@@ -1,9 +1,9 @@
 import tkinter as tk
-import subprocess
+#import subprocess
 import os
-import time
+#import time
 import random
-import math
+#import math
 import playsound
 import datetime
 from tkinter import *
@@ -49,7 +49,7 @@ Viruses = []
 News = 'bbb'
 Problem = 'ccc'
 Health = 0
-ScrubBuffer = []
+global ScrubBuffer
 GameActive = 0
 SimpleDict = []
 Prompts = []
@@ -86,7 +86,6 @@ def DictRead():
     DictRead = []
     DictDAT = ''
     SimpleDict = []
-    n1 = 0
     print('Reading Data...')
     try:
         myFile = open(PromptReference, 'r')
@@ -97,9 +96,8 @@ def DictRead():
         myFile.close()
         Dictionary = DictRead
         #print Dictionary
-        for x in range(len(Dictionary)):
-            Prompts.append((Dictionary[n1]).lower())
-            n1 = n1 + 1
+        for i in range(len(Dictionary)):
+            Prompts.append((Dictionary[i]).lower())
         del Prompts[0]
     except:
         pass
@@ -227,7 +225,7 @@ def Timekeeper():
     #print milla
     Time = milla
 
-def AlphaRelate(Int):
+def AlphaRelate(value: int):
     """
     The function `AlphaRelate` takes an integer input and returns the corresponding lowercase letter or
     special character based on the input value.
@@ -240,67 +238,14 @@ def AlphaRelate(Int):
     letter of the alphabet. If the input is 27, it returns an underscore "_". If the input is 28, it
     returns "Enter". For any other input, it returns "NULL". The
     """
-    Return = ''
-    if Int == 1:
-        Return = 'a'
-    elif Int == 2:
-        Return = 'b'
-    elif Int == 3:
-        Return = 'c'
-    elif Int == 4:
-        Return = 'd'
-    elif Int == 5:
-        Return = 'e'
-    elif Int == 6:
-        Return = 'f'
-    elif Int == 7:
-        Return = 'g'
-    elif Int == 8:
-        Return = 'h'
-    elif Int == 9:
-        Return = 'i'
-    elif Int == 10:
-        Return = 'j'
-    elif Int == 11:
-        Return = 'k'
-    elif Int == 12:
-        Return = 'l'
-    elif Int == 13:
-        Return = 'm'
-    elif Int == 14:
-        Return = 'n'
-    elif Int == 15:
-        Return = 'o'
-    elif Int == 16:
-        Return = 'p'
-    elif Int == 17:
-        Return = 'q'
-    elif Int == 18:
-        Return = 'r'
-    elif Int == 19:
-        Return = 's'
-    elif Int == 20:
-        Return = 't'
-    elif Int == 21:
-        Return = 'u'
-    elif Int == 22:
-        Return = 'v'
-    elif Int == 23:
-        Return = 'w'
-    elif Int == 24:
-        Return = 'x'
-    elif Int == 25:
-        Return = 'y'
-    elif Int == 26:
-        Return = 'z'
-    elif Int == 27:
-        Return = '_'
-    elif Int == 28:
-        Return = 'Enter'
-    else:
-        Return = 'NULL'
-    Return = Return.lower()
-    return (Return)
+    result = chr(value+96)
+    if (value == 123):
+        result = '_'
+    elif (value == 124):
+        result = 'enter'
+    elif(value > 124):
+        result = "null"
+    return result.lower()
 
 def RandomString(length):
     """
@@ -333,19 +278,16 @@ def ClickRegistrar(event):
     """
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    Overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    n1 = 1
-    for x in range(28):
-        Checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
-        n2 = 0
-        for x in range(len(Checker)):
+    overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
+                                  int(ShipRoot[1])+PlayerSize, 
+                                  int(ShipRoot[0])-PlayerSize, 
+                                  int(ShipRoot[1])-PlayerSize)
+    for n1 in range(1,28):
+        checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
+        for char in checker:
             #print Checker
-            if Checker[n2] in Overlaps:
-                #print AlphaRelate(n1)
-                if AlphaRelate(n1) not in Blacklist:
-                    ServerSelect(AlphaRelate(n1))
-            n2 = n2 + 1
-        n1 = n1 + 1
+            if (char in overlaps) and (AlphaRelate(n1) not in Blacklist):
+                ServerSelect(AlphaRelate(n1))
         
 def ServerSelect(tagstring):
     """
@@ -391,23 +333,12 @@ def PromptEnter(Prompt):
     if Prompt == Problem:
         Problem = ''
     scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
-    for n1 in range(len(scrub_list)):
-        if scrub_list[n1] in Prompt:
+    for i in range(len(scrub_list)):
+        if scrub_list[i] in Prompt:
             ScrubBuffer.append(Prompt[-1])
+        #n1 = n1 + 1
 
-    
-def ScrubWrite():
-    """
-    The `ScrubWrite` function iterates over elements in `ScrubBuffer`, applies the `scrub` function to
-    each element, and then clears `ScrubBuffer`.
-    """
-    global ScrubBuffer
-    n1 = 0
-    for x in range(len(ScrubBuffer)):
-        scrub(ScrubBuffer[n1])
-        n1 = n1 + 1
-    ScrubBuffer = []
- 
+
 def BarSieve():
     """
     The function `BarSieve` iterates through `ProgressBars` to filter out duplicate entries and add
@@ -415,22 +346,20 @@ def BarSieve():
     """
     global ProgressBars
     global GameActive
-    n1 = 0
-    Sieve = []
-    for x in range(len(ProgressBars)):
-        if ((ProgressBars[n1])[0]) not in Sieve:    
-            Sieve.append((ProgressBars[n1])[0])
-        elif ((ProgressBars[n1])[0]) in Sieve:
-            del ProgressBars[n1]
-            n1 = n1 - 1
-        n1 = n1 + 1
+    sieve = []
+    for i in range(len(ProgressBars)):
+        if ((ProgressBars[i])[0]) not in sieve:    
+            sieve.append((ProgressBars[i])[0])
+        elif ((ProgressBars[i])[0]) in sieve:
+            del ProgressBars[i]
+            i = i - 1
         #print Sieve
     if GameActive == 1 or GameActive == 2:          
-        if 'Energy' not in Sieve:
+        if 'Energy' not in sieve:
             BarAdd('Energy',1,str(EnergyRate),1)
-        if 'MaxEnergy' not in Sieve:
+        if 'MaxEnergy' not in sieve:
             BarAdd('MaxEnergy',1,str(MaxEnergyRate),1)
-        if 'ProblemTrigger' not in Sieve:
+        if 'ProblemTrigger' not in sieve:
             BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)  
           
                   
@@ -498,16 +427,14 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
     global ProgressBars
     global Time 
-    n1 = 0
     n2 = 0
     #print [str(string),magnitude, (int(Time)+int(delay)),delay,persistance]
-    for x in range(len(ProgressBars)):
+    for i in range(len(ProgressBars)):
         #print len(ProgressBars)
-        if (ProgressBars[n1])[0] == string:
-            del ProgressBars[n1]
+        if (ProgressBars[i])[0] == string:
+            del ProgressBars[i]
             n2 = 1
             ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
-        n1 = n1 + 1
     if n2 == 0:
         ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
     #print ProgressBars
@@ -552,11 +479,10 @@ def KeyPress(event):
     #print event.keysym
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    n1 = 1
-    for x in range(26):
-        if event.keysym == AlphaRelate(n1) and event.keysym not in Blacklist:
-            ServerSelect(AlphaRelate(n1))
-        n1 = n1 + 1
+    
+    for i in range(1,26):
+        if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
+            ServerSelect(AlphaRelate(i))
     if event.keysym == 'Return' and event.keysym not in Blacklist:
         ServerSelect('Enter')
     if event.keysym == 'space' and event.keysym not in Blacklist:
@@ -642,16 +568,14 @@ def MiscDecay():
     global ProgressBars
     global Time
     global GameActive
-    n1 = 0
     EventTime = 0
     Delay = 0
     Output = 1.0
     if GameActive == 1:
-        for x in range(len(ProgressBars)):
-            if str((ProgressBars[n1])[0]) == 'ProblemTrigger':
-                EventTime = int((ProgressBars[n1])[2])
-                Delay = int((ProgressBars[n1])[3])
-            n1 = n1 + 1
+        for i in range(len(ProgressBars)):
+            if str((ProgressBars[i])[0]) == 'ProblemTrigger':
+                EventTime = int((ProgressBars[i])[2])
+                Delay = int((ProgressBars[i])[3])
         Output = float((float(EventTime)-float(Time))/float(Delay))
         #print Output
         Output = (Output*-1.0) + 1.0
@@ -721,29 +645,21 @@ def ColorManager(string):
     global Time
     global PrevScans
     global PrevScansShow
-    n1 = 0
-    n2 = 0
-    Return = 'white'
+    result = 'white'
     if string == 'ProblemDecay':
-        n1 = 0
-        for x in range(len(ProgressBars)):
-            if (ProgressBars[n1])[0] == 'ProblemTrigger':
-                Return = ColCyc(((ProgressBars[n1])[2]),((ProgressBars[n1])[3]))
-            n1 = n1 + 1       
-    n1 = 0       
+        for i in range(len(ProgressBars)):
+            if (ProgressBars[i])[0] == 'ProblemTrigger':
+                result = ColCyc(((ProgressBars[i])[2]),
+                                ((ProgressBars[i])[3]))   
     if len(string) == 1:
-        for x in range(len(Blacklist)):
-            if string == Blacklist[n1]:
-                n2 = n2 + 1
-            n1 = n1 + 1      
-        if n2 > 0:
-            Return = 'red'
+        blacklisted_char_count = Blacklist.count(string) 
+        if blacklisted_char_count != 0:
+            result = 'red'
+        elif string in PrevScans and PrevScansShow == True:
+            result = 'grey'
         else:
-            if string in PrevScans and PrevScansShow == True:
-                Return = 'grey'
-            else:
-                Return = 'white'
-    return Return
+            result = 'white'
+    return result
     
 def DrawServers():
     """
@@ -965,49 +881,50 @@ def TOTAL_MAIN():
     """
     global GameActive
     global Time
+    global ScrubBuffer
     GameState()
     Timekeeper()
     BarSieve()
     Progressor()
-    ScrubWrite()
+    ScrubBuffer = []
     DrawMaster()
     c.after(17, TOTAL_MAIN)
 
 
+if __name__ == "__main__":
+    # init    
+    root = tk.Tk()
 
-# init    
-root = tk.Tk()
+    root.bind('<Key>', KeyPress)
+    root.title('Singularity')
+    root.configure(bg='#000000')
 
-root.bind('<Key>', KeyPress)
-root.title('Singularity')
-root.configure(bg='#000000')
+    #Make Canvas
+    c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
+    c.bind('<Motion>', motion)
+    c.bind('<ButtonPress>', ClickRegistrar)
+    c.pack(pady=10)
+    c.config(cursor="none")
 
-#Make Canvas
-c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
-c.bind('<Motion>', motion)
-c.bind('<ButtonPress>', ClickRegistrar)
-c.pack(pady=10)
-c.config(cursor="none")
+    OhSevenFlash = ImageTk.PhotoImage(file='079Flash.jpg')
+    c.create_image(500,500,image=OhSevenFlash)
 
-OhSevenFlash = ImageTk.PhotoImage(file='079Flash.jpg')
-c.create_image(500,500,image=OhSevenFlash)
+    # button with text closing window
+    b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100) )
+    b1.pack(padx=5, pady=10, side='right')
 
-# button with text closing window
-b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100) )
-b1.pack(padx=5, pady=10, side='right')
-
-#Create start/menu button
-b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100) )
-b2.pack(padx=5, pady=10, side='left')
-
-
-
-#Specific programs to be run once on startup.
-MusicManager('Intro')
-TOTAL_MAIN()
+    #Create start/menu button
+    b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100) )
+    b2.pack(padx=5, pady=10, side='left')
 
 
 
+    #Specific programs to be run once on startup.
+    MusicManager('Intro')
+    TOTAL_MAIN()
 
-# "start the engine"
-root.mainloop()
+
+
+
+    # "start the engine"
+    root.mainloop()
