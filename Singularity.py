@@ -35,14 +35,14 @@ PrevScansShow = False
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
 print(cwd)
-PromptReferance = ''.join([cwd,'/SingularityPrompts.txt'])
+PromptReference = ''.join([cwd,'/SingularityPrompts.txt'])
 ShipRoot = (0,0)
 Energy = 0
 MaxEnergy = 100
 ProblemRate = (0,0)
 ProgressBars = [] #Name, inc/dec amount, time when next tick
 Time = 0
-Gitter = (0,0)
+Jitter = (0,0)
 Prompt = 'aaa'
 Blacklist = []
 Viruses = []
@@ -60,9 +60,9 @@ PrevScans = []
 
 # --- Media ---
 NowPlaying = ''
-Intro = ''.join([cwd,'/machienintro.wav'])
-Music = ''.join([cwd,'/machinemusic.wav'])
-QED = ''.join([cwd,'/machineend.wav'])
+Intro = ''.join([cwd,'/machine_intro.wav'])
+Music = ''.join([cwd,'/machine_music.wav'])
+QED = ''.join([cwd,'/machine_end.wav'])
 
 
 
@@ -80,7 +80,7 @@ def DictRead():
     global Dictionary
     global SimpleDict
     global Prompts
-    global PromptReferance
+    global PromptReference
     Prompts = []
     Dictionary = []
     DictRead = []
@@ -89,7 +89,7 @@ def DictRead():
     n1 = 0
     print('Reading Data...')
     try:
-        myFile = open(PromptReferance, 'r')
+        myFile = open(PromptReference, 'r')
         DictDAT = myFile.read()
         #print HighDAT
         DictRead = (DictDAT.split('\n')) 
@@ -392,9 +392,9 @@ def PromptEnter(Prompt):
         MusicManager('QED')
     if Prompt == Problem:
         Problem = ''
-    scrublist = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
-    for x in range(len(scrublist)):
-        if scrublist[n1] in Prompt:
+    scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
+    for x in range(len(scrub_list)):
+        if scrub_list[n1] in Prompt:
             ScrubHolder(Prompt[-1])
         n1 = n1 + 1
 
@@ -818,10 +818,10 @@ def Jitter(Rate):
     """
     pointer = random.randint(1, int(Rate)) # Convert Rate to an integer
     if pointer == Rate:
-        Gitter = random.choice([-1,1])
+        Jitter = random.choice([-1,1])
     else:
-        Gitter = 0
-    return Gitter
+        Jitter = 0
+    return Jitter
     
 def DrawMaster():
     """
@@ -833,7 +833,7 @@ def DrawMaster():
     global CanvasWidth
     global Energy
     global MaxEnergy
-    global Gitter
+    global Jitter
     global Prompt
     global News
     global Health
@@ -945,19 +945,19 @@ def scrub(letter):
         BarAdd(''.join(['virus',str(letter)]),1,int(ScrubLength),0)
     else:
         #print (letter,'letter')
-        letterread = str(letter[-1])
+        letter_read = str(letter[-1])
         if letter[0:4] == 'done':
             #print (Blacklist,'blacklist')
-            #print (letterread, 'letterred')
-            if letterread not in PrevScans:
-                PrevScans.append(str(letterread))
+            #print (letter_read, 'letterred')
+            if letter_read not in PrevScans:
+                PrevScans.append(str(letter_read))
                 #print PrevScans
-            if letterread in Viruses:
-                Viruses.remove(letterread)
-                News = ''.join(['Virus Found in ', letterread, '!'])
+            if letter_read in Viruses:
+                Viruses.remove(letter_read)
+                News = ''.join(['Virus Found in ', letter_read, '!'])
                 BarAdd('ClearNews',0,3000,0)
-            if letterread in Blacklist:
-                Blacklist.remove(letterread)
+            if letter_read in Blacklist:
+                Blacklist.remove(letter_read)
 
     #print ('bbb',letter,Blacklist,Viruses)
 
@@ -990,7 +990,7 @@ def TOTAL_MAIN():
 root = tk.Tk()
 
 root.bind('<Key>', KeyPress)
-root.title('Singluarity')
+root.title('Singularity')
 root.configure(bg='#000000')
 
 #Make Canvas
