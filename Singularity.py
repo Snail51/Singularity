@@ -382,7 +382,6 @@ def PromptEnter(Prompt):
     global Problem
     global Blacklist
     global Viruses
-    n1 = 0
     if Prompt == 'bars':
         print (ProgressBars)
         print (Blacklist)
@@ -392,19 +391,10 @@ def PromptEnter(Prompt):
     if Prompt == Problem:
         Problem = ''
     scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
-    for x in range(len(scrub_list)):
+    for n1 in range(len(scrub_list)):
         if scrub_list[n1] in Prompt:
-            ScrubHolder(Prompt[-1])
-        n1 = n1 + 1
+            ScrubBuffer.append(Prompt[-1])
 
-def ScrubHolder(add):
-    """
-    The function `ScrubHolder` appends the input parameter `add` to a global list `ScrubBuffer`.
-    @param add - The `add` parameter in the `ScrubHolder` function is the value that will be added to
-    the `ScrubBuffer` list.
-    """
-    global ScrubBuffer
-    ScrubBuffer.append(add)
     
 def ScrubWrite():
     """
@@ -620,7 +610,7 @@ def Scorekeeper(variable,amount):
         
     if variable[0:5] == 'virus':
         #print(''.join(['done',str(variable[-1])]))
-        ScrubHolder(''.join(['done',str(variable[-1])]))
+        ScrubBuffer.append(''.join(['done',str(variable[-1])]))
 
     if variable == 'CLEAR':
         ProgressBars = []
