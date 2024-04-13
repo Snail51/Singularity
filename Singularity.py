@@ -3,8 +3,8 @@ import subprocess
 import os
 import time
 import random
-import winsound
 import math
+import playsound
 import datetime
 from tkinter import *
 
@@ -138,7 +138,6 @@ def CloseAll():
     The CloseAll function stops the game, closes the window, and prints a thank you message.
     """
     global GameActive
-    winsound.PlaySound(None, 0)
     root.destroy()
     GameActive = 0
     print("Thanks for playing!")
@@ -538,16 +537,16 @@ def MusicManager(File):
     global Time
 
     if File == "Intro" and NowPlaying != 'Intro':
-        winsound.PlaySound(Intro,
-                    winsound.SND_FILENAME|winsound.SND_ASYNC| winsound.SND_LOOP)
+        playsound.playsound(Intro,block=False)
+        #os.system("beep -f %s -l %s" % (Intro, 5))
         NowPlaying = "Intro"
     if File == 'Music' and NowPlaying != 'Music':
-        winsound.PlaySound(Music,
-                    winsound.SND_FILENAME|winsound.SND_ASYNC| winsound.SND_LOOP)
+        playsound.playsound(Music,block=False)
+       # os.system("beep -f %s -l %s" % (Music, 5))
         NowPlaying = 'Music'
     if File == 'QED' and NowPlaying != "QED":
-        winsound.PlaySound(QED,
-                    winsound.SND_FILENAME|winsound.SND_ASYNC)
+        playsound.playsound(QED,block=False)
+      #  os.system("beep -f %s -l %s" % (QED, 5))
         NowPlaying = 'QED'
 
 
@@ -765,7 +764,7 @@ def DrawServers():
     global CanvasHeight
     global CanvasWidth
     global cwd
-    OhSevenFlash = Image.open((''.join([cwd,'\\','079Flash.jpg'])))
+    OhSevenFlash = Image.open('079Flash.jpg')
     c.image = ImageTk.PhotoImage(OhSevenFlash)
     
     n2 = 1
@@ -1000,7 +999,7 @@ c.bind('<ButtonPress>', ClickRegistrar)
 c.pack(pady=10)
 c.config(cursor="none")
 
-OhSevenFlash = ImageTk.PhotoImage(file=(''.join([cwd,'\\','079Flash.jpg'])))
+OhSevenFlash = ImageTk.PhotoImage(file='079Flash.jpg')
 c.create_image(500,500,image=OhSevenFlash)
 
 # button with text closing window
