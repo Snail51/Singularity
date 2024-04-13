@@ -982,7 +982,7 @@ def TOTAL_MAIN():
     Progressor()
     ScrubWrite()
     DrawMaster()
-    c.after(1, TOTAL_MAIN)
+    c.after(17, TOTAL_MAIN)
 
 
 
