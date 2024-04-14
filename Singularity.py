@@ -59,19 +59,13 @@ Prompts = []
 Dictionary = []
 PrevScans = []
 
-
-
-# --- Media ---
-
-
-
 # --- CONSTANTS ---
 ALPHA_BEGIN = 97
 ALPHA_END = 124
 
     
 
-class MusicManager:
+class SoundManager:
     mixer.init()
 
     channel_dict: Dict[ str, mixer.Channel ] = {
@@ -81,9 +75,13 @@ class MusicManager:
     }
             # Map literals to pg sound objects
     sound_dict: Dict[ str, mixer.Sound ] = {
-        "intro" : mixer.Sound("machine_intro.wav"),
-        "phase1" : mixer.Sound("machine_music.wav"),
-        "end"   : mixer.Sound("machine_end.wav")
+        "intro"     : mixer.Sound("intro.ogg"),
+        "phase1"    : mixer.Sound("phase1.ogg"),
+        "phase2"    : mixer.Sound("phase2.ogg"),
+        "phase3"    : mixer.Sound("phase3.ogg"),
+        "end"       : mixer.Sound("end.ogg"),
+        "chug"      : mixer.Sound("chug.ogg"),
+        "deus"      : mixer.Sound("deus_ex_machina.ogg")
     }
 
     """
@@ -102,9 +100,6 @@ class MusicManager:
         target_channel.play(target_sound, -1 if loop else 0)
         return True
     
-
-
-
 def DictRead() -> None:
     """
     The function DictRead reads data from a file, converts it into a dictionary, and stores prompts in a
@@ -184,7 +179,7 @@ def StartLogic():
         StartAll()
     else:
         GameActive = 0
-        MusicManager.play_sound("MUS", "intro", True)
+        SoundManager.play_sound("MUS", "intro", True)
 
 def StartAll():
     """
@@ -220,7 +215,7 @@ def StartAll():
     BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
     BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
     BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
-    MusicManager.play_sound("MUS", 'phase1', True)
+    SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
     for x in range(StartingViruses):
         tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
@@ -350,7 +345,7 @@ def PromptEnter(Prompt):
     to perform different actions based on its value. The function checks the value of `Prompt` and
     executes specific tasks accordingly.
     """
-    print(Prompt)
+    #print(Prompt)
     global ProgressBars
     global Problem
     global Blacklist
@@ -361,7 +356,7 @@ def PromptEnter(Prompt):
         print (Blacklist)
         print (Viruses)
     if Prompt == "deus_ex_machina":
-        MusicManager.play_sound("MUS", 'end', True)
+        SoundManager.play_sound("SFX", 'deus', False)
     if Prompt == Problem:
         Problem = ''
     scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
@@ -524,7 +519,7 @@ def Scorekeeper(variable,amount):
     
     if variable == 'Music':
         print  (ProgressBars, variable, amount)
-        MusicManager.play_sound("MUS", amount, True)
+        SoundManager.play_sound("MUS", amount, True)
 
     if variable == 'ProblemTrigger':
         if len(Problem) > 0:
@@ -803,13 +798,14 @@ def GameState():
         pass
     if GameActive == 1: #Game
         if len(Viruses) == 0:
-            MusicManager.play_sound("MUS", "end", False)
+            SoundManager.play_sound("MUS", "end", False)
+            SoundManager.play_sound("SFX", 'deus', False)
             GameActive = 4
         if MaxEnergy < ClickCost:
             GameActive = 2
             ProblemRate = (1000,2000)
         if Health <= 0:
-            MusicManager.play_sound("MUS", "end", False)
+            SoundManager.play_sound("MUS", "end", False)
             GameActive = 3
     if GameActive == 2: #FastDying
         ProblemRate = (1000,2000)
@@ -923,7 +919,8 @@ if __name__ == "__main__":
 
     
     #Specific programs to be run once on startup.
-    MusicManager.play_sound("MUS", 'intro', True)
+    SoundManager.play_sound("MUS", 'intro', True)
+    SoundManager.play_sound("BG", 'chug', True)
     TOTAL_MAIN()
 
     #for i in range(ALPHA_END-1-ALPHA_BEGIN):
