@@ -10,7 +10,15 @@ from tkinter import *
 from pygame import mixer
 
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
-from typing import List, Tuple, Dict
+import enum
+
+
+mixer.init()
+CHANNEL = mixer.Channel(0)
+# --- Sounds ---
+INTRO_SOUND = mixer.Sound('machine_intro.wav')
+MUSIC_SOUND = mixer.Sound('machine_music.wav')
+QED_SOUND = mixer.Sound('machine_end.wav')
 
 
 # --- Config ---
@@ -23,23 +31,23 @@ MaxEnergyRate = 5000
 MaxEnergyCap = 200
 JitterRate = 200
 ScrubLength = 5000
+StartingViruses = 5 # <= 26
+StartingProblemRate = (10000,20000)
+ProblemLength = 6
 StartingHealth = 10
-StartingViruses: int = 5 # <= 26
-StartingProblemRate: Tuple = (10000,20000)
-ProblemLength: int = 6
-CanvasWidth: int = 1000
-CanvasHeight: int = 700
-BinaryBG: bool = True
-ProblemType: str = "String" # Prompts or String
-DebugMode: bool = False
-PrevScansShow: bool = False
+CanvasWidth = 1000
+CanvasHeight = 700
+BinaryBG = True
+ProblemType = "String" # Prompts or String
+DebugMode = False
+PrevScansShow = False
 
 
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
 print(cwd)
-PromptReference: str = ''.join([cwd,'/SingularityPrompts.txt'])
-ShipRoot: Tuple = (0,0)
+PromptReference = ''.join([cwd,'/SingularityPrompts.txt'])
+ShipRoot = (0,0)
 Energy = 0
 MaxEnergy = 100
 ProblemRate = (0,0)
@@ -61,9 +69,7 @@ PrevScans = []
 
 # --- CONSTANTS ---
 ALPHA_BEGIN = 97
-ALPHA_END = 124
-
-    
+ALPHA_END = 124  
 
 class SoundManager:
     mixer.init()
@@ -136,13 +142,13 @@ def DictRead() -> None:
 
 
 # --- functions ---    
-def clearCanvas() -> None:
+def clearCanvas():
     """
     The `clearCanvas` function in Python clears all items from a canvas.
     """
     c.delete('all')
     
-def motion(event) -> None:
+def motion(event):
     """
     The `motion` function updates the position of a ship on a canvas based on user input.
     @param event - The `event` parameter in the `motion` function is typically an event object that
@@ -160,7 +166,7 @@ def motion(event) -> None:
         c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1]), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])),fill="red",tag='ship')
         c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
 
-def CloseAll() -> None:
+def CloseAll():
     """
     The CloseAll function stops the game, closes the window, and prints a thank you message.
     """
@@ -235,23 +241,26 @@ def Timekeeper():
     global Time
     timeget = datetime.datetime.now()
     temptime = str(timeget)[11:]
+    #print temptime
     hours = int(temptime[0:2])
+    #print hours
     minutes = int(temptime[3:5])
+    #print minutes
     seconds = int(temptime[6:8])
+    #print seconds
     milla = 0
     try:
         milla = int(temptime[9:12])
     except:
         milla = 0
     #print milla
-    finally:
-        minutes = minutes + (hours * 60)
-        seconds = seconds + (minutes) * 60
-        milla = milla + (seconds * 1000)
+    minutes = int(minutes) + (int(hours) * 60)
+    seconds = int(seconds) + (int(minutes) * 60)
+    milla =int(milla) + (int(seconds) * 1000)
+    #print milla
+    Time = milla
 
-        Time = milla
-
-def AlphaRelate(value: int) -> None | str :
+def AlphaRelate(value: int):
     """
     The function `AlphaRelate` takes an integer input and returns the corresponding lowercase letter or
     special character based on the input value.
@@ -273,7 +282,7 @@ def AlphaRelate(value: int) -> None | str :
         result = 'enter'
     return result
 
-def RandomString(length) -> str:
+def RandomString(length):
     """
     The function `RandomString` generates a random string of a specified length using a set of prompts
     or random alphabets if no prompts are provided.
@@ -315,7 +324,7 @@ def ClickRegistrar(event):
             if (char in overlaps) and (AlphaRelate(n1) not in Blacklist):
                 ServerSelect(AlphaRelate(n1))
         
-def ServerSelect(tagstring: str) -> None:
+def ServerSelect(tagstring):
     """
     The function `ServerSelect` checks if a given tag string is 'ENTER' and deducts energy if conditions
     are met, otherwise it appends the tag string to the `Prompt` variable.
@@ -336,6 +345,7 @@ def ServerSelect(tagstring: str) -> None:
             pass
     else:
         Prompt = ''.join([str(Prompt),str(tagstring)])
+        #print Prompt
 
 def PromptEnter(Prompt):
     """
@@ -409,10 +419,8 @@ def Progressor():
     n3 = 0
     for x in range(len(ProgressBars)):
         if (ProgressBars[n2])[2] < Time:
-   
             Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
             
-
             OldTitle = str((ProgressBars[n2])[0])
             Mag = str((ProgressBars[n2])[1])
             OldTick = int((ProgressBars[n2])[2])
@@ -464,6 +472,34 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     if n2 == 0:
         ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
     #print ProgressBars
+
+def MusicManager(File):
+    """
+    The function `MusicManager` plays different sound files based on the input `File` and manages the
+    currently playing sound.
+    @param File - It looks like the `MusicManager` function is designed to manage playing different
+    types of music files based on the input `File`. The function uses the `winsound` module to play the
+    music files asynchronously.
+    """
+    global Music
+    global QED
+    global NowPlaying
+    global ProgressBars
+    global Time
+
+    if File == "Intro" and NowPlaying != 'Intro':
+        CHANNEL.play(INTRO_SOUND, -1)
+        #os.system("beep -f %s -l %s" % (Intro, 5))
+        NowPlaying = "Intro"
+    if File == 'Music' and NowPlaying != 'Music':
+        CHANNEL.play(MUSIC_SOUND, -1)
+       # os.system("beep -f %s -l %s" % (Music, 5))
+        NowPlaying = 'Music'
+    if File == 'QED' and NowPlaying != "QED":
+        CHANNEL.play(QED_SOUND, 0)
+      #  os.system("beep -f %s -l %s" % (QED, 5))
+        NowPlaying = 'QED'
+
 
 def KeyPress(event):
     """
@@ -546,6 +582,8 @@ def Scorekeeper(variable,amount):
         if MaxEnergy >= MaxEnergyCap:
             BarAdd('Energy', 1, EnergyRate/2)
 
+
+        
     # LIMITS
     if Energy > MaxEnergy:
         Energy = MaxEnergy
@@ -570,12 +608,13 @@ def MiscDecay():
                 Delay = int((ProgressBars[i])[3])
         Output = float((float(EventTime)-float(Time))/float(Delay))
         #print Output
-        Output = (((Output*-1.0) + 1.0) * 5)
+        Output = (Output*-1.0) + 1.0
+        Output = Output * 5
     return Output
         
 
 
-def ColCyc(EventTime,Delay) -> str | None: 
+def ColCyc(EventTime,Delay): 
     """
     This Python function calculates a color value based on the input event time and delay, and returns
     the color in hexadecimal format.
@@ -600,8 +639,7 @@ def ColCyc(EventTime,Delay) -> str | None:
     Red = int(float(Output) * float(255.0))
     Green = 0
     Blue = int(255.0-float(Red))
-    
-    result = None
+    #print (Red,Green,Blue)
                                             
     # --- Convert to HEX ---    
     if Red >= 0 and Green >=0 and Blue >= 0:                                                                           
@@ -617,8 +655,8 @@ def ColCyc(EventTime,Delay) -> str | None:
         MB = "{0:x}".format(Blue)
         if len(MB) == 1:
             MB = ''.join(['0',MB])
-        result = ''.join(['#',MR, MG, MB])
-    return result
+        Master = ''.join(['#',MR, MG, MB])
+        return Master
     
 def ColorManager(string):
     """
@@ -643,11 +681,14 @@ def ColorManager(string):
             if (ProgressBars[i])[0] == 'ProblemTrigger':
                 result = ColCyc(((ProgressBars[i])[2]),
                                 ((ProgressBars[i])[3]))   
-    elif len(string) == 1:
-        if Blacklist.count(string)  != 0:
+    if len(string) == 1:
+        blacklisted_char_count = Blacklist.count(string) 
+        if blacklisted_char_count != 0:
             result = 'red'
         elif string in PrevScans and PrevScansShow == True:
             result = 'grey'
+        else:
+            result = 'white'
     return result
     
 def DrawServers():
@@ -681,7 +722,7 @@ def DrawServers():
             n1 = n1 + 1
     n2 = n2 + 1
     n1 = 1
-    for _ in range(2):
+    for x in range(2):
         Width = CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10) * 5
@@ -690,7 +731,7 @@ def DrawServers():
         n1 = n1 + 5
         n3 = n3 + 1
     n1 = 2
-    for _ in range(2):
+    for x in range(2):
         Width=CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10)*5
@@ -700,7 +741,7 @@ def DrawServers():
         n3 = n3 + 1
         
     
-def Jitter(jit: int):
+def Jitter(Rate):
     """
     The function `Jitter` generates a random jitter value based on a given rate.
     @param Rate - The `Rate` parameter in the `Jitter` function represents the frequency at which the
@@ -893,8 +934,6 @@ if __name__ == "__main__":
     # init    
     root = tk.Tk()
 
-    music_filenames = ["machine_intro.wav","machine_music.wav","machine_end.wav"]
-
     root.bind('<Key>', KeyPress)
     root.title('Singularity')
     root.configure(bg='#000000')
@@ -917,11 +956,14 @@ if __name__ == "__main__":
     b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100) )
     b2.pack(padx=5, pady=10, side='left')
 
+
     
     #Specific programs to be run once on startup.
     SoundManager.play_sound("MUS", 'intro', True)
     SoundManager.play_sound("BG", 'chug', True)
     TOTAL_MAIN()
+
+
 
     #for i in range(ALPHA_END-1-ALPHA_BEGIN):
     #    print(''.join([str(i),str(AlphaRelate(i+ALPHA_BEGIN))]))
