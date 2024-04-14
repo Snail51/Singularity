@@ -1,17 +1,12 @@
 import tkinter as tk
-#import subprocess
+from tkinter import *
 import os
-#import time
 import random
-#import math
 import traceback
 import datetime
-from tkinter import *
 from pygame import mixer
-
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
-
 
 # --- Config ---
 StartingEnergy = 0 # >=0
@@ -33,7 +28,6 @@ BinaryBG: bool = True
 ProblemType: str = "String" # Prompts or String
 DebugMode: bool = False
 PrevScansShow: bool = False
-
 
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
@@ -62,8 +56,6 @@ PrevScans = []
 # --- CONSTANTS ---
 ALPHA_BEGIN = 97
 ALPHA_END = 124
-
-    
 
 class SoundManager:
     mixer.init()
@@ -131,9 +123,6 @@ def DictRead() -> None:
     except:
         pass
     print(Prompts)
-
-
-
 
 # --- functions ---    
 def clearCanvas() -> None:
@@ -226,8 +215,6 @@ def StartAll():
     if DebugMode ==  True:
         print (Viruses)
     
-
-
 def Timekeeper():
     """
     The `Timekeeper` function calculates the current time in milliseconds.
@@ -293,7 +280,6 @@ def RandomString(length) -> str:
             Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-1)))])
     return Return
     
-
 def ClickRegistrar(event):
     """
     This function checks for overlaps between a player's ship and certain server objects, and calls a
@@ -393,8 +379,7 @@ def BarSieve():
             BarAdd('MaxEnergy',1,str(MaxEnergyRate),1)
         if 'ProblemTrigger' not in sieve:
             BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)  
-          
-                  
+                        
 def Progressor():
     """
     The `Progressor` function iterates through `ProgressBars`, updates progress based on time, and
@@ -411,7 +396,6 @@ def Progressor():
         if (ProgressBars[n2])[2] < Time:
    
             Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
-            
 
             OldTitle = str((ProgressBars[n2])[0])
             Mag = str((ProgressBars[n2])[1])
@@ -433,7 +417,6 @@ def Progressor():
             #print ProgressBars    
         n2 = n2 + 1
   
-
 def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
     The function `BarAdd` creates a new progress bar and manages its properties in a list called
@@ -549,8 +532,7 @@ def Scorekeeper(variable,amount):
     # LIMITS
     if Energy > MaxEnergy:
         Energy = MaxEnergy
-        
-    
+          
 def MiscDecay():
     """
     The function `MiscDecay` calculates and returns an output value based on the progress bars, time,
@@ -573,8 +555,6 @@ def MiscDecay():
         Output = (((Output*-1.0) + 1.0) * 5)
     return Output
         
-
-
 def ColCyc(EventTime,Delay) -> str | None: 
     """
     This Python function calculates a color value based on the input event time and delay, and returns
@@ -699,7 +679,6 @@ def DrawServers():
         n1 = n1 + 2
         n3 = n3 + 1
         
-    
 def Jitter(jit: int):
     """
     The function `Jitter` generates a random jitter value based on a given rate.
@@ -735,7 +714,6 @@ def DrawMaster():
     global BinaryBG
     global WallTemp
 
-
     clearCanvas()
     if BinaryBG == True:
         if GameActive != 3:
@@ -747,15 +725,12 @@ def DrawMaster():
         else:
             c.create_text(CanvasWidth/2,CanvasHeight/2,fill="#2f2f2f",text=WallTemp, width=CanvasWidth,font=(16))
     
-    
-        
     if GameActive == 0:
         c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Singularity',font=('Inhuman BB', 64))
         c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.25+Jitter(JitterRate)),fill='white',text='A typing management game',font=('Inhuman BB', 24))
     if GameActive == 1 or GameActive == 2:
         #Draw Servers
         DrawServers()
-        
         #Draw Text
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/1.03)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
@@ -777,8 +752,7 @@ def DrawMaster():
     c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
     c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
     c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
-                  
-                      
+                            
 def GameState():
     """
     The `GameState` function manages the game state based on various conditions such as energy levels,
@@ -814,7 +788,8 @@ def GameState():
     if GameActive == 3: #Dead
         pass
     if GameActive == 4: #Win
-        pass                    
+        pass       
+
 # --- Game Commands ---
 def scrub(letter):
     """
@@ -850,15 +825,6 @@ def scrub(letter):
             if letter_read in Blacklist:
                 Blacklist.remove(letter_read)
 
-    #print ('bbb',letter,Blacklist,Viruses)
-
-                
-            
-    
-
-
-
-
 # --- Executives ---
 def TOTAL_MAIN():
     """
@@ -893,8 +859,6 @@ if __name__ == "__main__":
     # init    
     root = tk.Tk()
 
-    music_filenames = ["machine_intro.wav","machine_music.wav","machine_end.wav"]
-
     root.bind('<Key>', KeyPress)
     root.title('Singularity')
     root.configure(bg='#000000')
@@ -917,14 +881,10 @@ if __name__ == "__main__":
     b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100) )
     b2.pack(padx=5, pady=10, side='left')
 
-    
     #Specific programs to be run once on startup.
     SoundManager.play_sound("MUS", 'intro', True)
     SoundManager.play_sound("BG", 'chug', True)
     TOTAL_MAIN()
-
-    #for i in range(ALPHA_END-1-ALPHA_BEGIN):
-    #    print(''.join([str(i),str(AlphaRelate(i+ALPHA_BEGIN))]))
 
     # "start the engine"
     root.mainloop()

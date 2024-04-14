@@ -1,3 +1,7 @@
 {
-    "docwriter.style": "JSDoc"
+    "docwriter.style": "JSDoc",
+    "cSpell.words": [
+        "Progressor",
+        "pygame"
+    ]
 }
