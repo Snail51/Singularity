@@ -73,7 +73,8 @@ class SoundManager:
         "phase3"    : mixer.Sound("phase3.ogg"),
         "end"       : mixer.Sound("end.ogg"),
         "chug"      : mixer.Sound("chug.ogg"),
-        "deus"      : mixer.Sound("deus_ex_machina.ogg")
+        "deus"      : mixer.Sound("deus_ex_machina.ogg"),
+        "die"       : mixer.Sound("die.ogg")
     }
 
     """
@@ -779,7 +780,7 @@ def GameState():
             GameActive = 2
             ProblemRate = (1000,2000)
         if Health <= 0:
-            SoundManager.play_sound("MUS", "end", False)
+            SoundManager.play_sound("MUS", "die", False)
             GameActive = 3
     if GameActive == 2: #FastDying
         ProblemRate = (1000,2000)
