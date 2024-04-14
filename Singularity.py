@@ -7,8 +7,18 @@ import random
 import playsound
 import datetime
 from tkinter import *
+from pygame import mixer
 
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
+
+mixer.init()
+CHANNEL = mixer.Channel(0)
+# --- Sounds ---
+
+INTRO_SOUND = mixer.Sound('machine_intro.wav')
+MUSIC_SOUND = mixer.Sound('machine_music.wav')
+QED_SOUND = mixer.Sound('machine_end.wav')
+
 
 # --- Config ---
 StartingEnergy = 0 # >=0
@@ -60,7 +70,7 @@ PrevScans = []
 
 # --- Media ---
 NowPlaying = ''
-Intro = ''.join([cwd,'/machine_intro.wav'])
+Intro = 'machine_intro.wav'
 Music = ''.join([cwd,'/machine_music.wav'])
 QED = ''.join([cwd,'/machine_end.wav'])
 
@@ -454,15 +464,15 @@ def MusicManager(File):
     global Time
 
     if File == "Intro" and NowPlaying != 'Intro':
-        playsound.playsound(Intro,block=False)
+        CHANNEL.play(INTRO_SOUND)
         #os.system("beep -f %s -l %s" % (Intro, 5))
         NowPlaying = "Intro"
     if File == 'Music' and NowPlaying != 'Music':
-        playsound.playsound(Music,block=False)
+        CHANNEL.play(MUSIC_SOUND)
        # os.system("beep -f %s -l %s" % (Music, 5))
         NowPlaying = 'Music'
     if File == 'QED' and NowPlaying != "QED":
-        playsound.playsound(QED,block=False)
+        CHANNEL.play(QED_SOUND)
       #  os.system("beep -f %s -l %s" % (QED, 5))
         NowPlaying = 'QED'
 
@@ -918,7 +928,7 @@ if __name__ == "__main__":
     b2.pack(padx=5, pady=10, side='left')
 
 
-
+    
     #Specific programs to be run once on startup.
     MusicManager('Intro')
     TOTAL_MAIN()
