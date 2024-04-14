@@ -60,7 +60,7 @@ Viruses = []
 News = 'bbb'
 Problem = 'ccc'
 Health = 0
-global ScrubBuffer
+ScrubBuffer = []
 GameActive = 0
 SimpleDict = []
 Prompts = []
@@ -203,10 +203,10 @@ def StartAll():
     MusicManager('Music')
     GameActive = 1
     for x in range(StartingViruses):
-        tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))
+        tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
         while tempString in Viruses:
             #print (tempString in Viruses,tempString,Viruses)
-            tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))
+            tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
         Viruses.append(tempString)
     if DebugMode ==  True:
         print (Viruses)
@@ -278,7 +278,7 @@ def RandomString(length):
         Return = str(random.choice(Prompts))
     else:
         for _ in range(length):
-            Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END)))])
+            Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-1)))])
     return Return
     
 
@@ -315,7 +315,8 @@ def ServerSelect(tagstring):
     global Energy
     global ClickCost
     global Prompt
-    
+
+
     if (str(tagstring).upper()) == 'ENTER':
         if Energy >= ClickCost:
                 PromptEnter(Prompt)
@@ -333,7 +334,7 @@ def PromptEnter(Prompt):
     to perform different actions based on its value. The function checks the value of `Prompt` and
     executes specific tasks accordingly.
     """
-    #print Prompt
+    #print(Prompt)
     global ProgressBars
     global Problem
     global Blacklist
@@ -352,6 +353,13 @@ def PromptEnter(Prompt):
             ScrubBuffer.append(Prompt[-1])
         #n1 = n1 + 1
 
+def ScrubWrite():
+    global ScrubBuffer
+    n1 = 0
+    for x in range(len(ScrubBuffer)):
+        scrub(ScrubBuffer[n1])
+        n1 = n1 + 1
+    ScrubBuffer = []
 
 def BarSieve():
     """
@@ -394,10 +402,10 @@ def Progressor():
             #print len(ProgressBars)
             #print ((ProgressBars[n2])[2])
             #print (str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
-            '''
-            if ((ProgressBars[n2])[0])[0:6] == 'Music':
-                print ('progressor',ProgressBars[n2])
-            '''
+
+            #if ((ProgressBars[n2])[0])[0:6] == 'Music':
+            #    print ('progressor',ProgressBars[n2])
+
             Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
             
 
@@ -468,15 +476,15 @@ def MusicManager(File):
     global Time
 
     if File == "Intro" and NowPlaying != 'Intro':
-        CHANNEL.play(INTRO_SOUND)
+        CHANNEL.play(INTRO_SOUND, -1)
         #os.system("beep -f %s -l %s" % (Intro, 5))
         NowPlaying = "Intro"
     if File == 'Music' and NowPlaying != 'Music':
-        CHANNEL.play(MUSIC_SOUND)
+        CHANNEL.play(MUSIC_SOUND, -1)
        # os.system("beep -f %s -l %s" % (Music, 5))
         NowPlaying = 'Music'
     if File == 'QED' and NowPlaying != "QED":
-        CHANNEL.play(QED_SOUND)
+        CHANNEL.play(QED_SOUND, 0)
       #  os.system("beep -f %s -l %s" % (QED, 5))
         NowPlaying = 'QED'
 
@@ -494,7 +502,7 @@ def KeyPress(event):
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
     
-    for i in range(ALPHA_BEGIN,ALPHA_END-2):
+    for i in range(ALPHA_BEGIN,ALPHA_END-1):
         if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
             ServerSelect(AlphaRelate(i))
     if event.keysym == 'Return' and event.keysym not in Blacklist:
@@ -899,7 +907,7 @@ def TOTAL_MAIN():
     Timekeeper()
     BarSieve()
     Progressor()
-    ScrubBuffer = []
+    ScrubWrite()
     DrawMaster()
     c.after(17, TOTAL_MAIN)
 
@@ -938,6 +946,8 @@ if __name__ == "__main__":
 
 
 
+    #for i in range(ALPHA_END-1-ALPHA_BEGIN):
+    #    print(''.join([str(i),str(AlphaRelate(i+ALPHA_BEGIN))]))
 
     # "start the engine"
     root.mainloop()
