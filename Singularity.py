@@ -278,7 +278,7 @@ def RandomString(length) -> str:
         Return = str(random.choice(Prompts))
     else:
         for _ in range(length):
-            Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-1)))])
+            Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2)))])
     return Return
     
 def ClickRegistrar(event):
