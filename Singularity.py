@@ -10,11 +10,12 @@ from tkinter import *
 from pygame import mixer
 
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
+import enum
+
 
 mixer.init()
 CHANNEL = mixer.Channel(0)
 # --- Sounds ---
-
 INTRO_SOUND = mixer.Sound('machine_intro.wav')
 MUSIC_SOUND = mixer.Sound('machine_music.wav')
 QED_SOUND = mixer.Sound('machine_end.wav')
@@ -75,6 +76,9 @@ Music = ''.join([cwd,'/machine_music.wav'])
 QED = ''.join([cwd,'/machine_end.wav'])
 
 
+# --- CONSTANTS ---
+ALPHA_BEGIN = 97
+ALPHA_END = 124
 
 
 
@@ -199,10 +203,10 @@ def StartAll():
     MusicManager('Music')
     GameActive = 1
     for x in range(StartingViruses):
-        tempString = AlphaRelate(random.randint(1,26))
+        tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))
         while tempString in Viruses:
             #print (tempString in Viruses,tempString,Viruses)
-            tempString = AlphaRelate(random.randint(1,26))
+            tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))
         Viruses.append(tempString)
     if DebugMode ==  True:
         print (Viruses)
@@ -248,14 +252,14 @@ def AlphaRelate(value: int):
     letter of the alphabet. If the input is 27, it returns an underscore "_". If the input is 28, it
     returns "Enter". For any other input, it returns "NULL". The
     """
-    result = chr(value+96)
-    if (value == 123):
+    if (value < 97) or (value > 124):
+        return None
+    result = chr(value)
+    if value == 123:
         result = '_'
-    elif (value == 124):
+    elif value == 124:
         result = 'enter'
-    elif(value > 124):
-        result = "null"
-    return result.lower()
+    return result
 
 def RandomString(length):
     """
@@ -273,8 +277,8 @@ def RandomString(length):
     if len(Prompts) > 0:
         Return = str(random.choice(Prompts))
     else:
-        for x in range(length):
-            Return = ''.join([Return,str(AlphaRelate(random.randint(1,26)))])
+        for _ in range(length):
+            Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END)))])
     return Return
     
 
@@ -292,7 +296,7 @@ def ClickRegistrar(event):
                                   int(ShipRoot[1])+PlayerSize, 
                                   int(ShipRoot[0])-PlayerSize, 
                                   int(ShipRoot[1])-PlayerSize)
-    for n1 in range(1,28):
+    for n1 in range(ALPHA_BEGIN,ALPHA_END):
         checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
         for char in checker:
             #print Checker
@@ -490,7 +494,7 @@ def KeyPress(event):
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
     
-    for i in range(1,26):
+    for i in range(ALPHA_BEGIN,ALPHA_END-2):
         if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
             ServerSelect(AlphaRelate(i))
     if event.keysym == 'Return' and event.keysym not in Blacklist:
@@ -684,13 +688,12 @@ def DrawServers():
     c.image = ImageTk.PhotoImage(OhSevenFlash)
     
     n2 = 1
-    n3 = 1
-    for x in range(4):
+    n3 = ALPHA_BEGIN
+    for _ in range(4):
         Height = CanvasHeight/10
         Height = Height * n2
         n2 = n2 + 1
-        n1 = 1
-        for x in range(6):
+        for n1 in range(1,7):
             Width = CanvasWidth/7.5
             Width = Width * n1
             Holder = random.randint(1,500)
@@ -800,7 +803,7 @@ def DrawMaster():
     c.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
     c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
     c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
-    c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(1,26))),font=('Inhuman BB', 12))  
+    c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
                   
                       
 def GameState():
