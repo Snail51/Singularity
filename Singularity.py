@@ -4,6 +4,7 @@ import os
 #import time
 import random
 #import math
+import traceback
 import datetime
 from tkinter import *
 from pygame import mixer
@@ -72,14 +73,19 @@ ALPHA_END = 124
 
 class MusicManager:
     mixer.init()
-    channel = mixer.Channel(0)
-            # Map literals to pg sound objects
-    song_dict: Dict[ str, mixer.Sound ] = {
-        "machine_intro.wav" : mixer.Sound("machine_intro.wav"),
-        "machine_music.wav" : mixer.Sound("machine_music.wav"),
-        "machine_end.wav"   : mixer.Sound("machine_end.wav")
+
+    channel_dict: Dict[ str, mixer.Channel ] = {
+        "MUS"   : mixer.Channel(0),
+        "BG"    : mixer.Channel(1),
+        "SFX"   : mixer.Channel(2)
     }
-    now_playing = None
+            # Map literals to pg sound objects
+    sound_dict: Dict[ str, mixer.Sound ] = {
+        "intro" : mixer.Sound("machine_intro.wav"),
+        "phase1" : mixer.Sound("machine_music.wav"),
+        "end"   : mixer.Sound("machine_end.wav")
+    }
+
     """
     @function play_sound Plays the music file indicated by filename,
     if filename exists in song_dict.
@@ -88,16 +94,13 @@ class MusicManager:
     @return True if the song was able to be played, else False
     """
     @classmethod
-    def play_sound(cls, filename: str) -> bool:
-
-
-        if (filename != cls.now_playing) and (filename in cls.song_dict.keys()):
-
-            target_song = cls.song_dict[filename]
-            cls.channel.play(target_song)
-
-            return True
-        return False
+    def play_sound(cls, channel: str, filename: str, loop: BooleanVar) -> bool:
+        if(filename not in cls.sound_dict.keys()) or (channel not in cls.channel_dict.keys()):
+            return False
+        target_sound = cls.sound_dict[filename]
+        target_channel = cls.channel_dict[channel]
+        target_channel.play(target_sound, -1 if loop else 0)
+        return True
     
 
 
@@ -181,7 +184,7 @@ def StartLogic():
         StartAll()
     else:
         GameActive = 0
-        MusicManager.play_sound("machine_intro.wav")
+        MusicManager.play_sound("MUS", "intro", True)
 
 def StartAll():
     """
@@ -217,7 +220,7 @@ def StartAll():
     BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
     BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
     BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
-    MusicManager.play_sound('machine_music.wav')
+    MusicManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
     for x in range(StartingViruses):
         tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
@@ -329,10 +332,13 @@ def ServerSelect(tagstring: str) -> None:
     global Energy
     global ClickCost
     global Prompt
-    if tagstring == 'enter' and Energy >= ClickCost:
-        PromptEnter(Prompt)
-        Prompt = ''
-        Energy = Energy - ClickCost
+    if tagstring == 'enter':
+        if Energy >= ClickCost:
+            PromptEnter(Prompt)
+            Prompt = ''
+            Energy = Energy - ClickCost
+        else:
+            pass
     else:
         Prompt = ''.join([str(Prompt),str(tagstring)])
 
@@ -344,26 +350,27 @@ def PromptEnter(Prompt):
     to perform different actions based on its value. The function checks the value of `Prompt` and
     executes specific tasks accordingly.
     """
-    #print(Prompt)
+    print(Prompt)
     global ProgressBars
     global Problem
     global Blacklist
     global Viruses
+    global ScrubBuffer
     if Prompt == 'bars':
         print (ProgressBars)
         print (Blacklist)
         print (Viruses)
     if Prompt == "deus_ex_machina":
-        MusicManager.play_sound('machine_end.wav')
+        MusicManager.play_sound("MUS", 'end', True)
     if Prompt == Problem:
         Problem = ''
     scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
-    ScrubBuffer += [entry for entry in scrub_list if entry in Prompt]
-        #n1 = n1 + 1
+    ScrubBuffer += [Prompt[-1] for entry in scrub_list if Prompt.startswith(entry)]
 
 def ScrubWrite():
     global ScrubBuffer
     n1 = 0
+    #print(ScrubBuffer)
     for x in range(len(ScrubBuffer)):
         scrub(ScrubBuffer[n1])
         n1 = n1 + 1
@@ -401,35 +408,35 @@ def Progressor():
     global ProblemRate
     global ProgressBars
     global Time
-    for i in range(len(ProgressBars)):
-        if (ProgressBars[i])[2] < Time:
-            #print len(ProgressBars)
-            #print ((ProgressBars[n2])[2])
-            #print (str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
-
-            #if ((ProgressBars[n2])[0])[0:6] == 'Music':
-            #    print ('progressor',ProgressBars[n2])
-
-            Scorekeeper(str((ProgressBars[i])[0]),((ProgressBars[i])[1]))
+    n2 = 0 #Search Pointer
+    #print Time
+    #print ProgressBars
+    n3 = 0
+    for x in range(len(ProgressBars)):
+        if (ProgressBars[n2])[2] < Time:
+   
+            Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
             
-            OldTitle = str((ProgressBars[i])[0])
-            Mag = str((ProgressBars[i])[1])
-            OldTick = int((ProgressBars[i])[2])
-            OldDelay = int((ProgressBars[i])[3])
-            Persistance = int((ProgressBars[i])[4])
+
+            OldTitle = str((ProgressBars[n2])[0])
+            Mag = str((ProgressBars[n2])[1])
+            OldTick = int((ProgressBars[n2])[2])
+            OldDelay = int((ProgressBars[n2])[3])
+            Persistance = int((ProgressBars[n2])[4])
             if Persistance == 1:
                 if OldTitle == 'ProblemTrigger':
                     OldDelay = ProblemRate[0]
-                ProgressBars[i] = (OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
-            else:
+                ProgressBars[n2] = (OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
+            if Persistance == 0:
                 if Mag == 'Deus':
                     OldDelay = 2751
-                    ProgressBars[i] = (OldTitle,'Music',OldTick+OldDelay, OldDelay, Persistance)
+                    ProgressBars[n2] = (OldTitle,'Music',OldTick+OldDelay, OldDelay, Persistance)
                 else:
-                    del ProgressBars[i]
-                    i = i -1
+                    del ProgressBars[n2]
+                    n2 = n2 -1
                 
             #print ProgressBars    
+        n2 = n2 + 1
   
 
 def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
@@ -480,7 +487,7 @@ def KeyPress(event):
         if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
             ServerSelect(AlphaRelate(i))
     if event.keysym == 'Return' and event.keysym not in Blacklist:
-        ServerSelect('Enter')
+        ServerSelect('enter')
     if event.keysym == 'space' and event.keysym not in Blacklist:
         ServerSelect('_')
     if event.keysym == 'parenleft':
@@ -517,21 +524,17 @@ def Scorekeeper(variable,amount):
     
     if variable == 'Music':
         print  (ProgressBars, variable, amount)
-        MusicManager.play_sound(amount)
-
+        MusicManager.play_sound("MUS", amount, True)
 
     if variable == 'ProblemTrigger':
         if len(Problem) > 0:
             Health = Health - 1
         Problem = RandomString(ProblemLength)
-        #print "aaa"
         
     if variable == 'ClearNews':
         News = ''
 
-        
     if variable[0:5] == 'virus':
-        #print(''.join(['done',str(variable[-1])]))
         ScrubBuffer.append(''.join(['done',str(variable[-1])]))
 
     if variable == 'CLEAR':
@@ -711,7 +714,7 @@ def Jitter(jit: int):
     @returns The function `Jitter` returns either -1, 1, or 0 based on the conditions inside the
     function.
     """
-    jitteriness = random.randint(1, jit) # Convert Rate to an integer
+    jitteriness = random.randint(1, int(jit)) # Convert Rate to an integer
     if jitteriness != jit:
         return 0
     return random.choice([-1,1])
@@ -799,15 +802,14 @@ def GameState():
     if GameActive == 0: #Pre-Start
         pass
     if GameActive == 1: #Game
-
         if len(Viruses) == 0:
-            MusicManager.play_sound("QED")
+            MusicManager.play_sound("MUS", "end", False)
             GameActive = 4
         if MaxEnergy < ClickCost:
             GameActive = 2
             ProblemRate = (1000,2000)
         if Health <= 0:
-            MusicManager.play_sound("QED")
+            MusicManager.play_sound("MUS", "end", False)
             GameActive = 3
     if GameActive == 2: #FastDying
         ProblemRate = (1000,2000)
@@ -835,7 +837,7 @@ def scrub(letter):
     #print ('aaa',letter,Blacklist,Viruses)
     if len(letter) == 1:
         Blacklist.append(str(letter))
-        BarAdd(''.join(['virus',str(letter)]),1,int(ScrubLength),0)
+        BarAdd(''.join(['virus',str(letter)]),"1",int(ScrubLength),0)
     else:
         #print (letter,'letter')
         letter_read = str(letter[-1])
@@ -870,14 +872,26 @@ def TOTAL_MAIN():
     global GameActive
     global Time
     global ScrubBuffer
-    GameState()
-    Timekeeper()
-    BarSieve()
-    Progressor()
-    ScrubWrite()
-    DrawMaster()
-    c.after(17, TOTAL_MAIN)
-
+    try:
+        GameState()
+        Timekeeper()
+        BarSieve()
+        Progressor()
+        ScrubWrite()
+        DrawMaster()
+        c.after(17, TOTAL_MAIN)
+    except Exception as e:
+        global ProgressBars
+        global Blacklist
+        global ScrubBuffer
+        print("███████<crash>███████")
+        print("game is crashing... dumping memory to console NOW!")
+        print("Error: ", e)
+        print("Progress Bars: ", ProgressBars)
+        print("Blacklist: ", Blacklist)
+        print("ScrubBuffer: ", ScrubBuffer)
+        print("███████</crash>███████")
+        traceback.print_exc()
 
 if __name__ == "__main__":
     # init    
@@ -909,7 +923,7 @@ if __name__ == "__main__":
 
     
     #Specific programs to be run once on startup.
-    MusicManager.play_sound('machine_intro.wav')
+    MusicManager.play_sound("MUS", 'intro', True)
     TOTAL_MAIN()
 
     #for i in range(ALPHA_END-1-ALPHA_BEGIN):
