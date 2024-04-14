@@ -1,25 +1,14 @@
 import tkinter as tk
-#import subprocess
+import subprocess
 import os
-#import time
+import time
 import random
-#import math
-import playsound
+import winsound
+import math
 import datetime
 from tkinter import *
-from pygame import mixer
 
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
-import enum
-
-
-mixer.init()
-CHANNEL = mixer.Channel(0)
-# --- Sounds ---
-INTRO_SOUND = mixer.Sound('machine_intro.wav')
-MUSIC_SOUND = mixer.Sound('machine_music.wav')
-QED_SOUND = mixer.Sound('machine_end.wav')
-
 
 # --- Config ---
 StartingEnergy = 0 # >=0
@@ -46,14 +35,14 @@ PrevScansShow = False
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
 print(cwd)
-PromptReference = ''.join([cwd,'/SingularityPrompts.txt'])
+PromptReferance = ''.join([cwd,'/SingularityPrompts.txt'])
 ShipRoot = (0,0)
 Energy = 0
 MaxEnergy = 100
 ProblemRate = (0,0)
 ProgressBars = [] #Name, inc/dec amount, time when next tick
 Time = 0
-Jitter = (0,0)
+Gitter = (0,0)
 Prompt = 'aaa'
 Blacklist = []
 Viruses = []
@@ -71,14 +60,11 @@ PrevScans = []
 
 # --- Media ---
 NowPlaying = ''
-Intro = 'machine_intro.wav'
-Music = ''.join([cwd,'/machine_music.wav'])
-QED = ''.join([cwd,'/machine_end.wav'])
+Intro = ''.join([cwd,'/machienintro.wav'])
+Music = ''.join([cwd,'/machinemusic.wav'])
+QED = ''.join([cwd,'/machineend.wav'])
 
 
-# --- CONSTANTS ---
-ALPHA_BEGIN = 97
-ALPHA_END = 124
 
 
 
@@ -94,15 +80,16 @@ def DictRead():
     global Dictionary
     global SimpleDict
     global Prompts
-    global PromptReference
+    global PromptReferance
     Prompts = []
     Dictionary = []
     DictRead = []
     DictDAT = ''
     SimpleDict = []
+    n1 = 0
     print('Reading Data...')
     try:
-        myFile = open(PromptReference, 'r')
+        myFile = open(PromptReferance, 'r')
         DictDAT = myFile.read()
         #print HighDAT
         DictRead = (DictDAT.split('\n')) 
@@ -110,8 +97,9 @@ def DictRead():
         myFile.close()
         Dictionary = DictRead
         #print Dictionary
-        for i in range(len(Dictionary)):
-            Prompts.append((Dictionary[i]).lower())
+        for x in range(len(Dictionary)):
+            Prompts.append((Dictionary[n1]).lower())
+            n1 = n1 + 1
         del Prompts[0]
     except:
         pass
@@ -150,6 +138,7 @@ def CloseAll():
     The CloseAll function stops the game, closes the window, and prints a thank you message.
     """
     global GameActive
+    winsound.PlaySound(None, 0)
     root.destroy()
     GameActive = 0
     print("Thanks for playing!")
@@ -203,10 +192,10 @@ def StartAll():
     MusicManager('Music')
     GameActive = 1
     for x in range(StartingViruses):
-        tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
+        tempString = AlphaRelate(random.randint(1,26))
         while tempString in Viruses:
             #print (tempString in Viruses,tempString,Viruses)
-            tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
+            tempString = AlphaRelate(random.randint(1,26))
         Viruses.append(tempString)
     if DebugMode ==  True:
         print (Viruses)
@@ -239,7 +228,7 @@ def Timekeeper():
     #print milla
     Time = milla
 
-def AlphaRelate(value: int):
+def AlphaRelate(Int):
     """
     The function `AlphaRelate` takes an integer input and returns the corresponding lowercase letter or
     special character based on the input value.
@@ -252,14 +241,67 @@ def AlphaRelate(value: int):
     letter of the alphabet. If the input is 27, it returns an underscore "_". If the input is 28, it
     returns "Enter". For any other input, it returns "NULL". The
     """
-    if (value < 97) or (value > 124):
-        return None
-    result = chr(value)
-    if value == 123:
-        result = '_'
-    elif value == 124:
-        result = 'enter'
-    return result
+    Return = ''
+    if Int == 1:
+        Return = 'a'
+    elif Int == 2:
+        Return = 'b'
+    elif Int == 3:
+        Return = 'c'
+    elif Int == 4:
+        Return = 'd'
+    elif Int == 5:
+        Return = 'e'
+    elif Int == 6:
+        Return = 'f'
+    elif Int == 7:
+        Return = 'g'
+    elif Int == 8:
+        Return = 'h'
+    elif Int == 9:
+        Return = 'i'
+    elif Int == 10:
+        Return = 'j'
+    elif Int == 11:
+        Return = 'k'
+    elif Int == 12:
+        Return = 'l'
+    elif Int == 13:
+        Return = 'm'
+    elif Int == 14:
+        Return = 'n'
+    elif Int == 15:
+        Return = 'o'
+    elif Int == 16:
+        Return = 'p'
+    elif Int == 17:
+        Return = 'q'
+    elif Int == 18:
+        Return = 'r'
+    elif Int == 19:
+        Return = 's'
+    elif Int == 20:
+        Return = 't'
+    elif Int == 21:
+        Return = 'u'
+    elif Int == 22:
+        Return = 'v'
+    elif Int == 23:
+        Return = 'w'
+    elif Int == 24:
+        Return = 'x'
+    elif Int == 25:
+        Return = 'y'
+    elif Int == 26:
+        Return = 'z'
+    elif Int == 27:
+        Return = '_'
+    elif Int == 28:
+        Return = 'Enter'
+    else:
+        Return = 'NULL'
+    Return = Return.lower()
+    return (Return)
 
 def RandomString(length):
     """
@@ -277,8 +319,8 @@ def RandomString(length):
     if len(Prompts) > 0:
         Return = str(random.choice(Prompts))
     else:
-        for _ in range(length):
-            Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-1)))])
+        for x in range(length):
+            Return = ''.join([Return,str(AlphaRelate(random.randint(1,26)))])
     return Return
     
 
@@ -292,16 +334,19 @@ def ClickRegistrar(event):
     """
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
-                                  int(ShipRoot[1])+PlayerSize, 
-                                  int(ShipRoot[0])-PlayerSize, 
-                                  int(ShipRoot[1])-PlayerSize)
-    for n1 in range(ALPHA_BEGIN,ALPHA_END):
-        checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
-        for char in checker:
+    Overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
+    n1 = 1
+    for x in range(28):
+        Checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
+        n2 = 0
+        for x in range(len(Checker)):
             #print Checker
-            if (char in overlaps) and (AlphaRelate(n1) not in Blacklist):
-                ServerSelect(AlphaRelate(n1))
+            if Checker[n2] in Overlaps:
+                #print AlphaRelate(n1)
+                if AlphaRelate(n1) not in Blacklist:
+                    ServerSelect(AlphaRelate(n1))
+            n2 = n2 + 1
+        n1 = n1 + 1
         
 def ServerSelect(tagstring):
     """
@@ -315,8 +360,7 @@ def ServerSelect(tagstring):
     global Energy
     global ClickCost
     global Prompt
-
-
+    
     if (str(tagstring).upper()) == 'ENTER':
         if Energy >= ClickCost:
                 PromptEnter(Prompt)
@@ -334,11 +378,12 @@ def PromptEnter(Prompt):
     to perform different actions based on its value. The function checks the value of `Prompt` and
     executes specific tasks accordingly.
     """
-    #print(Prompt)
+    #print Prompt
     global ProgressBars
     global Problem
     global Blacklist
     global Viruses
+    n1 = 0
     if Prompt == 'bars':
         print (ProgressBars)
         print (Blacklist)
@@ -347,20 +392,33 @@ def PromptEnter(Prompt):
         MusicManager('QED')
     if Prompt == Problem:
         Problem = ''
-    scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
-    for i in range(len(scrub_list)):
-        if scrub_list[i] in Prompt:
-            ScrubBuffer.append(Prompt[-1])
-        #n1 = n1 + 1
+    scrublist = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
+    for x in range(len(scrublist)):
+        if scrublist[n1] in Prompt:
+            ScrubHolder(Prompt[-1])
+        n1 = n1 + 1
 
+def ScrubHolder(add):
+    """
+    The function `ScrubHolder` appends the input parameter `add` to a global list `ScrubBuffer`.
+    @param add - The `add` parameter in the `ScrubHolder` function is the value that will be added to
+    the `ScrubBuffer` list.
+    """
+    global ScrubBuffer
+    ScrubBuffer.append(add)
+    
 def ScrubWrite():
+    """
+    The `ScrubWrite` function iterates over elements in `ScrubBuffer`, applies the `scrub` function to
+    each element, and then clears `ScrubBuffer`.
+    """
     global ScrubBuffer
     n1 = 0
     for x in range(len(ScrubBuffer)):
         scrub(ScrubBuffer[n1])
         n1 = n1 + 1
     ScrubBuffer = []
-
+ 
 def BarSieve():
     """
     The function `BarSieve` iterates through `ProgressBars` to filter out duplicate entries and add
@@ -368,20 +426,22 @@ def BarSieve():
     """
     global ProgressBars
     global GameActive
-    sieve = []
-    for i in range(len(ProgressBars)):
-        if ((ProgressBars[i])[0]) not in sieve:    
-            sieve.append((ProgressBars[i])[0])
-        elif ((ProgressBars[i])[0]) in sieve:
-            del ProgressBars[i]
-            i = i - 1
+    n1 = 0
+    Sieve = []
+    for x in range(len(ProgressBars)):
+        if ((ProgressBars[n1])[0]) not in Sieve:    
+            Sieve.append((ProgressBars[n1])[0])
+        elif ((ProgressBars[n1])[0]) in Sieve:
+            del ProgressBars[n1]
+            n1 = n1 - 1
+        n1 = n1 + 1
         #print Sieve
     if GameActive == 1 or GameActive == 2:          
-        if 'Energy' not in sieve:
+        if 'Energy' not in Sieve:
             BarAdd('Energy',1,str(EnergyRate),1)
-        if 'MaxEnergy' not in sieve:
+        if 'MaxEnergy' not in Sieve:
             BarAdd('MaxEnergy',1,str(MaxEnergyRate),1)
-        if 'ProblemTrigger' not in sieve:
+        if 'ProblemTrigger' not in Sieve:
             BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)  
           
                   
@@ -402,10 +462,10 @@ def Progressor():
             #print len(ProgressBars)
             #print ((ProgressBars[n2])[2])
             #print (str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
-
-            #if ((ProgressBars[n2])[0])[0:6] == 'Music':
-            #    print ('progressor',ProgressBars[n2])
-
+            '''
+            if ((ProgressBars[n2])[0])[0:6] == 'Music':
+                print ('progressor',ProgressBars[n2])
+            '''
             Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
             
 
@@ -449,14 +509,16 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
     global ProgressBars
     global Time 
+    n1 = 0
     n2 = 0
     #print [str(string),magnitude, (int(Time)+int(delay)),delay,persistance]
-    for i in range(len(ProgressBars)):
+    for x in range(len(ProgressBars)):
         #print len(ProgressBars)
-        if (ProgressBars[i])[0] == string:
-            del ProgressBars[i]
+        if (ProgressBars[n1])[0] == string:
+            del ProgressBars[n1]
             n2 = 1
             ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
+        n1 = n1 + 1
     if n2 == 0:
         ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
     #print ProgressBars
@@ -476,16 +538,16 @@ def MusicManager(File):
     global Time
 
     if File == "Intro" and NowPlaying != 'Intro':
-        CHANNEL.play(INTRO_SOUND, -1)
-        #os.system("beep -f %s -l %s" % (Intro, 5))
+        winsound.PlaySound(Intro,
+                    winsound.SND_FILENAME|winsound.SND_ASYNC| winsound.SND_LOOP)
         NowPlaying = "Intro"
     if File == 'Music' and NowPlaying != 'Music':
-        CHANNEL.play(MUSIC_SOUND, -1)
-       # os.system("beep -f %s -l %s" % (Music, 5))
+        winsound.PlaySound(Music,
+                    winsound.SND_FILENAME|winsound.SND_ASYNC| winsound.SND_LOOP)
         NowPlaying = 'Music'
     if File == 'QED' and NowPlaying != "QED":
-        CHANNEL.play(QED_SOUND, 0)
-      #  os.system("beep -f %s -l %s" % (QED, 5))
+        winsound.PlaySound(QED,
+                    winsound.SND_FILENAME|winsound.SND_ASYNC)
         NowPlaying = 'QED'
 
 
@@ -501,10 +563,11 @@ def KeyPress(event):
     #print event.keysym
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    
-    for i in range(ALPHA_BEGIN,ALPHA_END-1):
-        if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
-            ServerSelect(AlphaRelate(i))
+    n1 = 1
+    for x in range(26):
+        if event.keysym == AlphaRelate(n1) and event.keysym not in Blacklist:
+            ServerSelect(AlphaRelate(n1))
+        n1 = n1 + 1
     if event.keysym == 'Return' and event.keysym not in Blacklist:
         ServerSelect('Enter')
     if event.keysym == 'space' and event.keysym not in Blacklist:
@@ -558,7 +621,7 @@ def Scorekeeper(variable,amount):
         
     if variable[0:5] == 'virus':
         #print(''.join(['done',str(variable[-1])]))
-        ScrubBuffer.append(''.join(['done',str(variable[-1])]))
+        ScrubHolder(''.join(['done',str(variable[-1])]))
 
     if variable == 'CLEAR':
         ProgressBars = []
@@ -590,14 +653,16 @@ def MiscDecay():
     global ProgressBars
     global Time
     global GameActive
+    n1 = 0
     EventTime = 0
     Delay = 0
     Output = 1.0
     if GameActive == 1:
-        for i in range(len(ProgressBars)):
-            if str((ProgressBars[i])[0]) == 'ProblemTrigger':
-                EventTime = int((ProgressBars[i])[2])
-                Delay = int((ProgressBars[i])[3])
+        for x in range(len(ProgressBars)):
+            if str((ProgressBars[n1])[0]) == 'ProblemTrigger':
+                EventTime = int((ProgressBars[n1])[2])
+                Delay = int((ProgressBars[n1])[3])
+            n1 = n1 + 1
         Output = float((float(EventTime)-float(Time))/float(Delay))
         #print Output
         Output = (Output*-1.0) + 1.0
@@ -667,21 +732,29 @@ def ColorManager(string):
     global Time
     global PrevScans
     global PrevScansShow
-    result = 'white'
+    n1 = 0
+    n2 = 0
+    Return = 'white'
     if string == 'ProblemDecay':
-        for i in range(len(ProgressBars)):
-            if (ProgressBars[i])[0] == 'ProblemTrigger':
-                result = ColCyc(((ProgressBars[i])[2]),
-                                ((ProgressBars[i])[3]))   
+        n1 = 0
+        for x in range(len(ProgressBars)):
+            if (ProgressBars[n1])[0] == 'ProblemTrigger':
+                Return = ColCyc(((ProgressBars[n1])[2]),((ProgressBars[n1])[3]))
+            n1 = n1 + 1       
+    n1 = 0       
     if len(string) == 1:
-        blacklisted_char_count = Blacklist.count(string) 
-        if blacklisted_char_count != 0:
-            result = 'red'
-        elif string in PrevScans and PrevScansShow == True:
-            result = 'grey'
+        for x in range(len(Blacklist)):
+            if string == Blacklist[n1]:
+                n2 = n2 + 1
+            n1 = n1 + 1      
+        if n2 > 0:
+            Return = 'red'
         else:
-            result = 'white'
-    return result
+            if string in PrevScans and PrevScansShow == True:
+                Return = 'grey'
+            else:
+                Return = 'white'
+    return Return
     
 def DrawServers():
     """
@@ -692,16 +765,17 @@ def DrawServers():
     global CanvasHeight
     global CanvasWidth
     global cwd
-    OhSevenFlash = Image.open('079Flash.jpg')
+    OhSevenFlash = Image.open((''.join([cwd,'\\','079Flash.jpg'])))
     c.image = ImageTk.PhotoImage(OhSevenFlash)
     
     n2 = 1
-    n3 = ALPHA_BEGIN
-    for _ in range(4):
+    n3 = 1
+    for x in range(4):
         Height = CanvasHeight/10
         Height = Height * n2
         n2 = n2 + 1
-        for n1 in range(1,7):
+        n1 = 1
+        for x in range(6):
             Width = CanvasWidth/7.5
             Width = Width * n1
             Holder = random.randint(1,500)
@@ -744,10 +818,10 @@ def Jitter(Rate):
     """
     pointer = random.randint(1, int(Rate)) # Convert Rate to an integer
     if pointer == Rate:
-        Jitter = random.choice([-1,1])
+        Gitter = random.choice([-1,1])
     else:
-        Jitter = 0
-    return Jitter
+        Gitter = 0
+    return Gitter
     
 def DrawMaster():
     """
@@ -759,7 +833,7 @@ def DrawMaster():
     global CanvasWidth
     global Energy
     global MaxEnergy
-    global Jitter
+    global Gitter
     global Prompt
     global News
     global Health
@@ -811,7 +885,7 @@ def DrawMaster():
     c.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
     c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
     c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
-    c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
+    c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(1,26))),font=('Inhuman BB', 12))  
                   
                       
 def GameState():
@@ -871,19 +945,19 @@ def scrub(letter):
         BarAdd(''.join(['virus',str(letter)]),1,int(ScrubLength),0)
     else:
         #print (letter,'letter')
-        letter_read = str(letter[-1])
+        letterread = str(letter[-1])
         if letter[0:4] == 'done':
             #print (Blacklist,'blacklist')
-            #print (letter_read, 'letterred')
-            if letter_read not in PrevScans:
-                PrevScans.append(str(letter_read))
+            #print (letterread, 'letterred')
+            if letterread not in PrevScans:
+                PrevScans.append(str(letterread))
                 #print PrevScans
-            if letter_read in Viruses:
-                Viruses.remove(letter_read)
-                News = ''.join(['Virus Found in ', letter_read, '!'])
+            if letterread in Viruses:
+                Viruses.remove(letterread)
+                News = ''.join(['Virus Found in ', letterread, '!'])
                 BarAdd('ClearNews',0,3000,0)
-            if letter_read in Blacklist:
-                Blacklist.remove(letter_read)
+            if letterread in Blacklist:
+                Blacklist.remove(letterread)
 
     #print ('bbb',letter,Blacklist,Viruses)
 
@@ -902,52 +976,49 @@ def TOTAL_MAIN():
     """
     global GameActive
     global Time
-    global ScrubBuffer
     GameState()
     Timekeeper()
     BarSieve()
     Progressor()
     ScrubWrite()
     DrawMaster()
-    c.after(17, TOTAL_MAIN)
-
-
-if __name__ == "__main__":
-    # init    
-    root = tk.Tk()
-
-    root.bind('<Key>', KeyPress)
-    root.title('Singularity')
-    root.configure(bg='#000000')
-
-    #Make Canvas
-    c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
-    c.bind('<Motion>', motion)
-    c.bind('<ButtonPress>', ClickRegistrar)
-    c.pack(pady=10)
-    c.config(cursor="none")
-
-    OhSevenFlash = ImageTk.PhotoImage(file='079Flash.jpg')
-    c.create_image(500,500,image=OhSevenFlash)
-
-    # button with text closing window
-    b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100) )
-    b1.pack(padx=5, pady=10, side='right')
-
-    #Create start/menu button
-    b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100) )
-    b2.pack(padx=5, pady=10, side='left')
-
-
-    
-    #Specific programs to be run once on startup.
-    MusicManager('Intro')
-    TOTAL_MAIN()
+    c.after(1, TOTAL_MAIN)
 
 
 
-    #for i in range(ALPHA_END-1-ALPHA_BEGIN):
-    #    print(''.join([str(i),str(AlphaRelate(i+ALPHA_BEGIN))]))
+# init    
+root = tk.Tk()
 
-    # "start the engine"
-    root.mainloop()
+root.bind('<Key>', KeyPress)
+root.title('Singluarity')
+root.configure(bg='#000000')
+
+#Make Canvas
+c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
+c.bind('<Motion>', motion)
+c.bind('<ButtonPress>', ClickRegistrar)
+c.pack(pady=10)
+c.config(cursor="none")
+
+OhSevenFlash = ImageTk.PhotoImage(file=(''.join([cwd,'\\','079Flash.jpg'])))
+c.create_image(500,500,image=OhSevenFlash)
+
+# button with text closing window
+b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100) )
+b1.pack(padx=5, pady=10, side='right')
+
+#Create start/menu button
+b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100) )
+b2.pack(padx=5, pady=10, side='left')
+
+
+
+#Specific programs to be run once on startup.
+MusicManager('Intro')
+TOTAL_MAIN()
+
+
+
+
+# "start the engine"
+root.mainloop()
