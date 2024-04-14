@@ -12,13 +12,17 @@ from pygame import mixer
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import enum
 
-
-mixer.init()
-CHANNEL = mixer.Channel(0)
 # --- Sounds ---
-INTRO_SOUND = mixer.Sound('machine_intro.wav')
-MUSIC_SOUND = mixer.Sound('machine_music.wav')
-QED_SOUND = mixer.Sound('machine_end.wav')
+NowPlaying = ''
+mixer.init()
+CHANNEL_MUS = mixer.Channel(0)
+CHANNEL_BG = mixer.Channel(1)
+CHANNEL_SFX = mixer.Channel(2)
+MUS_INTRO = mixer.Sound('intro.ogg')
+MUS_MAIN = mixer.Sound('phase1.ogg')
+MUS_QED = mixer.Sound('end.ogg')
+BG_CHUG = mixer.Sound('chug.ogg')
+SFX_DEUS = mixer.Sound('deus_ex_machina.ogg')
 
 
 # --- Config ---
@@ -67,23 +71,9 @@ Prompts = []
 Dictionary = []
 PrevScans = []
 
-
-
-# --- Media ---
-NowPlaying = ''
-Intro = 'machine_intro.wav'
-Music = ''.join([cwd,'/machine_music.wav'])
-QED = ''.join([cwd,'/machine_end.wav'])
-
-
 # --- CONSTANTS ---
 ALPHA_BEGIN = 97
 ALPHA_END = 124
-
-
-
-
-
 
 def DictRead():
     """
@@ -344,7 +334,7 @@ def PromptEnter(Prompt):
         print (Blacklist)
         print (Viruses)
     if Prompt == "deus_ex_machina":
-        MusicManager('QED')
+        CHANNEL_SFX.play(SFX_DEUS, 0)
     if Prompt == Problem:
         Problem = ''
     scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
@@ -476,15 +466,15 @@ def MusicManager(File):
     global Time
 
     if File == "Intro" and NowPlaying != 'Intro':
-        CHANNEL.play(INTRO_SOUND, -1)
+        CHANNEL_MUS.play(MUS_INTRO, -1)
         #os.system("beep -f %s -l %s" % (Intro, 5))
         NowPlaying = "Intro"
     if File == 'Music' and NowPlaying != 'Music':
-        CHANNEL.play(MUSIC_SOUND, -1)
+        CHANNEL_MUS.play(MUS_MAIN, -1)
        # os.system("beep -f %s -l %s" % (Music, 5))
         NowPlaying = 'Music'
     if File == 'QED' and NowPlaying != "QED":
-        CHANNEL.play(QED_SOUND, 0)
+        CHANNEL_MUS.play(MUS_QED, 0)
       #  os.system("beep -f %s -l %s" % (QED, 5))
         NowPlaying = 'QED'
 
@@ -942,6 +932,7 @@ if __name__ == "__main__":
     
     #Specific programs to be run once on startup.
     MusicManager('Intro')
+    CHANNEL_BG.play(BG_CHUG, -1)
     TOTAL_MAIN()
 
 
