@@ -93,10 +93,10 @@ pyglet.resource.add_font('multivac-ghost.ttf')
 pyglet.resource.add_font('multivac-interference.ttf')
 
 
-Inhuman = font.load('inhuman')
-Inhuman_I = font.load('inhuman_ital')
-Ghost = font.load('ghost')
-Interference = font.load('interference')
+Inhuman = pyglet.font.load('inhuman')
+Inhuman_I = pyglet.font.load('inhuman_ital')
+Ghost = pyglet.font.load('ghost')
+Interference = pyglet.font.load('interference')
 
 class SoundManager:
     mixer.init()
