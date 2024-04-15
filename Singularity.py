@@ -29,6 +29,7 @@ BinaryBG: bool = True
 ProblemType: str = "String" # Prompts or String
 DebugMode: bool = False
 PrevScansShow: bool = False
+IsFullscreen: bool = True
 
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
@@ -442,6 +443,11 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
         ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
     #print ProgressBars
 
+def ToggleFullscreen() -> None:
+    global IsFullscreen
+    IsFullscreen = not IsFullscreen
+    root.attributes('-fullscreen',IsFullscreen)
+
 def KeyPress(event):
     """
     The function `KeyPress` handles key press events in Python, checking for specific key presses and
@@ -451,13 +457,16 @@ def KeyPress(event):
     attribute of the event to determine which key was pressed. The function then performs certain
     actions based on the key
     """
-    #print event.keysym
     global Blacklist
+    global IsFullscreen
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    
+    if event.keysym == 'Control_L':
+        IsFullscreen = not IsFullscreen
+        root.attributes('-fullscreen',IsFullscreen)
     for i in range(ALPHA_BEGIN,ALPHA_END-1):
-        if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
+        if event.keysym not in Blacklist and event.keysym == AlphaRelate(i):
             ServerSelect(AlphaRelate(i))
+
     if event.keysym == 'Return' and event.keysym not in Blacklist:
         ServerSelect('enter')
     if event.keysym == 'space' and event.keysym not in Blacklist:
@@ -466,6 +475,8 @@ def KeyPress(event):
         ServerSelect('(')
     if event.keysym == 'parenright':
         ServerSelect(')')
+        
+    
     
 def Scorekeeper(variable,amount):
     """
@@ -869,9 +880,10 @@ if __name__ == "__main__":
     root = tk.Tk()
 
     root.bind('<Key>', KeyPress)
+    root.bind('Alt',ToggleFullscreen)
     root.title('Singularity')
     root.configure(bg='#000000') # set the window background to black
-    root.state('zoomed') # start the program zoomed in
+    root.attributes('-fullscreen',IsFullscreen) # start the program zoomed in
     root.bind('<Configure>', resize_canvas) # every time the window is changed (in this case resized), do something
     root.wm_iconphoto(True, tk.PhotoImage(file=(ResourcePrefix()+"assets/icon.png"))) # set the taskbar icon to a file
 
