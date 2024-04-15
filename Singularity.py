@@ -871,7 +871,7 @@ if __name__ == "__main__":
     root.bind('<Key>', KeyPress)
     root.title('Singularity')
     root.configure(bg='#000000') # set the window background to black
-    root.state('zoomed') # start the program zoomed in
+  #  root.state('zoomed') # start the program zoomed in
     root.bind('<Configure>', resize_canvas) # every time the window is changed (in this case resized), do something
     root.wm_iconphoto(True, tk.PhotoImage(file=(ResourcePrefix()+"assets/icon.png"))) # set the taskbar icon to a file
 
