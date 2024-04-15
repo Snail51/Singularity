@@ -73,6 +73,7 @@ def ResourcePrefix() -> str:
 
 # --- FONTS ---
 prefix = ResourcePrefix()
+font.init()
 Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
 Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
 Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
