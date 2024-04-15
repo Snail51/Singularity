@@ -713,7 +713,7 @@ def DrawMaster():
     if BinaryBG == True:
         if GameActive != 3:
             WallTemp = ""
-            for x in range(6000):
+            for x in range(9999):
                 WallTemp = ''.join([WallTemp,(random.choice(["0","1"]))])
         if GameActive == 3:
             c.create_text(CanvasWidth/2+Jitter(JitterRate/50)*5,CanvasHeight/2+Jitter(JitterRate/50)*5,fill="#00004f",text=WallTemp, width=CanvasWidth,font=(16))
@@ -851,12 +851,26 @@ def TOTAL_MAIN():
         print("███████</crash>███████")
         traceback.print_exc()
 
+def update_canvas_size(event):
+    """
+    Update the canvas size to take up the top 80% of the window.
+    """
+    #print(event)
+    global CanvasWidth
+    global CanvasHeight
+    CanvasWidth = root.winfo_width()
+    CanvasHeight = root.winfo_height()
+    print(CanvasWidth, CanvasHeight)
+    new_height = CanvasHeight * 0.9
+    c.config(height=new_height, width=CanvasWidth)
+
 if __name__ == "__main__":
     # init    
     root = tk.Tk()
 
     root.bind('<Key>', KeyPress)
     root.title('Singularity')
+    root.bind('<Configure>', update_canvas_size)
     root.configure(bg='#000000')
 
 
@@ -865,14 +879,8 @@ if __name__ == "__main__":
     c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
     c.bind('<Motion>', motion)
     c.bind('<ButtonPress>', ClickRegistrar)
-    c.pack(pady=10)
+    c.pack(pady=10, fill='both', expand=True)
     c.config(cursor="none")
-
-    prefix = ""
-    if os.path.isdir('_internal'):
-        prefix = "_internal/assets/"
-    else:
-        prefix = "assets/"
 
     OhSevenFlash = ImageTk.PhotoImage(file=ResourcePrefix()+'assets/079Flash.jpg')
     c.create_image(500,500,image=OhSevenFlash)
