@@ -4,6 +4,9 @@ import os
 import random
 import traceback
 import datetime
+import pyglet
+from pyglet import font
+from pyglet import resource
 from pygame import mixer
 from pygame import font
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
@@ -74,11 +77,26 @@ def ResourcePrefix() -> str:
 # --- FONTS ---
 prefix = ResourcePrefix()
 font.init()
-Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
-Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
-Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
-Interference = font.Font(prefix + "exe/multivac-interference.ttf")
+#Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
+#Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
+#Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
+#Interference = font.Font(prefix + "exe/multivac-interference.ttf")
 
+# Going to insert new font management stuff here
+
+pyglet.resource.add_directory('~/./exe')
+#technically this should add everything but I'll be explicit just in case
+
+pyglet.resource.add_font('InhumanBB.ttf')
+pyglet.resource.add_font('InhumanBB_ital.ttf')
+pyglet.resource.add_font('multivac-ghost.ttf')
+pyglet.resource.add_font('multivac-interference.ttf')
+
+
+Inhuman = font.load('inhuman')
+Inhuman_I = font.load('inhuman_ital')
+Ghost = font.load('ghost')
+Interference = font.load('interference')
 
 class SoundManager:
     mixer.init()
