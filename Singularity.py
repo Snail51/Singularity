@@ -18,7 +18,7 @@ MaxEnergyRate = 5000
 MaxEnergyCap = 200
 JitterRate = 200
 ScrubLength = 5000
-StartingHealth = 3
+StartingHealth = 10
 StartingViruses: int = 5 # <= 26
 StartingProblemRate: Tuple = (10000,20000)
 ProblemLength: int = 6
