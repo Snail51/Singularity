@@ -5,6 +5,7 @@ import random
 import traceback
 import datetime
 from pygame import mixer
+from pygame import font
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
 
@@ -52,6 +53,7 @@ Prompts = []
 Dictionary = []
 PrevScans = []
 
+
 # --- CONSTANTS ---
 ALPHA_BEGIN = 97
 ALPHA_END = 124
@@ -65,9 +67,17 @@ def ResourcePrefix() -> str:
     return `"_internal/assets/"`, otherwise it will return `"assets/"`.
     """
     if os.path.isdir('_internal'):
-        return "_internal/assets/"
+        return "_internal/"
     else:
-        return "assets/"
+        return ""
+
+# --- FONTS ---
+prefix = ResourcePrefix()
+Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
+Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
+Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
+Interference = font.Font(prefix + "exe/multivac-interference.ttf")
+
 
 class SoundManager:
     mixer.init()
@@ -79,15 +89,15 @@ class SoundManager:
         "SFX"   : mixer.Channel(2)
     }
     sound_dict: Dict[ str, mixer.Sound ] = {
-        "intro"     : mixer.Sound(prefix + "intro.ogg"),
-        "phase1"    : mixer.Sound(prefix + "phase1.ogg"),
-        "phase2"    : mixer.Sound(prefix + "phase2.ogg"),
-        "phase3"    : mixer.Sound(prefix + "phase3.ogg"),
-        "end"       : mixer.Sound(prefix + "end.ogg"),
-        "chug"      : mixer.Sound(prefix + "chug.ogg"),
-        "deus"      : mixer.Sound(prefix + "deus_ex_machina.ogg"),
-        "die"       : mixer.Sound(prefix + "die.ogg"),
-        "silence"   : mixer.Sound(prefix + "silence.ogg")
+        "intro"     : mixer.Sound(prefix + "assets/intro.ogg"),
+        "phase1"    : mixer.Sound(prefix + "assets/phase1.ogg"),
+        "phase2"    : mixer.Sound(prefix + "assets/phase2.ogg"),
+        "phase3"    : mixer.Sound(prefix + "assets/phase3.ogg"),
+        "end"       : mixer.Sound(prefix + "assets/end.ogg"),
+        "chug"      : mixer.Sound(prefix + "assets/chug.ogg"),
+        "deus"      : mixer.Sound(prefix + "assets/deus_ex_machina.ogg"),
+        "die"       : mixer.Sound(prefix + "assets/die.ogg"),
+        "silence"   : mixer.Sound(prefix + "assets/silence.ogg")
     }
 
     """
@@ -623,7 +633,7 @@ def DrawServers():
     global CanvasWidth
     global cwd
 
-    OhSevenFlash = Image.open(ResourcePrefix() + '079Flash.jpg')
+    OhSevenFlash = Image.open(ResourcePrefix() + 'assets/079Flash.jpg')
     c.image = ImageTk.PhotoImage(OhSevenFlash)
     
     n2 = 1
@@ -848,6 +858,8 @@ if __name__ == "__main__":
     root.title('Singularity')
     root.configure(bg='#000000')
 
+
+
     #Make Canvas
     c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
     c.bind('<Motion>', motion)
@@ -861,7 +873,7 @@ if __name__ == "__main__":
     else:
         prefix = "assets/"
 
-    OhSevenFlash = ImageTk.PhotoImage(file=ResourcePrefix()+'079Flash.jpg')
+    OhSevenFlash = ImageTk.PhotoImage(file=ResourcePrefix()+'assets/079Flash.jpg')
     c.create_image(500,500,image=OhSevenFlash)
 
     # button with text closing window
