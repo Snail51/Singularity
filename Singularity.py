@@ -32,7 +32,6 @@ PrevScansShow: bool = False
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
 print(cwd)
-PromptReference: str = ''.join([cwd,'/SingularityPrompts.txt'])
 ShipRoot: Tuple = (0,0)
 Energy = 0
 MaxEnergy = 100
@@ -57,25 +56,31 @@ PrevScans = []
 ALPHA_BEGIN = 97
 ALPHA_END = 124
 
+def ResourcePrefix():
+    if os.path.isdir('_internal'):
+        return "_internal/assets/"
+    else:
+        return "assets/"
+
 class SoundManager:
     mixer.init()
+    prefix = ResourcePrefix()
 
     channel_dict: Dict[ str, mixer.Channel ] = {
         "MUS"   : mixer.Channel(0),
         "BG"    : mixer.Channel(1),
         "SFX"   : mixer.Channel(2)
     }
-            # Map literals to pg sound objects
     sound_dict: Dict[ str, mixer.Sound ] = {
-        "intro"     : mixer.Sound("intro.ogg"),
-        "phase1"    : mixer.Sound("phase1.ogg"),
-        "phase2"    : mixer.Sound("phase2.ogg"),
-        "phase3"    : mixer.Sound("phase3.ogg"),
-        "end"       : mixer.Sound("end.ogg"),
-        "chug"      : mixer.Sound("chug.ogg"),
-        "deus"      : mixer.Sound("deus_ex_machina.ogg"),
-        "die"       : mixer.Sound("die.ogg"),
-        "silence"   : mixer.Sound("silence.ogg")
+        "intro"     : mixer.Sound(prefix + "intro.ogg"),
+        "phase1"    : mixer.Sound(prefix + "phase1.ogg"),
+        "phase2"    : mixer.Sound(prefix + "phase2.ogg"),
+        "phase3"    : mixer.Sound(prefix + "phase3.ogg"),
+        "end"       : mixer.Sound(prefix + "end.ogg"),
+        "chug"      : mixer.Sound(prefix + "chug.ogg"),
+        "deus"      : mixer.Sound(prefix + "deus_ex_machina.ogg"),
+        "die"       : mixer.Sound(prefix + "die.ogg"),
+        "silence"   : mixer.Sound(prefix + "silence.ogg")
     }
 
     """
@@ -94,38 +99,6 @@ class SoundManager:
         target_channel.play(target_sound, -1 if loop else 0)
         return True
     
-def DictRead() -> None:
-    """
-    The function DictRead reads data from a file, converts it into a dictionary, and stores prompts in a
-    list.
-    """
-    #Open and convert
-    global Dictionary
-    global SimpleDict
-    global Prompts
-    global PromptReference
-    Prompts = []
-    Dictionary = []
-    DictRead = []
-    DictDAT = ''
-    SimpleDict = []
-    print('Reading Data...')
-    try:
-        myFile = open(PromptReference, 'r')
-        DictDAT = myFile.read()
-        #print HighDAT
-        DictRead = (DictDAT.split('\n')) 
-        #print DictRead
-        myFile.close()
-        Dictionary = DictRead
-        #print Dictionary
-        for i in range(len(Dictionary)):
-            Prompts.append((Dictionary[i]).lower())
-        del Prompts[0]
-    except:
-        pass
-    print(Prompts)
-
 # --- functions ---    
 def clearCanvas() -> None:
     """
@@ -642,7 +615,8 @@ def DrawServers():
     global CanvasHeight
     global CanvasWidth
     global cwd
-    OhSevenFlash = Image.open('079Flash.jpg')
+
+    OhSevenFlash = Image.open(ResourcePrefix() + '079Flash.jpg')
     c.image = ImageTk.PhotoImage(OhSevenFlash)
     
     n2 = 1
@@ -874,7 +848,13 @@ if __name__ == "__main__":
     c.pack(pady=10)
     c.config(cursor="none")
 
-    OhSevenFlash = ImageTk.PhotoImage(file='079Flash.jpg')
+    prefix = ""
+    if os.path.isdir('_internal'):
+        prefix = "_internal/assets/"
+    else:
+        prefix = "assets/"
+
+    OhSevenFlash = ImageTk.PhotoImage(file=ResourcePrefix()+'079Flash.jpg')
     c.create_image(500,500,image=OhSevenFlash)
 
     # button with text closing window
