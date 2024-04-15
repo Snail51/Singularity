@@ -713,7 +713,7 @@ def DrawMaster():
     if BinaryBG == True:
         if GameActive != 3:
             WallTemp = ""
-            for x in range(6000):
+            for x in range(9999):
                 WallTemp = ''.join([WallTemp,(random.choice(["0","1"]))])
         if GameActive == 3:
             c.create_text(CanvasWidth/2+Jitter(JitterRate/50)*5,CanvasHeight/2+Jitter(JitterRate/50)*5,fill="#00004f",text=WallTemp, width=CanvasWidth,font=(16))
@@ -729,17 +729,17 @@ def DrawMaster():
         #Draw Text
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/1.03)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.65)+Jitter(JitterRate/25)),text=str(Prompt),font = ('Inhuman BB', 48), fill='red', justify='center',anchor='n')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='center',anchor='n')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1.15)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='center',anchor='n')
+        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.65)+Jitter(JitterRate/25)),text=str(Prompt),font = ('Inhuman BB', 48), fill='red', justify='center',anchor='c')
+        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='center',anchor='c')
+        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1.15)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='center',anchor='c')
         c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/1.03)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
-        c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='n',justify='center')
-        c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='n', justify='center')
+        c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
+        c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
     if GameActive == 4:
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64))
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.1+Jitter(JitterRate)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='n', justify='center')   
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/2.5+Jitter(JitterRate)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='n', justify='center')   
+        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4.5+Jitter(JitterRate)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64),anchor='c', justify='center')
+        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.1+Jitter(JitterRate)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/2.5+Jitter(JitterRate)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='c', justify='center')   
                     
     #Draw Player
     c.delete('ship')
@@ -851,13 +851,29 @@ def TOTAL_MAIN():
         print("███████</crash>███████")
         traceback.print_exc()
 
+def resize_canvas(event) -> None:
+    """
+    Update the canvas size to take up the top 90% of the window.
+    This function is called every time the window is updated for any reason
+    (Window resizes count as a reason)
+    In the future it may be prudent to do nothing during events where the window size stays the same
+    """
+    global CanvasWidth
+    global CanvasHeight
+    CanvasWidth = root.winfo_width()
+    CanvasHeight = root.winfo_height() * 0.9
+    c.config(height=CanvasHeight, width=CanvasWidth)
+
 if __name__ == "__main__":
     # init    
     root = tk.Tk()
 
     root.bind('<Key>', KeyPress)
     root.title('Singularity')
-    root.configure(bg='#000000')
+    root.configure(bg='#000000') # set the window background to black
+    root.state('zoomed') # start the program zoomed in
+    root.bind('<Configure>', resize_canvas) # every time the window is changed (in this case resized), do something
+    root.wm_iconphoto(True, tk.PhotoImage(file=(ResourcePrefix()+"assets/icon.png"))) # set the taskbar icon to a file
 
 
 
@@ -865,14 +881,8 @@ if __name__ == "__main__":
     c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
     c.bind('<Motion>', motion)
     c.bind('<ButtonPress>', ClickRegistrar)
-    c.pack(pady=10)
+    c.pack(pady=10, fill='both', expand=True)
     c.config(cursor="none")
-
-    prefix = ""
-    if os.path.isdir('_internal'):
-        prefix = "_internal/assets/"
-    else:
-        prefix = "assets/"
 
     OhSevenFlash = ImageTk.PhotoImage(file=ResourcePrefix()+'assets/079Flash.jpg')
     c.create_image(500,500,image=OhSevenFlash)
