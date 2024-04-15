@@ -851,9 +851,12 @@ def TOTAL_MAIN():
         print("███████</crash>███████")
         traceback.print_exc()
 
-def update_canvas_size(event):
+def resize_canvas(event) -> None:
     """
     Update the canvas size to take up the top 90% of the window.
+    This function is called every time the window is updated for any reason
+    (Window resizes count as a reason)
+    In the future it may be prudent to do nothing during events where the window size stays the same
     """
     global CanvasWidth
     global CanvasHeight
@@ -867,11 +870,10 @@ if __name__ == "__main__":
 
     root.bind('<Key>', KeyPress)
     root.title('Singularity')
-    root.bind('<Configure>', update_canvas_size)
-    root.configure(bg='#000000')
-    root.state('zoomed')
-    print(ResourcePrefix()+"assets/icon.png")
-    root.wm_iconphoto(True, tk.PhotoImage(file=(ResourcePrefix()+"assets/icon.png")))
+    root.configure(bg='#000000') # set the window background to black
+    root.state('zoomed') # start the program zoomed in
+    root.bind('<Configure>', resize_canvas) # every time the window is changed (in this case resized), do something
+    root.wm_iconphoto(True, tk.PhotoImage(file=(ResourcePrefix()+"assets/icon.png"))) # set the taskbar icon to a file
 
 
 
