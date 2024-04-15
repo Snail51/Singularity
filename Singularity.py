@@ -18,7 +18,7 @@ MaxEnergyRate = 5000
 MaxEnergyCap = 200
 JitterRate = 200
 ScrubLength = 5000
-StartingHealth = 10
+StartingHealth = 3
 StartingViruses: int = 5 # <= 26
 StartingProblemRate: Tuple = (10000,20000)
 ProblemLength: int = 6
@@ -74,7 +74,8 @@ class SoundManager:
         "end"       : mixer.Sound("end.ogg"),
         "chug"      : mixer.Sound("chug.ogg"),
         "deus"      : mixer.Sound("deus_ex_machina.ogg"),
-        "die"       : mixer.Sound("die.ogg")
+        "die"       : mixer.Sound("die.ogg"),
+        "silence"   : mixer.Sound("silence.ogg")
     }
 
     """
@@ -170,6 +171,7 @@ def StartLogic():
     else:
         GameActive = 0
         SoundManager.play_sound("MUS", "intro", True)
+        SoundManager.play_sound("BG", 'chug', True)
 
 def StartAll():
     """
@@ -781,6 +783,7 @@ def GameState():
             ProblemRate = (1000,2000)
         if Health <= 0:
             SoundManager.play_sound("MUS", "die", False)
+            SoundManager.play_sound("BG", "silence", False)
             GameActive = 3
     if GameActive == 2: #FastDying
         ProblemRate = (1000,2000)
