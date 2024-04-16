@@ -10,10 +10,19 @@ from pygame import font
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
 
-# --- Config ---
-StartingEnergy = 0 # >=0
-StartingMaxEnergy = 100
-ClickCost = 25 # <= StartingMaxEnergy
+from dataclasses import dataclass, field
+
+
+@dataclass
+class ProgressBar:
+    title: str = field(default_factory = str)
+    magnitude: int = field(default_factory = int)
+    delay: int = field(default = 0)
+    ticks: int = field(default = 0)
+    persistance: int = field(default = 0)
+
+
+# --- Global Variables ---
 PlayerSize = 20
 EnergyRate = 100
 MaxEnergyRate = 5000
@@ -28,8 +37,9 @@ CanvasWidth: int = 1000
 CanvasHeight: int = 700
 BinaryBG: bool = True
 ProblemType: str = "String" # Prompts or String
-DebugMode: bool = False
+
 PrevScansShow: bool = False
+Health: int = 0
 
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
@@ -38,15 +48,15 @@ ShipRoot: Tuple = (0,0)
 Energy = 0
 MaxEnergy = 100
 ProblemRate = (0,0)
-ProgressBars = [] #Name, inc/dec amount, time when next tick
+ProgressBars: List[ProgressBar] = [] #Name, inc/dec amount, time when next tick
 Time = 0
 Jitter = (0,0)
-Prompt = 'aaa'
-Blacklist = []
-Viruses = []
-News = 'bbb'
-Problem = 'ccc'
-Health = 0
+Prompt: str = 'aaa'
+Blacklist: List[str] = []
+Viruses: List[str] = []
+News: str = 'bbb'
+Problem: str = 'ccc'
+Health:int = 0
 ScrubBuffer = []
 GameActive = 0
 SimpleDict = []
@@ -55,9 +65,20 @@ Dictionary = []
 PrevScans = []
 
 
-# --- CONSTANTS ---
+
+# --- Constants ---
 ALPHA_BEGIN = 97
 ALPHA_END = 124
+STARTING_ENERGY = 0 # <= 0
+MAX_STARTING_ENERGY = 100 #
+MAX_ENERGY_CAP = 5000
+CLICK_COST = 25 <= MAX_STARTING_ENERGY
+DEBUG_MODE = False
+
+
+
+
+
 
 def ResourcePrefix() -> str:
     """
@@ -79,6 +100,7 @@ Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
 Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
 Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
 Interference = font.Font(prefix + "exe/multivac-interference.ttf")
+
 
 
 class SoundManager:
@@ -184,11 +206,9 @@ def StartAll():
     global ProgressBars
     global Blacklist
     global StartingProblemRate
-    global DebugMode
     Blacklist = []
     ProblemRate = StartingProblemRate
     ProgressBars = []
-    PrevScans = []
     Problem = ''
     Prompt = ''
     News = ''
@@ -196,18 +216,18 @@ def StartAll():
     tempString = ''
     Health = StartingHealth
     Scorekeeper('CLEAR',0)
-    BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
-    BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
-    BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
+    BarAdd('Energy',1,EnergyRate,1) #Title, Magnitude,Tick Delay, Persistance.
+    BarAdd('MaxEnergy',-1,MaxEnergyRate,1)
+    BarAdd('ProblemTrigger',1,random.randint(ProblemRate[0],ProblemRate[1]),1)
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
-    for x in range(StartingViruses):
+    for _ in range(StartingViruses):
         tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
         while tempString in Viruses:
             #print (tempString in Viruses,tempString,Viruses)
             tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
         Viruses.append(tempString)
-    if DebugMode ==  True:
+    if DEBUG_MODE is True:
         print (Viruses)
     
 def Timekeeper():
@@ -233,7 +253,7 @@ def Timekeeper():
 
         Time = milla
 
-def AlphaRelate(value: int) -> None | str :
+def AlphaRelate(value: int) -> str | None:
     """
     The function `AlphaRelate` takes an integer input and returns the corresponding lowercase letter or
     special character based on the input value.
@@ -271,7 +291,6 @@ def RandomString(length) -> str:
     if len(Prompts) > 0:
         Return = str(random.choice(Prompts))
     else:
-        for _ in range(length):
             Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2)))])
     return Return
     
@@ -306,15 +325,11 @@ def ServerSelect(tagstring: str) -> None:
     then call
     """
     global Energy
-    global ClickCost
     global Prompt
-    if tagstring == 'enter':
-        if Energy >= ClickCost:
-            PromptEnter(Prompt)
-            Prompt = ''
-            Energy = Energy - ClickCost
-        else:
-            pass
+    if tagstring == 'enter' and Energy >= CLICK_COST:
+        PromptEnter(Prompt)
+        Prompt = ''
+        Energy = Energy - CLICK_COST
     else:
         Prompt = ''.join([str(Prompt),str(tagstring)])
 
@@ -343,37 +358,39 @@ def PromptEnter(Prompt):
     scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
     ScrubBuffer += [Prompt[-1] for entry in scrub_list if Prompt.startswith(entry)]
 
-def ScrubWrite():
+def ScrubWrite() -> None:
     global ScrubBuffer
-    n1 = 0
     #print(ScrubBuffer)
-    for x in range(len(ScrubBuffer)):
-        scrub(ScrubBuffer[n1])
-        n1 = n1 + 1
+    for i in range(len(ScrubBuffer)):
+        scrub(ScrubBuffer[i])
     ScrubBuffer = []
 
-def BarSieve():
+def BarSieve() -> None:
     """
     The function `BarSieve` iterates through `ProgressBars` to filter out duplicate entries and add
     specific bars if they are not already present.
     """
     global ProgressBars
     global GameActive
+
     sieve = []
-    for i in range(len(ProgressBars)):
-        if ((ProgressBars[i])[0]) not in sieve:    
-            sieve.append((ProgressBars[i])[0])
-        elif ((ProgressBars[i])[0]) in sieve:
+    for i, bar in enumerate(ProgressBars):
+        if bar.title not in sieve:    
+            sieve.append(bar.title)
+        
+        # This one might need more bounds checking. We can decrement i when it is 0, but we'd 
+        # never be warned because we can index negative numbers in Python (it accesses entries in reverse)
+        else:
             del ProgressBars[i]
             i = i - 1
-        #print Sieve
+
     if GameActive == 1 or GameActive == 2:          
         if 'Energy' not in sieve:
-            BarAdd('Energy',1,str(EnergyRate),1)
+            BarAdd('Energy',1,EnergyRate,1)
         if 'MaxEnergy' not in sieve:
-            BarAdd('MaxEnergy',1,str(MaxEnergyRate),1)
+            BarAdd('MaxEnergy',1,MaxEnergyRate,1)
         if 'ProblemTrigger' not in sieve:
-            BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)  
+            BarAdd('ProblemTrigger',1,random.randint(ProblemRate[0],ProblemRate[1]),1)  
                         
 def Progressor():
     """
@@ -383,36 +400,23 @@ def Progressor():
     global ProblemRate
     global ProgressBars
     global Time
-    n2 = 0 #Search Pointer
-    #print Time
-    #print ProgressBars
-    n3 = 0
-    for x in range(len(ProgressBars)):
-        if (ProgressBars[n2])[2] < Time:
-   
-            Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
+    for i, bar in enumerate(ProgressBars):
+        if bar.delay >= Time:
+            continue
+        Scorekeeper(bar.title,bar.magnitude)
+        magnitude = bar.magnitude
+        if bar.persistance == 1 and bar.title == 'ProblemTrigger':
+            ProgressBars[i].delay = ProblemRate[0]
+        if bar.persistance == 0:
+            if bar.magnitude == 'Deus':
+                magnitude = 'Music'
+                ProgressBars[i].delay = 2751 + bar.tick
+            else:
+                del ProgressBars[i]
+                i = i -1
+        ProgressBars[i].magnitude = magnitude
 
-            OldTitle = str((ProgressBars[n2])[0])
-            Mag = str((ProgressBars[n2])[1])
-            OldTick = int((ProgressBars[n2])[2])
-            OldDelay = int((ProgressBars[n2])[3])
-            Persistance = int((ProgressBars[n2])[4])
-            if Persistance == 1:
-                if OldTitle == 'ProblemTrigger':
-                    OldDelay = ProblemRate[0]
-                ProgressBars[n2] = (OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
-            if Persistance == 0:
-                if Mag == 'Deus':
-                    OldDelay = 2751
-                    ProgressBars[n2] = (OldTitle,'Music',OldTick+OldDelay, OldDelay, Persistance)
-                else:
-                    del ProgressBars[n2]
-                    n2 = n2 -1
-                
-            #print ProgressBars    
-        n2 = n2 + 1
-  
-def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
+def BarAdd(title: str, magnitude: float, delay: int, persistance: float): #Create a new progress bar
     """
     The function `BarAdd` creates a new progress bar and manages its properties in a list called
     `ProgressBars`.
@@ -431,16 +435,21 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
     global ProgressBars
     global Time 
-    n2 = 0
-    #print [str(string),magnitude, (int(Time)+int(delay)),delay,persistance]
-    for i in range(len(ProgressBars)):
-        #print len(ProgressBars)
-        if (ProgressBars[i])[0] == string:
-            del ProgressBars[i]
-            n2 = 1
-            ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
-    if n2 == 0:
-        ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
+    found = False
+    
+    progress_bar = ProgressBar(title=title, 
+                               magnitude=magnitude,
+                               delay= Time + delay,
+                               ticks=delay,
+                               persistance=persistance)
+    for i, bar in enumerate(ProgressBars):
+        if bar.title == title:
+            del ProgressBars[i] # "del" might not be necessary here. Enumerate would probably handle these better,
+                                # (because we would need to decrement i, see last comment) but I'm not sure what this does
+            found = True
+            ProgressBars.insert(0,progress_bar)
+    if found is False:
+        ProgressBars.insert(0,progress_bar)
     #print ProgressBars
 
 def KeyPress(event):
@@ -483,8 +492,6 @@ def Scorekeeper(variable,amount):
     """
     global Energy
     global MaxEnergy
-    global StartingEnergy
-    global StartingMaxEnergy
     global ProgressBars
     global EnergyRate
     global MaxEnergyRate
@@ -512,8 +519,8 @@ def Scorekeeper(variable,amount):
 
     if variable == 'CLEAR':
         ProgressBars = []
-        Energy = StartingEnergy
-        MaxEnergy = StartingMaxEnergy
+        Energy = STARTING_ENERGY
+        MaxEnergy = MAX_STARTING_ENERGY
 
     
     #UPDATE
@@ -541,10 +548,10 @@ def MiscDecay():
     Delay = 0
     Output = 1.0
     if GameActive == 1:
-        for i in range(len(ProgressBars)):
-            if str((ProgressBars[i])[0]) == 'ProblemTrigger':
-                EventTime = int((ProgressBars[i])[2])
-                Delay = int((ProgressBars[i])[3])
+        for bar in ProgressBars:
+            if bar.title == 'ProblemTrigger':
+                EventTime = bar.delay
+                Delay = bar.ticks
         Output = float((float(EventTime)-float(Time))/float(Delay))
         #print Output
         Output = (((Output*-1.0) + 1.0) * 5)
@@ -614,10 +621,10 @@ def ColorManager(string):
     global PrevScansShow
     result = 'white'
     if string == 'ProblemDecay':
-        for i in range(len(ProgressBars)):
-            if (ProgressBars[i])[0] == 'ProblemTrigger':
-                result = ColCyc(((ProgressBars[i])[2]),
-                                ((ProgressBars[i])[3]))   
+        for bar in ProgressBars:
+            if bar.title == 'ProblemTrigger':
+                result = ColCyc(bar.delay,
+                                bar.ticks)
     elif len(string) == 1:
         if Blacklist.count(string)  != 0:
             result = 'red'
@@ -758,34 +765,29 @@ def GameState():
     global GameActive
     global Health
     global Energy
-    global ClickCost
     global ProblemRate
     global MaxEnergy
     global Viruses
-    if MaxEnergy < ClickCost and GameActive ==1:
-        GameActive = 2
-    if GameActive == 0: #Pre-Start
-        pass
-    if GameActive == 1: #Game
-        if len(Viruses) == 0:
-            SoundManager.play_sound("MUS", "end", False)
-            SoundManager.play_sound("SFX", 'deus', False)
-            GameActive = 4
-        if MaxEnergy < ClickCost:
-            GameActive = 2
-            ProblemRate = (1000,2000)
-        if Health <= 0:
-            SoundManager.play_sound("MUS", "die", False)
-            SoundManager.play_sound("BG", "silence", False)
-            GameActive = 3
-    if GameActive == 2: #FastDying
-        ProblemRate = (1000,2000)
-        if Health <= 0:
-            GameActive = 3
-    if GameActive == 3: #Dead
-        pass
-    if GameActive == 4: #Win
-        pass       
+    match (GameActive): 
+        case (1):
+            if MaxEnergy < CLICK_COST:
+                GameActive = 2
+        case (2):
+            if len(Viruses) == 0:
+                SoundManager.play_sound("MUS", "end", False)
+                SoundManager.play_sound("SFX", 'deus', False)
+                GameActive = 4
+            if MaxEnergy < CLICK_COST:
+                GameActive = 2
+                ProblemRate = (1000,2000)
+            if Health <= 0:
+                SoundManager.play_sound("MUS", "die", False)
+                SoundManager.play_sound("BG", "silence", False)
+                GameActive = 3
+        case (3): pass
+        case(4): pass
+        case(5): pass
+
 
 # --- Game Commands ---
 def scrub(letter):
