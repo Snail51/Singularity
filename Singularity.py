@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 @dataclass
 class ProgressBar:
     title: str = field(default_factory = str)
-    magnitude: int = field(default_factory = int)
+    magnitude: str = field(default_factory = str)
     delay: int = field(default = 0)
     ticks: int = field(default = 0)
     persistance: int = field(default = 0)
@@ -25,8 +25,6 @@ class ProgressBar:
 # --- Global Variables ---
 PlayerSize = 20
 EnergyRate = 100
-MaxEnergyRate = 5000
-MaxEnergyCap = 200
 JitterRate = 200
 ScrubLength = 5000
 StartingHealth = 10
@@ -71,7 +69,8 @@ ALPHA_BEGIN = 97
 ALPHA_END = 124
 STARTING_ENERGY = 0 # <= 0
 MAX_STARTING_ENERGY = 100 #
-MAX_ENERGY_CAP = 5000
+MAX_ENERGY_RATE = 5000
+MAX_ENERGY_CAP = 200
 CLICK_COST = 25 <= MAX_STARTING_ENERGY
 DEBUG_MODE = False
 
@@ -193,7 +192,6 @@ def StartAll():
     including creating a list of viruses and adding progress bars.
     """
     global EnergyRate
-    global MaxEnergyRate
     global Viruses
     global StartingViruses
     global ProblemRate
@@ -217,7 +215,7 @@ def StartAll():
     Health = StartingHealth
     Scorekeeper('CLEAR',0)
     BarAdd('Energy',1,EnergyRate,1) #Title, Magnitude,Tick Delay, Persistance.
-    BarAdd('MaxEnergy',-1,MaxEnergyRate,1)
+    BarAdd('MaxEnergy',-1,MAX_ENERGY_RATE,1)
     BarAdd('ProblemTrigger',1,random.randint(ProblemRate[0],ProblemRate[1]),1)
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
@@ -291,7 +289,8 @@ def RandomString(length) -> str:
     if len(Prompts) > 0:
         Return = str(random.choice(Prompts))
     else:
-            Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2)))])
+        Return = ''.join([Return,
+        str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2)))])
     return Return
     
 def ClickRegistrar(event):
@@ -380,7 +379,7 @@ def BarSieve() -> None:
         
         # This one might need more bounds checking. We can decrement i when it is 0, but we'd 
         # never be warned because we can index negative numbers in Python (it accesses entries in reverse)
-        else:
+        elif bar.title in sieve:
             del ProgressBars[i]
             i = i - 1
 
@@ -388,7 +387,7 @@ def BarSieve() -> None:
         if 'Energy' not in sieve:
             BarAdd('Energy',1,EnergyRate,1)
         if 'MaxEnergy' not in sieve:
-            BarAdd('MaxEnergy',1,MaxEnergyRate,1)
+            BarAdd('MaxEnergy',1,MAX_ENERGY_RATE,1)
         if 'ProblemTrigger' not in sieve:
             BarAdd('ProblemTrigger',1,random.randint(ProblemRate[0],ProblemRate[1]),1)  
                         
@@ -404,19 +403,24 @@ def Progressor():
         if bar.delay >= Time:
             continue
         Scorekeeper(bar.title,bar.magnitude)
-        magnitude = bar.magnitude
-        if bar.persistance == 1 and bar.title == 'ProblemTrigger':
-            ProgressBars[i].delay = ProblemRate[0]
+
+        bar.delay = bar.delay + bar.ticks
+        old_delay = bar.ticks
+        if bar.persistance == 1:
+            if bar.title == 'ProblemTrigger':
+                old_delay = ProblemRate[0]
+            ProgressBars[i].delay = old_delay + bar.delay    
+
         if bar.persistance == 0:
             if bar.magnitude == 'Deus':
-                magnitude = 'Music'
-                ProgressBars[i].delay = 2751 + bar.tick
+                
+                ProgressBars[i].magnitude = "Music"
+                ProgressBars[i].delay = 2751 + bar.delay
             else:
                 del ProgressBars[i]
-                i = i -1
-        ProgressBars[i].magnitude = magnitude
+                i = i - 1 
 
-def BarAdd(title: str, magnitude: float, delay: int, persistance: float): #Create a new progress bar
+def BarAdd(title: str, magnitude: str, delay: int, persistance: int): #Create a new progress bar
     """
     The function `BarAdd` creates a new progress bar and manages its properties in a list called
     `ProgressBars`.
@@ -439,7 +443,7 @@ def BarAdd(title: str, magnitude: float, delay: int, persistance: float): #Creat
     
     progress_bar = ProgressBar(title=title, 
                                magnitude=magnitude,
-                               delay= Time + delay,
+                               delay= int(Time) + int(delay),
                                ticks=delay,
                                persistance=persistance)
     for i, bar in enumerate(ProgressBars):
@@ -448,7 +452,7 @@ def BarAdd(title: str, magnitude: float, delay: int, persistance: float): #Creat
                                 # (because we would need to decrement i, see last comment) but I'm not sure what this does
             found = True
             ProgressBars.insert(0,progress_bar)
-    if found is False:
+    if not found:
         ProgressBars.insert(0,progress_bar)
     #print ProgressBars
 
@@ -494,8 +498,6 @@ def Scorekeeper(variable,amount):
     global MaxEnergy
     global ProgressBars
     global EnergyRate
-    global MaxEnergyRate
-    global MaxEnergyCap
     global Blacklist
     global News
     global Problem
@@ -526,9 +528,9 @@ def Scorekeeper(variable,amount):
     #UPDATE
     if variable == 'Energy':
         Energy = Energy + int(amount)
-    if variable == 'MaxEnergy' and MaxEnergy < MaxEnergyCap:
+    if variable == 'MaxEnergy' and MaxEnergy < MAX_ENERGY_CAP:
         MaxEnergy = MaxEnergy + int(amount)
-        if MaxEnergy >= MaxEnergyCap:
+        if MaxEnergy >= MAX_ENERGY_CAP:
             BarAdd('Energy', 1, EnergyRate/2)
 
     # LIMITS
@@ -768,11 +770,9 @@ def GameState():
     global ProblemRate
     global MaxEnergy
     global Viruses
+    
     match (GameActive): 
-        case (1):
-            if MaxEnergy < CLICK_COST:
-                GameActive = 2
-        case (2):
+        case 1:
             if len(Viruses) == 0:
                 SoundManager.play_sound("MUS", "end", False)
                 SoundManager.play_sound("SFX", 'deus', False)
@@ -784,9 +784,12 @@ def GameState():
                 SoundManager.play_sound("MUS", "die", False)
                 SoundManager.play_sound("BG", "silence", False)
                 GameActive = 3
-        case (3): pass
-        case(4): pass
-        case(5): pass
+        case 2:
+            ProblemRate = (1000,2000)
+            if Health <= 0:
+                GameActive = 3
+                
+        case _: pass
 
 
 # --- Game Commands ---
