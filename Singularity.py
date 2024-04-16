@@ -118,6 +118,17 @@ class SoundManager:
         target_channel.play(target_sound, -1 if loop else 0)
         return True
     
+    """
+    @function set_volume Adjusts all channel's volumes to,
+    the given value between 0.0  and 1.0.
+    """
+    @classmethod
+    def set_volume(cls, val: int) -> None:
+        volume = int(val) / 100
+        for mixer in cls.channel_dict.values():
+            mixer.set_volume(volume)
+        
+    
 # --- functions ---    
 def clearCanvas() -> None:
     """
@@ -728,12 +739,12 @@ def DrawMaster():
         #Draw Servers
         DrawServers()
         #Draw Text
-        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/1.03)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.65)+Jitter(JitterRate/25)),text=str(Prompt),font = ('Inhuman BB', 48), fill='red', justify='center',anchor='n')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='center',anchor='n')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1.15)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='center',anchor='n')
-        c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/1.03)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
+        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.4)+Jitter(JitterRate/25)),text=str(Prompt),font = ('Inhuman BB', 48), fill='red', justify='center',anchor='n')
+        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.2)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='center',anchor='n')
+        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='center',anchor='n')
+        c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
@@ -807,14 +818,10 @@ def scrub(letter):
         Blacklist.append(str(letter))
         BarAdd(''.join(['virus',str(letter)]),"1",int(ScrubLength),0)
     else:
-        #print (letter,'letter')
         letter_read = str(letter[-1])
         if letter[0:4] == 'done':
-            #print (Blacklist,'blacklist')
-            #print (letter_read, 'letterred')
             if letter_read not in PrevScans:
                 PrevScans.append(str(letter_read))
-                #print PrevScans
             if letter_read in Viruses:
                 Viruses.remove(letter_read)
                 News = ''.join(['Virus Found in ', letter_read, '!'])
@@ -862,7 +869,7 @@ def resize_canvas(event) -> None:
     global CanvasWidth
     global CanvasHeight
     CanvasWidth = root.winfo_width()
-    CanvasHeight = root.winfo_height() * 0.9
+    CanvasHeight = root.winfo_height() * 0.8
     c.config(height=CanvasHeight, width=CanvasWidth)
 
 if __name__ == "__main__":
@@ -886,23 +893,32 @@ if __name__ == "__main__":
     c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
     c.bind('<Motion>', motion)
     c.bind('<ButtonPress>', ClickRegistrar)
-    c.pack(pady=10, fill='both', expand=True)
+    c.pack(pady=10, fill='both', expand=True, anchor="n")
     c.config(cursor="none")
 
     OhSevenFlash = ImageTk.PhotoImage(file=ResourcePrefix()+'assets/079Flash.jpg')
     c.create_image(500,500,image=OhSevenFlash)
 
     # button with text closing window
-    b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100) )
+    b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100), bg="gray20", fg="white")
     b1.pack(padx=5, pady=10, side='right')
 
     #Create start/menu button
-    b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100) )
+    b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100), bg="gray20", fg="white")
     b2.pack(padx=5, pady=10, side='left')
+
+    #Create volume slider
+    slider_label = tk.Label(root, text="Volume", background="black", fg="white")
+    slider_label.pack()
+    slider_value = tk.DoubleVar(value=50)
+    slider_length = root.winfo_screenwidth() * 0.25
+    volume_slider = tk.Scale(root, from_=0, to=100, orient=tk.HORIZONTAL, command=SoundManager.set_volume, length=slider_length, variable=slider_value, troughcolor='grey20', sliderlength=20, background="white", showvalue=False)
+    volume_slider.pack(anchor="n", side="top")
 
     #Specific programs to be run once on startup.
     SoundManager.play_sound("MUS", 'intro', True)
     SoundManager.play_sound("BG", 'chug', True)
+    SoundManager.set_volume(50)
     TOTAL_MAIN()
 
     # "start the engine"
