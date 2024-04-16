@@ -54,6 +54,7 @@ Prompts = []
 Dictionary = []
 PrevScans = []
 PromptTicker = ""
+WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
 
 
 # --- CONSTANTS ---
@@ -727,19 +728,19 @@ def DrawMaster():
     global GameActive
     global Viruses
     global BinaryBG
-    global WallTemp
+    global BinaryWall
+    global WallSource
     global PromptTicker
+    global Time
 
     clearCanvas()
     if BinaryBG == True:
         if GameActive != 3:
-            WallTemp = ""
-            for x in range(9999):
-                WallTemp = ''.join([WallTemp,(random.choice(["0","1"]))])
-        if GameActive == 3:
-            c.create_text(CanvasWidth/2+Jitter(JitterRate/50)*5,CanvasHeight/2+Jitter(JitterRate/50)*5,fill="#00004f",text=WallTemp, width=CanvasWidth,font=(16))
-        else:
-            c.create_text(CanvasWidth/2,CanvasHeight/2,fill="#2f2f2f",text=WallTemp, width=CanvasWidth,font=(16))
+            BinaryWall = WallSource[Time%1024:].ljust(len(WallSource), "0")
+        if GameActive == 3: #BLUE SCREEN OF DEATH
+            c.create_text(-100, -100, fill="#00004f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
+        else: #NORMAL GAMEPLAY
+            c.create_text(-100, -100, fill="#2f2f2f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
     
     if GameActive == 0:
         c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Singularity',font=('Inhuman BB', 64))
