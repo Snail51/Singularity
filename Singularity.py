@@ -853,14 +853,19 @@ def TOTAL_MAIN():
     global GameActive
     global Time
     global ScrubBuffer
+    
     try:
-        GameState()
         Timekeeper()
+        preFrame = Time #the time at the start of this frame
+        GameState()
         BarSieve()
         Progressor()
         ScrubWrite()
         DrawMaster()
-        c.after(17, TOTAL_MAIN)
+        Timekeeper()
+        postFrame = Time # the time at the end of the frame
+        frameWait=max(0,17-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
+        c.after(frameWait, TOTAL_MAIN)
     except Exception as e:
         global ProgressBars
         global Blacklist
@@ -873,6 +878,7 @@ def TOTAL_MAIN():
         print("ScrubBuffer: ", ScrubBuffer)
         print("███████</crash>███████")
         traceback.print_exc()
+    
 
 def resize_canvas(event) -> None:
     """
