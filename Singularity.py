@@ -750,7 +750,7 @@ def DrawMaster():
         #Draw Text
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
+        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.15)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
