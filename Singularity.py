@@ -26,7 +26,7 @@ StartingProblemRate: Tuple = (10000,20000)
 ProblemLength: int = 6
 CanvasWidth: int = 1000
 CanvasHeight: int = 700
-BinaryBG: bool = True
+UseBinaryBG: bool = True
 ProblemType: str = "String" # Prompts or String
 DebugMode: bool = False
 PrevScansShow: bool = False
@@ -727,14 +727,14 @@ def DrawMaster():
     global Problem
     global GameActive
     global Viruses
-    global BinaryBG
+    global UseBinaryBG
     global BinaryWall
     global WallSource
     global PromptTicker
     global Time
 
     clearCanvas()
-    if BinaryBG == True:
+    if UseBinaryBG == True:
         if GameActive != 3:
             BinaryWall = WallSource[Time%1024:].ljust(len(WallSource), "0")
         if GameActive == 3: #BLUE SCREEN OF DEATH
@@ -865,6 +865,7 @@ def TOTAL_MAIN():
         Timekeeper()
         postFrame = Time # the time at the end of the frame
         frameWait=max(0,17-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
+        #print(postFrame-preFrame)
         c.after(frameWait, TOTAL_MAIN)
     except Exception as e:
         global ProgressBars
