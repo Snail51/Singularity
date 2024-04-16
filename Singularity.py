@@ -128,6 +128,103 @@ class SoundManager:
         for mixer in cls.channel_dict.values():
             mixer.set_volume(volume)
         
+class GameCanvas(tk.Canvas):
+    def __init__(self, *args, **kwargs):
+        
+        super().__init__(*args,**kwargs)
+
+        self.font_lg = ('Inhuman BB', 64)
+        self.font_sm = ('Inhuman BB', 24)
+    
+    def ClearCanvas(self):
+        super().delete('all')
+
+    def DrawInitMenu(self) -> None:
+
+        upper_text_coords: Tuple[float] = (
+            CanvasWidth/2+Jitter(JitterRate), 
+            CanvasHeight/4+Jitter(JitterRate))
+        lower_text_coords: Tuple[float] = (
+            CanvasWidth/2+Jitter(JitterRate), 
+            CanvasHeight/3.25+Jitter(JitterRate))
+        
+        #adjusted_
+        c.create_text(upper_text_coords,
+                      fill='white',
+                      text='Singularity',
+                      font=self.font_lg)
+        c.create_text(lower_text_coords,
+                      fill='white',
+                      text='A typing management game',
+                      font=self.font_sm)
+        
+    def Draw(self) -> None:
+        """
+        The `DrawMaster` function in Python is responsible for drawing various elements on the canvas based
+        on the current state of the game, including text, player ship, servers, and background.
+        """
+
+        clearCanvas()
+        #if BinaryBG == True:
+        if GameActive != 3:
+            WallTemp = ""
+            for _ in range(9999):
+                WallTemp = ''.join([WallTemp,(random.choice(["0","1"]))])
+        if GameActive == 3:
+            c.create_text(CanvasWidth/2+Jitter(JitterRate/50)*5,CanvasHeight/2+Jitter(JitterRate/50)*5,fill="#00004f",text=WallTemp, width=CanvasWidth,font=(16))
+        else:
+            c.create_text(CanvasWidth/2,CanvasHeight/2,fill="#2f2f2f",text=WallTemp, width=CanvasWidth,font=(16))
+        
+        if GameActive == 0:
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Singularity',font=('Inhuman BB', 64))
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.25+Jitter(JitterRate)),fill='white',text='A typing management game',font=('Inhuman BB', 24))
+        if GameActive == 1 or GameActive == 2:
+            #Draw Servers
+            DrawServers()
+            #Draw Text
+            self.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),
+                             text = "Energy: %f / %f" % (), 
+                             font = self.font_sm, 
+                             fill = 'white', 
+                             justify = 'left',
+                             anchor ='w')
+            self.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),
+                              ((CanvasHeight/20)+Jitter(JitterRate))),
+                             text="Viruses Remaining: %d" % len(Viruses), 
+                             font=self.font_sm, 
+                             fill='white', 
+                             justify='left',
+                             anchor='w')
+            self.create_text(
+                ((CanvasWidth/2)+Jitter(JitterRate/25),
+                 (CanvasHeight/1.4)+Jitter(JitterRate/25)),
+                 text=str(Prompt),
+                 font = ('Inhuman BB', 48), 
+                 fill='red', 
+                 justify='center',
+                 anchor='n')
+            self.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.2)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='center',anchor='n')
+            self.create_text(((CanvasWidth/2)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='center',anchor='n')
+            self.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
+        if GameActive == 3:
+            self.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
+            self.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
+        if GameActive == 4:
+            self.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4.5+Jitter(JitterRate)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64),anchor='c', justify='center')
+            self.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.1+Jitter(JitterRate)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+            self.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/2.5+Jitter(JitterRate)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+                        
+        #Draw Player
+        self.delete('ship')
+        self.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
+        self.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
+        self.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
+        self.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
+              
+
+
+    #def __init__(self, master: tk.Misc | None = None, cnf: Dict[str, tk.Any] | None = ..., *, background: str = ..., bd: str | float = 0, bg: str = ..., border: str | float = 0, borderwidth: str | float = 0, closeenough: float = 1, confine: bool = True, cursor: str | Tuple[str] | Tuple[str] | Tuple[str] | Tuple[str] = "", height: str | float = ..., highlightbackground: str = ..., highlightcolor: str = ..., highlightthickness: str | float = ..., insertbackground: str = ..., insertborderwidth: str | float = 0, insertofftime: int = 300, insertontime: int = 600, insertwidth: str | float = 2, name: str = ..., offset=..., relief: Literal['raised'] | Literal['sunken'] | Literal['flat'] | Literal['ridge'] | Literal['solid'] | Literal['groove'] = "flat", scrollregion: Tuple[str | float] | Tuple[Never] = ..., selectbackground: str = ..., selectborderwidth: str | float = 1, selectforeground: str = ..., state: Literal['normal'] | Literal['disabled'] = "normal", takefocus: bool | Callable[[str], bool | None] | Literal[0] | Literal[1] | Literal[''] = "", width: str | float = ..., xscrollcommand: str | Callable[[float, float], object] = "", xscrollincrement: str | float = 0, yscrollcommand: str | Callable[[float, float], object] = "", yscrollincrement: str | float = 0) -> None:
+        #super().__init__(master, cnf, background=background, bd=bd, bg=bg, border=border, borderwidth=borderwidth, closeenough=closeenough, confine=confine, cursor=cursor, height=height, highlightbackground=highlightbackground, highlightcolor=highlightcolor, highlightthickness=highlightthickness, insertbackground=insertbackground, insertborderwidth=insertborderwidth, insertofftime=insertofftime, insertontime=insertontime, insertwidth=insertwidth, name=name, offset=offset, relief=relief, scrollregion=scrollregion, selectbackground=selectbackground, selectborderwidth=selectborderwidth, selectforeground=selectforeground, state=state, takefocus=takefocus, width=width, xscrollcommand=xscrollcommand, xscrollincrement=xscrollincrement, yscrollcommand=yscrollcommand, yscrollincrement=yscrollincrement)
     
 # --- functions ---    
 def clearCanvas() -> None:
@@ -722,15 +819,15 @@ def DrawMaster():
     global WallTemp
 
     clearCanvas()
-    if BinaryBG == True:
-        if GameActive != 3:
-            WallTemp = ""
-            for x in range(9999):
-                WallTemp = ''.join([WallTemp,(random.choice(["0","1"]))])
-        if GameActive == 3:
-            c.create_text(CanvasWidth/2+Jitter(JitterRate/50)*5,CanvasHeight/2+Jitter(JitterRate/50)*5,fill="#00004f",text=WallTemp, width=CanvasWidth,font=(16))
-        else:
-            c.create_text(CanvasWidth/2,CanvasHeight/2,fill="#2f2f2f",text=WallTemp, width=CanvasWidth,font=(16))
+    #if BinaryBG == True:
+    if GameActive != 3:
+        WallTemp = ""
+        for _ in range(9999):
+            WallTemp = ''.join([WallTemp,(random.choice(["0","1"]))])
+    if GameActive == 3:
+        c.create_text(CanvasWidth/2+Jitter(JitterRate/50)*5,CanvasHeight/2+Jitter(JitterRate/50)*5,fill="#00004f",text=WallTemp, width=CanvasWidth,font=(16))
+    else:
+        c.create_text(CanvasWidth/2,CanvasHeight/2,fill="#2f2f2f",text=WallTemp, width=CanvasWidth,font=(16))
     
     if GameActive == 0:
         c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Singularity',font=('Inhuman BB', 64))
@@ -890,7 +987,11 @@ if __name__ == "__main__":
 
 
     #Make Canvas
-    c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
+    c = GameCanvas(master=root, 
+                   width=CanvasWidth, 
+                   height=CanvasHeight, 
+                   bg='#000000',
+                   highlightthickness=0)
     c.bind('<Motion>', motion)
     c.bind('<ButtonPress>', ClickRegistrar)
     c.pack(pady=10, fill='both', expand=True, anchor="n")
