@@ -21,7 +21,8 @@ a backspace key. It costs 25 energy to press enter and what you type can do vari
 
 Typing any alias of the scan command, ('scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean'), followed
 by a character will execute the process of investigating that server, and, if a virus is found within, destroying
-it. The command will investigate whatever the last character of the provided entry is. 
+it. The command will investigate whatever the last character of the provided entry is.
+!!You can investigate any number of server simultaneously!!
 
 NOTE: While a server is investigated, the user will not be able to type the corresponding key.
 
