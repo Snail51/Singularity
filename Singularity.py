@@ -53,6 +53,7 @@ SimpleDict = []
 Prompts = []
 Dictionary = []
 PrevScans = []
+PromptTicker = ""
 
 
 # --- CONSTANTS ---
@@ -210,6 +211,7 @@ def StartAll():
     BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
     BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
     BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
+    BarAdd('PromptTicker', 0, 666, 1)
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
     for x in range(StartingViruses):
@@ -394,9 +396,10 @@ def Progressor():
     global ProblemRate
     global ProgressBars
     global Time
+    global PromptTicker
     n2 = 0 #Search Pointer
     #print Time
-    #print ProgressBars
+    #print(ProgressBars)
     n3 = 0
     for x in range(len(ProgressBars)):
         if (ProgressBars[n2])[2] < Time:
@@ -411,6 +414,11 @@ def Progressor():
             if Persistance == 1:
                 if OldTitle == 'ProblemTrigger':
                     OldDelay = ProblemRate[0]
+                if OldTitle == 'PromptTicker':
+                    if PromptTicker == "":
+                        PromptTicker = "|"
+                    else:
+                        PromptTicker = ""
                 ProgressBars[n2] = (OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
             if Persistance == 0:
                 if Mag == 'Deus':
@@ -720,6 +728,7 @@ def DrawMaster():
     global Viruses
     global BinaryBG
     global WallTemp
+    global PromptTicker
 
     clearCanvas()
     if BinaryBG == True:
@@ -741,9 +750,9 @@ def DrawMaster():
         #Draw Text
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.4)+Jitter(JitterRate/25)),text='C:\>' + str(Prompt) + '_',font = ('Inhuman BB', 48), fill='red', justify='center',anchor='n')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25),(CanvasHeight/1.2)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='center',anchor='n')
-        c.create_text(((CanvasWidth/2)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='center',anchor='n')
+        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
+        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.15)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
+        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
