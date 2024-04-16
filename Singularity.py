@@ -773,10 +773,11 @@ def GameState():
     global ProblemRate
     global MaxEnergy
     global Viruses
+    global News
     if MaxEnergy < ClickCost and GameActive ==1:
         GameActive = 2
     if GameActive == 0: #Pre-Start
-        pass
+        BarAdd('ClearNews',0,100,0)
     if GameActive == 1: #Game
         if len(Viruses) == 0:
             SoundManager.play_sound("MUS", "end", False)
@@ -784,18 +785,22 @@ def GameState():
             GameActive = 4
         if MaxEnergy < ClickCost:
             GameActive = 2
-            ProblemRate = (1000,2000)
         if Health <= 0:
             SoundManager.play_sound("MUS", "die", False)
             SoundManager.play_sound("BG", "silence", False)
             GameActive = 3
     if GameActive == 2: #FastDying
-        ProblemRate = (1000,2000)
+        ProblemRate = (2000,3000)
+        News = 'Out of Energy! Accepting fate...'
         if Health <= 0:
             GameActive = 3
+            SoundManager.play_sound("MUS", "die", False)
+            SoundManager.play_sound("BG", "silence", False)
     if GameActive == 3: #Dead
+        BarAdd('ClearNews',0,100,0)
         pass
     if GameActive == 4: #Win
+        BarAdd('ClearNews',0,100,0)
         pass       
 
 # --- Game Commands ---
