@@ -1,6 +1,8 @@
 {
     "docwriter.style": "JSDoc",
     "cSpell.words": [
+        "padx",
+        "pady",
         "Progressor",
         "pygame"
     ]
