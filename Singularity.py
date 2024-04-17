@@ -75,19 +75,8 @@ def ResourcePrefix() -> str:
         return ""
 
 class Alphabet:
-    special_chars: Dict[ str, str ] = {
-        '!': 'excl',
-        '@': 'at',
-        '#': 'hash',
-        '$': 'dollar',
-        '%': 'percent',
-        '=': 'equals',
-        '?': 'question',
-        '*': 'asterisk',
-    }
     alphabet="abcdefghijklmnopqrstuvwxyz_~1234567890!@#$%=?*"
-    
-    sound_dict: Dict[ str, mixer.Sound ] = {
+    special_chars: Dict[ str, str ] = {
         '!': 'excl',
         '@': 'at',
         '#': 'hash',
@@ -109,7 +98,7 @@ class Alphabet:
  
     @classmethod
     def Escape(cls, unescaped: str) -> str:
-        return cls.sound_dict.get(unescaped, unescaped)
+        return cls.special_chars.get(unescaped, unescaped)
     
     @classmethod
     def SafeChar(cls) -> str:
