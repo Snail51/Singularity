@@ -75,7 +75,7 @@ def ResourcePrefix() -> str:
         return ""
 
 class Alphabet:
-    alphabet="abcdefghijklmnopqrstuvwxyz_~1234567890!@#$%=?*"
+    alphabet="abcdefghijklmnopqrstuvwxyz1234567890!@#$%=?*_~"
     special_chars: Dict[ str, str ] = {
         '!': 'excl',
         '@': 'at',
@@ -85,15 +85,14 @@ class Alphabet:
         '=': 'equals',
         '?': 'question',
         '*': 'asterisk',
+        '~': "Return"
     }
 
     @classmethod
     def Relate(cls, index: int) -> str:
         if(index < 0) or (index > 45):
-            return None
+            return "+"
         result = cls.alphabet[index]
-        if(result == "~"):
-            result = "enter"
         return result
  
     @classmethod
@@ -304,16 +303,18 @@ def ClickRegistrar(event):
     """
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
-                                  int(ShipRoot[1])+PlayerSize, 
-                                  int(ShipRoot[0])-PlayerSize, 
-                                  int(ShipRoot[1])-PlayerSize)
-    for n1 in range(ALPHA_BEGIN,ALPHA_END):
-        checker = c.find_withtag(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n1))]))
+    overlaps = c.find_overlapping(int(ShipRoot[0])+1,
+                                  int(ShipRoot[1])+1, 
+                                  int(ShipRoot[0])-1, 
+                                  int(ShipRoot[1])-1)
+    print(Alphabet.alphabet)
+    for n1 in Alphabet.alphabet:
+        print("values", Alphabet.Escape(n1))
+        checker = c.find_withtag(''.join(['Server',Alphabet.Escape(n1)]))
+        print("ck", checker)
         for char in checker:
-            #print Checker
-            if (char in overlaps) and (Alphabet.Relate(n1) not in Blacklist):
-                ServerSelect(Alphabet.Relate(n1))
+            if (char in overlaps) and (n1 not in Blacklist):
+                ServerSelect(n1)
         
 def ServerSelect(tagstring: str) -> None:
     """
@@ -327,7 +328,7 @@ def ServerSelect(tagstring: str) -> None:
     global Energy
     global ClickCost
     global Prompt
-    if tagstring == 'enter':
+    if tagstring == "Return" or tagstring == "~":
         if Energy >= ClickCost:
             PromptEnter(Prompt)
             Prompt = ''
@@ -481,11 +482,11 @@ def KeyPress(event):
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
     
-    for i in range(ALPHA_BEGIN,ALPHA_END-1):
+    for i in range(ALPHA_BEGIN,ALPHA_END):
         if event.keysym == Alphabet.Relate(i) and event.keysym not in Blacklist:
             ServerSelect(Alphabet.Escape(Alphabet.Relate(i)))
-    if event.keysym == 'Return' and 'enter' not in Blacklist:
-        ServerSelect('enter')
+    if event.keysym == "Return" and "Return" not in Blacklist:
+        ServerSelect("Return")
     if event.keysym == 'space' and '_' not in Blacklist:
         ServerSelect('_')
     if event.keysym == "exclam" "!" not in Blacklist:
@@ -642,7 +643,7 @@ def ColorManager(string):
     @returns The ColorManager function returns the color value based on the input string. The color
     value is determined by the conditions specified in the function, such as checking if the input
     string matches any items in the Blacklist, or if it is a specific string like 'ProblemDecay'. The
-    final color value is stored in the variable 'Return' and is returned at the end of the function.
+    final color value is stored in the variable "Return" and is returned at the end of the function.
     """
     global Blacklist
     global ProgressBars
@@ -677,7 +678,7 @@ def DrawServers():
     
     n2 = 1
     n3 = ALPHA_BEGIN
-    for _ in range(4):
+    for _ in range(7):
         Height = CanvasHeight/10
         Height = Height * n2
         n2 = n2 + 1
@@ -697,7 +698,7 @@ def DrawServers():
     for _ in range(2):
         Width = CanvasWidth/7.5
         Width = Width * n1
-        Height = (CanvasHeight/10) * 5
+        Height = (CanvasHeight/10) * 8
         c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n3))])))
         c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)).upper(), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Escape(Alphabet.Relate(n3))])))
         n1 = n1 + 5
@@ -706,26 +707,13 @@ def DrawServers():
     for _ in range(2):
         Width=CanvasWidth/7.5
         Width = Width * n1
-        Height = (CanvasHeight/10)*5
+        Height = (CanvasHeight/10)*8
+        #print(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n3))]))
         c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), ((CanvasWidth/7.5)*(n1+1)+50)+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n3))])))
-        c.create_text((((CanvasWidth/7.5)*(n1+0.5)+25)+Jitter(JitterRate), Height+10+Jitter(JitterRate)),text=(Alphabet.Relate(n3)).upper(), font=('Inhuman BB', 24), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Escape(Alphabet.Relate(n3))])))
+        c.create_text((((CanvasWidth/7.5)*(n1+0.5)+25)+Jitter(JitterRate), Height+10+Jitter(JitterRate)),text=Alphabet.Escape(Alphabet.Relate(n3)).upper(), font=('Inhuman BB', 24), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Escape(Alphabet.Relate(n3))])))
         n1 = n1 + 2
         n3 = n3 + 1
-    for _ in range(3):
-        Height = CanvasHeight/10
-        Height = Height * n2
-        n2 = n2 + 1
-        for n1 in range(1,7):
-            Width = CanvasWidth/7.5
-            Width = Width * n1
-            Holder = random.randint(1,500)
-            if Holder == 500:
-                c.create_image(Width+25, Height+25,image=c.image,anchor='c')
-            else:
-                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n3))])))
-                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)).upper(), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Escape(Alphabet.Relate(n3))])))
-            n3 = n3 + 1
-            n1 = n1 + 1
+    
         
 def Jitter(jit: int):
     """
