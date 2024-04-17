@@ -58,8 +58,8 @@ WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
 
 
 # --- CONSTANTS ---
-ALPHA_BEGIN = 97
-ALPHA_END = 124
+ALPHA_BEGIN = 0
+ALPHA_END = 45
 
 def ResourcePrefix() -> str:
     """
@@ -74,14 +74,53 @@ def ResourcePrefix() -> str:
     else:
         return ""
 
-# --- FONTS ---
-prefix = ResourcePrefix()
-font.init()
-Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
-Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
-Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
-Interference = font.Font(prefix + "exe/multivac-interference.ttf")
+class Alphabet:
+    special_chars: Dict[ str, str ] = {
+        '!': 'excl',
+        '@': 'at',
+        '#': 'hash',
+        '$': 'dollar',
+        '%': 'percent',
+        '=': 'equals',
+        '?': 'question',
+        '*': 'asterisk',
+    }
+    alphabet="abcdefghijklmnopqrstuvwxyz_~1234567890!@#$%=?*"
+    
+    sound_dict: Dict[ str, mixer.Sound ] = {
+        '!': 'excl',
+        '@': 'at',
+        '#': 'hash',
+        '$': 'dollar',
+        '%': 'percent',
+        '=': 'equals',
+        '?': 'question',
+        '*': 'asterisk',
+    }
 
+    @classmethod
+    def Relate(cls, index: int) -> str:
+        if(index < 0) or (index > 45):
+            return None
+        result = cls.alphabet[index]
+        if(result == "~"):
+            result = "enter"
+        return result
+ 
+    @classmethod
+    def Escape(cls, unescaped: str) -> str:
+        return cls.sound_dict.get(unescaped, unescaped)
+    
+    @classmethod
+    def SafeChar(cls) -> str:
+        result = random.choice(cls.alphabet)
+        if result == "~":
+            result = "="
+        if result == "_":
+            result = "="
+        return result
+
+            
 
 class SoundManager:
     mixer.init()
@@ -216,10 +255,9 @@ def StartAll():
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
     for x in range(StartingViruses):
-        tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
+        tempString = Alphabet.SafeChar()
         while tempString in Viruses:
-            #print (tempString in Viruses,tempString,Viruses)
-            tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
+            tempString = Alphabet.SafeChar()
         Viruses.append(tempString)
     if DebugMode ==  True:
         print (Viruses)
@@ -247,28 +285,6 @@ def Timekeeper():
 
         Time = milla
 
-def AlphaRelate(value: int) -> None | str :
-    """
-    The function `AlphaRelate` takes an integer input and returns the corresponding lowercase letter or
-    special character based on the input value.
-    @param Int - It looks like the code you provided is a function called `AlphaRelate` that takes an
-    integer input and returns a corresponding letter or symbol based on the input value. The function
-    maps integers to lowercase letters from 'a' to 'z', as well as to the underscore character '_', the
-    'Enter
-    @returns The function `AlphaRelate` takes an integer input and returns a corresponding letter or
-    symbol based on the input. If the input is between 1 and 26, it returns the corresponding lowercase
-    letter of the alphabet. If the input is 27, it returns an underscore "_". If the input is 28, it
-    returns "Enter". For any other input, it returns "NULL". The
-    """
-    if (value < 97) or (value > 124):
-        return None
-    result = chr(value)
-    if value == 123:
-        result = '_'
-    elif value == 124:
-        result = 'enter'
-    return result
-
 def RandomString(length) -> str:
     """
     The function `RandomString` generates a random string of a specified length using a set of prompts
@@ -286,7 +302,7 @@ def RandomString(length) -> str:
         Return = str(random.choice(Prompts))
     else:
         for _ in range(length):
-            Return = ''.join([Return,str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2)))])
+            Return = ''.join([Return,Alphabet.SafeChar()])
     return Return
     
 def ClickRegistrar(event):
@@ -304,11 +320,11 @@ def ClickRegistrar(event):
                                   int(ShipRoot[0])-PlayerSize, 
                                   int(ShipRoot[1])-PlayerSize)
     for n1 in range(ALPHA_BEGIN,ALPHA_END):
-        checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
+        checker = c.find_withtag(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n1))]))
         for char in checker:
             #print Checker
-            if (char in overlaps) and (AlphaRelate(n1) not in Blacklist):
-                ServerSelect(AlphaRelate(n1))
+            if (char in overlaps) and (Alphabet.Relate(n1) not in Blacklist):
+                ServerSelect(Alphabet.Relate(n1))
         
 def ServerSelect(tagstring: str) -> None:
     """
@@ -477,16 +493,28 @@ def KeyPress(event):
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
     
     for i in range(ALPHA_BEGIN,ALPHA_END-1):
-        if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
-            ServerSelect(AlphaRelate(i))
-    if event.keysym == 'Return' and event.keysym not in Blacklist:
+        if event.keysym == Alphabet.Relate(i) and event.keysym not in Blacklist:
+            ServerSelect(Alphabet.Escape(Alphabet.Relate(i)))
+    if event.keysym == 'Return' and 'enter' not in Blacklist:
         ServerSelect('enter')
-    if event.keysym == 'space' and event.keysym not in Blacklist:
+    if event.keysym == 'space' and '_' not in Blacklist:
         ServerSelect('_')
-    if event.keysym == 'parenleft':
-        ServerSelect('(')
-    if event.keysym == 'parenright':
-        ServerSelect(')')
+    if event.keysym == "exclam" "!" not in Blacklist:
+        ServerSelect("!")
+    if event.keysym == "at" and "@" not in Blacklist:
+        ServerSelect("@")
+    if event.keysym == "numbersign" and "#" not in Blacklist:
+        ServerSelect("#")
+    if event.keysym == "dollar" and "$" not in Blacklist:
+        ServerSelect("$")
+    if event.keysym == "percent" and "%" not in Blacklist:
+        ServerSelect("%")
+    if event.keysym == "equal" and "=" not in Blacklist:
+        ServerSelect("=")
+    if event.keysym == "question" and "?" not in Blacklist:
+        ServerSelect("?")
+    if event.keysym == "asterisk" and "*" not in Blacklist:
+        ServerSelect("*")
     
 def Scorekeeper(variable,amount):
     """
@@ -671,8 +699,8 @@ def DrawServers():
             if Holder == 500:
                 c.create_image(Width+25, Height+25,image=c.image,anchor='c')
             else:
-                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
-                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(AlphaRelate(n3)), font=('Inhuman BB', 36), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
+                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n3))])))
+                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)).upper(), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Escape(Alphabet.Relate(n3))])))
             n3 = n3 + 1
             n1 = n1 + 1
     n2 = n2 + 1
@@ -681,8 +709,8 @@ def DrawServers():
         Width = CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10) * 5
-        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
-        c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(AlphaRelate(n3)), font=('Inhuman BB', 36), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
+        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n3))])))
+        c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)).upper(), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Escape(Alphabet.Relate(n3))])))
         n1 = n1 + 5
         n3 = n3 + 1
     n1 = 2
@@ -690,10 +718,25 @@ def DrawServers():
         Width=CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10)*5
-        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), ((CanvasWidth/7.5)*(n1+1)+50)+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
-        c.create_text((((CanvasWidth/7.5)*(n1+0.5)+25)+Jitter(JitterRate), Height+10+Jitter(JitterRate)),text=(AlphaRelate(n3)), font=('Inhuman BB', 24), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
+        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), ((CanvasWidth/7.5)*(n1+1)+50)+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n3))])))
+        c.create_text((((CanvasWidth/7.5)*(n1+0.5)+25)+Jitter(JitterRate), Height+10+Jitter(JitterRate)),text=(Alphabet.Relate(n3)).upper(), font=('Inhuman BB', 24), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Escape(Alphabet.Relate(n3))])))
         n1 = n1 + 2
         n3 = n3 + 1
+    for _ in range(3):
+        Height = CanvasHeight/10
+        Height = Height * n2
+        n2 = n2 + 1
+        for n1 in range(1,7):
+            Width = CanvasWidth/7.5
+            Width = Width * n1
+            Holder = random.randint(1,500)
+            if Holder == 500:
+                c.create_image(Width+25, Height+25,image=c.image,anchor='c')
+            else:
+                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Escape(Alphabet.Relate(n3))])))
+                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)).upper(), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Escape(Alphabet.Relate(n3))])))
+            n3 = n3 + 1
+            n1 = n1 + 1
         
 def Jitter(jit: int):
     """
@@ -751,9 +794,11 @@ def DrawMaster():
         #Draw Text
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.15)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
+        shared_jitter_x = Jitter(JitterRate/25)*MiscDecay()
+        shared_jitter_y = Jitter(JitterRate/25)*MiscDecay()
+        c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Problem)).upper(),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
+        c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Prompt) + PromptTicker).upper(), font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
+        c.create_text(((CanvasWidth*0.8)+Jitter(JitterRate/25),(CanvasHeight/1)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='right',anchor='e')
         c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
@@ -768,7 +813,7 @@ def DrawMaster():
     c.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
     c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
     c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
-    c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
+    c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(Alphabet.Relate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
                             
 def GameState():
     """
