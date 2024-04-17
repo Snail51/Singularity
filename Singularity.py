@@ -7,28 +7,47 @@ import datetime
 import platform
 from pygame import mixer
 from pygame import font
-from PIL import Image, ImageTk, ImageDraw, ImageGrab
+from PIL import Image, ImageTk
 from typing import List, Tuple, Dict
 
+from enum import Enum
+
+# --- CONSTANTS ---
+ALPHA_BEGIN = 97
+ALPHA_END = 124
+
+JITTER_RATE = 200
+SCRUB_LENGTH = 5000
+
+
+MAX_ENERGY_RATE = 5000
+STARTING_MAX_ENERGY = 100
+STARTING_ENERGY = 0 
+
+STARTING_HEALTH = 10
+CLICK_COST = 25  # <= STARTING_MAX_ENERGY
+
+PLAYER_SIZE = 20
+MAX_ENERGY_RATE = 5000
+MAX_ENERGY_CAP = 200
+USE_BACKGROUND: bool = True
+
+PROBLEM_LENGTH: int = 6
+
+DEBUG_MODE: bool = False
+PROBLEM_TYPE: str = "String"
+
+
+
+
 # --- Config ---
-StartingEnergy = 0 # >=0
-StartingMaxEnergy = 100
-ClickCost = 25 # <= StartingMaxEnergy
-PlayerSize = 20
 EnergyRate = 100
-MaxEnergyRate = 5000
-MaxEnergyCap = 200
-JitterRate = 200
-ScrubLength = 5000
 StartingHealth = 10
+WallTemp: List[str] = ''.join([random.choice(["0","1"]) for _ in range(6950)])
 StartingViruses: int = 5 # <= 26
 StartingProblemRate: Tuple = (10000,20000)
-ProblemLength: int = 6
 CanvasWidth: int = 1000
 CanvasHeight: int = 700
-UseBinaryBG: bool = True
-ProblemType: str = "String" # Prompts or String
-DebugMode: bool = False
 PrevScansShow: bool = False
 
 # --- variables ---
@@ -49,17 +68,11 @@ Problem = 'ccc'
 Health = 0
 ScrubBuffer = []
 GameActive = 0
-SimpleDict = []
 Prompts = []
 Dictionary = []
 PrevScans = []
-PromptTicker = ""
-WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
 
 
-# --- CONSTANTS ---
-ALPHA_BEGIN = 97
-ALPHA_END = 124
 
 def ResourcePrefix() -> str:
     """
@@ -148,13 +161,12 @@ def motion(event) -> None:
     """
     global ShipRoot
     global GameActive
-    global PlayerSize
     ShipRoot = (event.x, event.y)
     if GameActive == 1:
         c.delete('ship')
-        c.create_line((int(ShipRoot[0]), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0]), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
-        c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1]), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])),fill="red",tag='ship')
-        c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
+        c.create_line((ShipRoot[0], ShipRoot[1]+PLAYER_SIZE, ShipRoot[0], ShipRoot[1]-PLAYER_SIZE),fill="red",tag='ship')
+        c.create_line((ShipRoot[0]-PLAYER_SIZE, ShipRoot[1], ShipRoot[0]+PLAYER_SIZE, ShipRoot[1]),fill="red",tag='ship')
+        c.create_oval(((ShipRoot[0]-PLAYER_SIZE/1.5), (ShipRoot[1]-PLAYER_SIZE/1.5), (ShipRoot[0]+PLAYER_SIZE/1.5), (ShipRoot[1]+PLAYER_SIZE/1.5)),outline='red')
 
 def CloseAll() -> None:
     """
@@ -184,7 +196,6 @@ def StartAll():
     including creating a list of viruses and adding progress bars.
     """
     global EnergyRate
-    global MaxEnergyRate
     global Viruses
     global StartingViruses
     global ProblemRate
@@ -197,7 +208,6 @@ def StartAll():
     global ProgressBars
     global Blacklist
     global StartingProblemRate
-    global DebugMode
     Blacklist = []
     ProblemRate = StartingProblemRate
     ProgressBars = []
@@ -210,18 +220,17 @@ def StartAll():
     Health = StartingHealth
     Scorekeeper('CLEAR',0)
     BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
-    BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
+    BarAdd('MaxEnergy',-1,str(MAX_ENERGY_RATE),1)
     BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
-    BarAdd('PromptTicker', 0, 666, 1)
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
-    for x in range(StartingViruses):
+    for _ in range(StartingViruses):
         tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
         while tempString in Viruses:
             #print (tempString in Viruses,tempString,Viruses)
             tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
         Viruses.append(tempString)
-    if DebugMode ==  True:
+    if DEBUG_MODE is True:
         print (Viruses)
     
 def Timekeeper():
@@ -298,13 +307,13 @@ def ClickRegistrar(event):
     triggered the function, such as a mouse click event.
     """
     global Blacklist
-    #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
-                                  int(ShipRoot[1])+PlayerSize, 
-                                  int(ShipRoot[0])-PlayerSize, 
-                                  int(ShipRoot[1])-PlayerSize)
-    for n1 in range(ALPHA_BEGIN,ALPHA_END):
-        checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
+    #print (int(ShipRoot[0])+PLAYER_SIZE, int(ShipRoot[1])+PLAYER_SIZE, int(ShipRoot[0])-PLAYER_SIZE, int(ShipRoot[1])-PLAYER_SIZE)
+    overlaps = c.find_overlapping(int(ShipRoot[0])+PLAYER_SIZE, 
+                                  int(ShipRoot[1])+PLAYER_SIZE, 
+                                  int(ShipRoot[0])-PLAYER_SIZE, 
+                                  int(ShipRoot[1])-PLAYER_SIZE)
+    for n1 in range(ALPHA_BEGIN,ALPHA_END-2):
+        checker = c.find_withtag()
         for char in checker:
             #print Checker
             if (char in overlaps) and (AlphaRelate(n1) not in Blacklist):
@@ -320,13 +329,12 @@ def ServerSelect(tagstring: str) -> None:
     then call
     """
     global Energy
-    global ClickCost
     global Prompt
     if tagstring == 'enter':
-        if Energy >= ClickCost:
+        if Energy >= CLICK_COST:
             PromptEnter(Prompt)
             Prompt = ''
-            Energy = Energy - ClickCost
+            Energy = Energy - CLICK_COST
         else:
             pass
     else:
@@ -350,20 +358,19 @@ def PromptEnter(Prompt):
         print (ProgressBars)
         print (Blacklist)
         print (Viruses)
-    if Prompt == "deus_ex_machina":
+    elif Prompt == "deus_ex_machina":
         SoundManager.play_sound("SFX", 'deus', False)
     if Prompt == Problem:
+
         Problem = ''
     scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
     ScrubBuffer += [Prompt[-1] for entry in scrub_list if Prompt.startswith(entry)]
 
 def ScrubWrite():
     global ScrubBuffer
-    n1 = 0
     #print(ScrubBuffer)
-    for x in range(len(ScrubBuffer)):
-        scrub(ScrubBuffer[n1])
-        n1 = n1 + 1
+    for i in range(len(ScrubBuffer)):
+        scrub(ScrubBuffer[i])
     ScrubBuffer = []
 
 def BarSieve():
@@ -374,10 +381,10 @@ def BarSieve():
     global ProgressBars
     global GameActive
     sieve = []
-    for i in range(len(ProgressBars)):
-        if ((ProgressBars[i])[0]) not in sieve:    
-            sieve.append((ProgressBars[i])[0])
-        elif ((ProgressBars[i])[0]) in sieve:
+    for i, bar in enumerate(ProgressBars):
+        if bar[0] not in sieve:    
+            sieve.append(bar[0])
+        else:
             del ProgressBars[i]
             i = i - 1
         #print Sieve
@@ -385,7 +392,7 @@ def BarSieve():
         if 'Energy' not in sieve:
             BarAdd('Energy',1,str(EnergyRate),1)
         if 'MaxEnergy' not in sieve:
-            BarAdd('MaxEnergy',1,str(MaxEnergyRate),1)
+            BarAdd('MaxEnergy',1,str(MAX_ENERGY_RATE),1)
         if 'ProblemTrigger' not in sieve:
             BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)  
                         
@@ -397,15 +404,10 @@ def Progressor():
     global ProblemRate
     global ProgressBars
     global Time
-    global PromptTicker
-    n2 = 0 #Search Pointer
-    #print Time
-    #print(ProgressBars)
-    n3 = 0
-    for x in range(len(ProgressBars)):
-        if (ProgressBars[n2])[2] < Time:
+    for i in range(len(ProgressBars)):
+        if (ProgressBars[i])[2] < Time:
    
-            Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
+            Scorekeeper(str((ProgressBars[i])[0]),((ProgressBars[n2])[1]))
 
             OldTitle = str((ProgressBars[n2])[0])
             Mag = str((ProgressBars[n2])[1])
@@ -415,23 +417,15 @@ def Progressor():
             if Persistance == 1:
                 if OldTitle == 'ProblemTrigger':
                     OldDelay = ProblemRate[0]
-                if OldTitle == 'PromptTicker':
-                    if PromptTicker == "":
-                        PromptTicker = "|"
-                    else:
-                        PromptTicker = ""
-                ProgressBars[n2] = (OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
+                ProgressBars[i] = (OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
             if Persistance == 0:
                 if Mag == 'Deus':
                     OldDelay = 2751
                     ProgressBars[n2] = (OldTitle,'Music',OldTick+OldDelay, OldDelay, Persistance)
                 else:
                     del ProgressBars[n2]
-                    n2 = n2 -1
+                    i = i -1
                 
-            #print ProgressBars    
-        n2 = n2 + 1
-  
 def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
     The function `BarAdd` creates a new progress bar and manages its properties in a list called
@@ -451,15 +445,15 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
     global ProgressBars
     global Time 
-    n2 = 0
+    found = False
     #print [str(string),magnitude, (int(Time)+int(delay)),delay,persistance]
     for i in range(len(ProgressBars)):
         #print len(ProgressBars)
-        if (ProgressBars[i])[0] == string:
+        if ProgressBars[i][0] == string:
             del ProgressBars[i]
-            n2 = 1
+            found = True
             ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
-    if n2 == 0:
+    if found is True:
         ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
     #print ProgressBars
 
@@ -474,7 +468,7 @@ def KeyPress(event):
     """
     #print event.keysym
     global Blacklist
-    #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
+    #print (int(ShipRoot[0])+PLAYER_SIZE, int(ShipRoot[1])+PLAYER_SIZE, int(ShipRoot[0])-PLAYER_SIZE, int(ShipRoot[1])-PLAYER_SIZE)
     
     for i in range(ALPHA_BEGIN,ALPHA_END-1):
         if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
@@ -503,16 +497,11 @@ def Scorekeeper(variable,amount):
     """
     global Energy
     global MaxEnergy
-    global StartingEnergy
-    global StartingMaxEnergy
     global ProgressBars
     global EnergyRate
-    global MaxEnergyRate
-    global MaxEnergyCap
     global Blacklist
     global News
     global Problem
-    global ProblemLength
     global Health
     
     if variable == 'Music':
@@ -522,7 +511,7 @@ def Scorekeeper(variable,amount):
     if variable == 'ProblemTrigger':
         if len(Problem) > 0:
             Health = Health - 1
-        Problem = RandomString(ProblemLength)
+        Problem = RandomString(PROBLEM_LENGTH)
         
     if variable == 'ClearNews':
         News = ''
@@ -532,16 +521,16 @@ def Scorekeeper(variable,amount):
 
     if variable == 'CLEAR':
         ProgressBars = []
-        Energy = StartingEnergy
-        MaxEnergy = StartingMaxEnergy
+        Energy = STARTING_ENERGY
+        MaxEnergy = STARTING_MAX_ENERGY
 
     
     #UPDATE
     if variable == 'Energy':
         Energy = Energy + int(amount)
-    if variable == 'MaxEnergy' and MaxEnergy < MaxEnergyCap:
+    if variable == 'MaxEnergy' and MaxEnergy < MAX_ENERGY_CAP:
         MaxEnergy = MaxEnergy + int(amount)
-        if MaxEnergy >= MaxEnergyCap:
+        if MaxEnergy >= MAX_ENERGY_CAP:
             BarAdd('Energy', 1, EnergyRate/2)
 
     # LIMITS
@@ -558,7 +547,7 @@ def MiscDecay():
     global Time
     global GameActive
     EventTime = 0
-    Delay = 0
+    Delay = 1.0
     Output = 1.0
     if GameActive == 1:
         for i in range(len(ProgressBars)):
@@ -650,7 +639,7 @@ def DrawServers():
     The `DrawServers` function in Python creates a visual representation of servers on a canvas with
     specified dimensions, using images and rectangles with text labels.
     """
-    global JitterRate
+    global JITTER_RATE
     global CanvasHeight
     global CanvasWidth
     global cwd
@@ -671,8 +660,8 @@ def DrawServers():
             if Holder == 500:
                 c.create_image(Width+25, Height+25,image=c.image,anchor='c')
             else:
-                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
-                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(AlphaRelate(n3)), font=('Inhuman BB', 36), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
+                c.create_rectangle((Width+Jitter(JITTER_RATE), Height+Jitter(JITTER_RATE), Width+50+Jitter(JITTER_RATE), Height+50+Jitter(JITTER_RATE)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
+                c.create_text((Width+25+Jitter(JITTER_RATE), Height+5+Jitter(JITTER_RATE)),text=(AlphaRelate(n3)), font=('Inhuman BB', 36), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
             n3 = n3 + 1
             n1 = n1 + 1
     n2 = n2 + 1
@@ -681,8 +670,8 @@ def DrawServers():
         Width = CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10) * 5
-        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
-        c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(AlphaRelate(n3)), font=('Inhuman BB', 36), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
+        c.create_rectangle((Width+Jitter(JITTER_RATE), Height+Jitter(JITTER_RATE), Width+50+Jitter(JITTER_RATE), Height+50+Jitter(JITTER_RATE)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
+        c.create_text((Width+25+Jitter(JITTER_RATE), Height+5+Jitter(JITTER_RATE)),text=(AlphaRelate(n3)), font=('Inhuman BB', 36), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
         n1 = n1 + 5
         n3 = n3 + 1
     n1 = 2
@@ -690,8 +679,8 @@ def DrawServers():
         Width=CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10)*5
-        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), ((CanvasWidth/7.5)*(n1+1)+50)+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
-        c.create_text((((CanvasWidth/7.5)*(n1+0.5)+25)+Jitter(JitterRate), Height+10+Jitter(JitterRate)),text=(AlphaRelate(n3)), font=('Inhuman BB', 24), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
+        c.create_rectangle((Width+Jitter(JITTER_RATE), Height+Jitter(JITTER_RATE), ((CanvasWidth/7.5)*(n1+1)+50)+Jitter(JITTER_RATE), Height+50+Jitter(JITTER_RATE)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
+        c.create_text((((CanvasWidth/7.5)*(n1+0.5)+25)+Jitter(JITTER_RATE), Height+10+Jitter(JITTER_RATE)),text=(AlphaRelate(n3)), font=('Inhuman BB', 24), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
         n1 = n1 + 2
         n3 = n3 + 1
         
@@ -714,7 +703,6 @@ def DrawMaster():
     The `DrawMaster` function in Python is responsible for drawing various elements on the canvas based
     on the current state of the game, including text, player ship, servers, and background.
     """
-    global JitterRate
     global CanvasHeight
     global CanvasWidth
     global Energy
@@ -727,48 +715,47 @@ def DrawMaster():
     global Problem
     global GameActive
     global Viruses
-    global UseBinaryBG
-    global BinaryWall
-    global WallSource
-    global PromptTicker
-    global Time
+    global WallTemp
 
     clearCanvas()
-    if UseBinaryBG == True:
+    if USE_BACKGROUND is True:
         if GameActive != 3:
-            BinaryWall = WallSource[Time%1024:].ljust(len(WallSource), "0")
-        if GameActive == 3: #BLUE SCREEN OF DEATH
-            c.create_text(-100, -100, fill="#00004f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
-        else: #NORMAL GAMEPLAY
-            c.create_text(-100, -100, fill="#2f2f2f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
+            WallTemp = [c for c in WallTemp]
+            random.shuffle(WallTemp)
+            
+            WallTemp = "".join(WallTemp)
+            c.create_text(CanvasWidth/2,CanvasHeight/2,fill="#2f2f2f",text=WallTemp, width=CanvasWidth,font=(16))
+        else:
+            c.create_text(CanvasWidth/2+Jitter(JITTER_RATE/50)*5,CanvasHeight/2+Jitter(JITTER_RATE/50)*5,fill="#00004f",text=WallTemp, width=CanvasWidth,font=(16))
+
     
     if GameActive == 0:
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Singularity',font=('Inhuman BB', 64))
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3+Jitter(JitterRate)),fill='white',text='A typing management game',font=('Inhuman BB', 24))
+        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/4+Jitter(JITTER_RATE)),fill='white',text='Singularity',font=('Inhuman BB', 64))
+        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/3.25+Jitter(JITTER_RATE)),fill='white',text='A typing management game',font=('Inhuman BB', 24))
     if GameActive == 1 or GameActive == 2:
         #Draw Servers
         DrawServers()
         #Draw Text
-        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.15)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
-        c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
+        c.create_text((((CanvasWidth*0.01)+Jitter(JITTER_RATE)),((CanvasHeight/0.9)+Jitter(JITTER_RATE))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+        c.create_text((((CanvasWidth*0.01)+Jitter(JITTER_RATE)),((CanvasHeight/20)+Jitter(JITTER_RATE))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+        c.create_text(((CanvasWidth/2)+Jitter(JITTER_RATE/25),(CanvasHeight/1.4)+Jitter(JITTER_RATE/25)),text=str(Prompt),font = ('Inhuman BB', 48), fill='red', justify='center',anchor='n')
+        c.create_text(((CanvasWidth/2)+Jitter(JITTER_RATE/25),(CanvasHeight/1.2)+Jitter(JITTER_RATE/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='center',anchor='n')
+        c.create_text(((CanvasWidth/2)+Jitter(JITTER_RATE/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JITTER_RATE/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='center',anchor='n')
+        c.create_text((((CanvasWidth*0.99)+Jitter(JITTER_RATE)),((CanvasHeight/0.9)+Jitter(JITTER_RATE))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
-        c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
-        c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
+        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE/5)*5, CanvasHeight/7+Jitter(JITTER_RATE/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
+        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE/5), CanvasHeight/3.1+Jitter(JITTER_RATE/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
     if GameActive == 4:
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4.5+Jitter(JitterRate)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64),anchor='c', justify='center')
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.1+Jitter(JitterRate)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='c', justify='center')   
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/2.5+Jitter(JitterRate)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/4.5+Jitter(JITTER_RATE)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64),anchor='c', justify='center')
+        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/3.1+Jitter(JITTER_RATE)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/2.5+Jitter(JITTER_RATE)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='c', justify='center')   
                     
     #Draw Player
     c.delete('ship')
-    c.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
-    c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
-    c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
-    c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
+    c.create_line((int(ShipRoot[0])+Jitter(JITTER_RATE), int(ShipRoot[1])+PLAYER_SIZE, int(ShipRoot[0])+Jitter(JITTER_RATE), int(ShipRoot[1])-PLAYER_SIZE),fill="red",tag='ship')
+    c.create_line((int(ShipRoot[0])-PLAYER_SIZE, int(ShipRoot[1])+Jitter(JITTER_RATE), int(ShipRoot[0])+PLAYER_SIZE, int(ShipRoot[1])+Jitter(JITTER_RATE)),fill="red",tag='ship')
+    c.create_oval(((int(ShipRoot[0])-PLAYER_SIZE/1.5), (int(ShipRoot[1])-PLAYER_SIZE/1.5), (int(ShipRoot[0])+PLAYER_SIZE/1.5), (int(ShipRoot[1])+PLAYER_SIZE/1.5)),outline='red')
+    c.create_text(((int(ShipRoot[0])+Jitter(JITTER_RATE)*50), (int(ShipRoot[1]))+Jitter(JITTER_RATE)*50),fill='red',text=str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
                             
 def GameState():
     """
@@ -779,42 +766,38 @@ def GameState():
     global GameActive
     global Health
     global Energy
-    global ClickCost
     global ProblemRate
     global MaxEnergy
     global Viruses
-    global News
-    if MaxEnergy < ClickCost and GameActive ==1:
+    if MaxEnergy < CLICK_COST and GameActive == 1:
         GameActive = 2
-    if GameActive == 0: #Pre-Start
-        BarAdd('ClearNews',0,100,0)
-    if GameActive == 1: #Game
-        if len(Viruses) == 0:
-            SoundManager.play_sound("MUS", "end", False)
-            SoundManager.play_sound("SFX", 'deus', False)
-            GameActive = 4
-        if MaxEnergy < ClickCost:
-            GameActive = 2
-        if Health <= 0:
-            SoundManager.play_sound("MUS", "die", False)
-            SoundManager.play_sound("BG", "silence", False)
-            GameActive = 3
-    if GameActive == 2: #FastDying
-        ProblemRate = (2000,3000)
-        News = 'Out of Energy! Accepting fate...'
-        if Health <= 0:
-            GameActive = 3
-            SoundManager.play_sound("MUS", "die", False)
-            SoundManager.play_sound("BG", "silence", False)
-    if GameActive == 3: #Dead
-        BarAdd('ClearNews',0,100,0)
-        pass
-    if GameActive == 4: #Win
-        BarAdd('ClearNews',0,100,0)
-        pass       
+
+    match(GameActive):
+        case 0: #Pre-Start
+            BarAdd('ClearNews',0,100,0)
+        case 1: #Game
+            if len(Viruses) == 0:
+                SoundManager.play_sound("MUS", "end", False)
+                SoundManager.play_sound("SFX", 'deus', False)
+                GameActive = 4
+            if MaxEnergy < CLICK_COST:
+                GameActive = 2
+                ProblemRate = (1000,2000)
+            if Health <= 0:
+                SoundManager.play_sound("MUS", "die", False)
+                SoundManager.play_sound("BG", "silence", False)
+                GameActive = 3
+        case 2:
+            ProblemRate = (1000,2000)
+            if Health <= 0:
+                GameActive = 3
+        case 3:
+            pass
+        case 4:
+            pass
 
 # --- Game Commands ---
-def scrub(letter):
+def scrub(letter: str):
     """
     The `scrub` function in Python manages a list of blacklisted items, viruses, progress bars, news
     updates, and previous scans, with the ability to add or remove items based on input letters.
@@ -823,26 +806,26 @@ def scrub(letter):
     global variables like `Blacklist`, `ScrubLength`, `Viruses`, `ProgressBars`, `News`,
     """
     global Blacklist
-    global ScrubLength
     global Viruses
     global ProgressBars
     global News
     global PrevScans
-    #print ('aaa',letter,Blacklist,Viruses)
-    if len(letter) == 1:
-        Blacklist.append(str(letter))
-        BarAdd(''.join(['virus',str(letter)]),"1",int(ScrubLength),0)
-    else:
-        letter_read = str(letter[-1])
-        if letter[0:4] == 'done':
-            if letter_read not in PrevScans:
-                PrevScans.append(str(letter_read))
-            if letter_read in Viruses:
-                Viruses.remove(letter_read)
-                News = ''.join(['Virus Found in ', letter_read, '!'])
-                BarAdd('ClearNews',0,3000,0)
-            if letter_read in Blacklist:
-                Blacklist.remove(letter_read)
+
+    #fuck 
+    if len(letter) == 1 or letter[0:4] != "done":
+        Blacklist.append(letter)
+        BarAdd("virus" + letter, "1",SCRUB_LENGTH, 0)
+
+        return
+    
+    if letter[-1] not in PrevScans:
+        PrevScans.append(letter[-1])
+    if letter[-1] in Blacklist:
+        Blacklist.remove(letter[-1])
+    if letter[-1] in Viruses:
+        Viruses.remove(letter[-1])
+        News = "virus found in %s!" % letter[-1]
+        BarAdd('ClearNews',0,3000,0)
 
 # --- Executives ---
 def TOTAL_MAIN():
@@ -853,20 +836,14 @@ def TOTAL_MAIN():
     global GameActive
     global Time
     global ScrubBuffer
-    
     try:
-        Timekeeper()
-        preFrame = Time #the time at the start of this frame
         GameState()
+        Timekeeper()
         BarSieve()
         Progressor()
         ScrubWrite()
         DrawMaster()
-        Timekeeper()
-        postFrame = Time # the time at the end of the frame
-        frameWait=max(0,17-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
-        #print(postFrame-preFrame)
-        c.after(frameWait, TOTAL_MAIN)
+        c.after(17, TOTAL_MAIN)
     except Exception as e:
         global ProgressBars
         global Blacklist
@@ -879,7 +856,6 @@ def TOTAL_MAIN():
         print("ScrubBuffer: ", ScrubBuffer)
         print("███████</crash>███████")
         traceback.print_exc()
-    
 
 def resize_canvas(event) -> None:
     """
