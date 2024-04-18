@@ -302,15 +302,15 @@ def ClickRegistrar(event):
     """
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
+    overlaps = set(c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
                                   int(ShipRoot[1])+PlayerSize, 
                                   int(ShipRoot[0])-PlayerSize, 
-                                  int(ShipRoot[1])-PlayerSize)
+                                  int(ShipRoot[1])-PlayerSize))
     for n1 in range(ALPHA_BEGIN,ALPHA_END):
         char = AlphaRelate(n1)
         checker = set(c.find_withtag("Server %s" % char))
 
-        has_overlapping_char = not checker.isdisjoint(set(overlaps))
+        has_overlapping_char = not checker.isdisjoint(overlaps)
         hasnt_blacklisted_chars = checker.isdisjoint(set(Blacklist))
 
         if has_overlapping_char and hasnt_blacklisted_chars:
