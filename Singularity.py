@@ -15,6 +15,9 @@ from typing import Tuple, Dict
 SCRUB_LENGTH = 5000
 CLICK_COST = 25
 
+ALPHA_BEGIN = 97
+ALPHA_END = 124
+
 
 # --- Config ---
 StartingEnergy = 0 # >=0
@@ -60,10 +63,6 @@ PrevScans = []
 PromptTicker = ""
 WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
 
-
-# --- CONSTANTS ---
-ALPHA_BEGIN = 97
-ALPHA_END = 124
 
 def ResourcePrefix() -> str:
     """
@@ -310,6 +309,7 @@ def ClickRegistrar(event):
     for n1 in range(ALPHA_BEGIN,ALPHA_END):
         char = AlphaRelate(n1)
         checker = set(c.find_withtag("Server %s" % char))
+
         has_overlapping_char = not checker.isdisjoint(set(overlaps))
         hasnt_blacklisted_chars = checker.isdisjoint(set(Blacklist))
 
@@ -327,11 +327,10 @@ def ServerSelect(tagstring: str) -> None:
     """
     global Energy
     global Prompt
-    if tagstring == 'enter':
-        if Energy >= CLICK_COST:
-            PromptEnter(Prompt)
-            Prompt = ''
-            Energy = Energy - CLICK_COST
+    if tagstring == 'enter' and Energy >= CLICK_COST:
+        PromptEnter(Prompt)
+        Prompt = ''
+        Energy = Energy - CLICK_COST
     else:
         Prompt = ''.join([str(Prompt),str(tagstring)])
 
