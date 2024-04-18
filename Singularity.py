@@ -557,10 +557,10 @@ def MiscDecay():
     Output = 1.0
     if GameActive == 1:
         for i in range(len(ProgressBars)):
-            if str((ProgressBars[i])[0]) == 'ProblemTrigger':
-                EventTime = int((ProgressBars[i])[2])
-                Delay = int((ProgressBars[i])[3])
-        Output = float((float(EventTime)-float(Time))/float(Delay))
+            if ProgressBars[i][0] == 'ProblemTrigger':
+                EventTime = float((ProgressBars[i])[2])
+                Delay = float((ProgressBars[i])[3])
+        Output = float((EventTime - float(Time) ) / Delay)
         #print Output
         Output = (((Output*-1.0) + 1.0) * 5)
     return Output
