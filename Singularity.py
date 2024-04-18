@@ -7,34 +7,32 @@ import datetime
 import platform
 from pygame import mixer
 from pygame import font
-from PIL import Image, ImageTk, ImageDraw, ImageGrab
-from typing import List, Tuple, Dict
+from PIL import Image, ImageTk
+from typing import Tuple, Dict
 
 # --- Constants ---
 
-MAX_ENERGY_RATE = 5000
-MAX_ENERGY_CAP = 200
-STARTING_MAX_ENERGY = 100
-STARTING_HEALTH = 10
+SCRUB_LENGTH = 5000
+CLICK_COST = 25
 
-DEBUG_MODE = False
-CLICK_COST = 25 # <= STARTING_MAX_ENERGY
-
-PLAYER_SIZE = 20
-STARTING_VIRUSES: int = 5
-
-STARTING_PROBLEM_RATE: Tuple[int] = (10000,20000)
-PROBLEM_LENGTH: int = 6
 
 # --- Config ---
 StartingEnergy = 0 # >=0
+StartingMaxEnergy = 100 # <= StartingMaxEnergy
+PlayerSize = 20
 EnergyRate = 100
+MaxEnergyRate = 5000
+MaxEnergyCap = 200
 JitterRate = 200
-ScrubLength = 5000
+StartingHealth = 10
+StartingViruses: int = 5 # <= 26
+StartingProblemRate: Tuple = (10000,20000)
+ProblemLength: int = 6
 CanvasWidth: int = 1000
 CanvasHeight: int = 700
 UseBinaryBG: bool = True
 ProblemType: str = "String" # Prompts or String
+DebugMode: bool = False
 PrevScansShow: bool = False
 
 # --- variables ---
@@ -154,12 +152,13 @@ def motion(event) -> None:
     """
     global ShipRoot
     global GameActive
+    global PlayerSize
     ShipRoot = (event.x, event.y)
     if GameActive == 1:
         c.delete('ship')
-        c.create_line((int(ShipRoot[0]), int(ShipRoot[1])+PLAYER_SIZE, int(ShipRoot[0]), int(ShipRoot[1])-PLAYER_SIZE),fill="red",tag='ship')
-        c.create_line((int(ShipRoot[0])-PLAYER_SIZE, int(ShipRoot[1]), int(ShipRoot[0])+PLAYER_SIZE, int(ShipRoot[1])),fill="red",tag='ship')
-        c.create_oval(((int(ShipRoot[0])-PLAYER_SIZE/1.5), (int(ShipRoot[1])-PLAYER_SIZE/1.5), (int(ShipRoot[0])+PLAYER_SIZE/1.5), (int(ShipRoot[1])+PLAYER_SIZE/1.5)),outline='red')
+        c.create_line((int(ShipRoot[0]), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0]), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
+        c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1]), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])),fill="red",tag='ship')
+        c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
 
 def CloseAll() -> None:
     """
@@ -189,17 +188,22 @@ def StartAll():
     including creating a list of viruses and adding progress bars.
     """
     global EnergyRate
+    global MaxEnergyRate
     global Viruses
+    global StartingViruses
     global ProblemRate
     global Health
+    global StartingHealth
     global Problem
     global Prompt
     global News
     global GameActive
     global ProgressBars
     global Blacklist
-
+    global StartingProblemRate
+    global DebugMode
     Blacklist = []
+    ProblemRate = StartingProblemRate
     ProgressBars = []
     PrevScans = []
     Problem = ''
@@ -207,22 +211,21 @@ def StartAll():
     News = ''
     Viruses = []
     tempString = ''
-    Health = STARTING_HEALTH
+    Health = StartingHealth
     Scorekeeper('CLEAR',0)
     BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
-    BarAdd('MaxEnergy',-1,str(MAX_ENERGY_RATE),1)
-    BarAdd('ProblemTrigger',1,str(random.randint(
-        STARTING_PROBLEM_RATE[0],STARTING_PROBLEM_RATE[1])),1)
+    BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
+    BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
     BarAdd('PromptTicker', 0, 666, 1)
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
-    for x in range(STARTING_VIRUSES):
+    for x in range(StartingViruses):
         tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
         while tempString in Viruses:
             #print (tempString in Viruses,tempString,Viruses)
             tempString = AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END-2))
         Viruses.append(tempString)
-    if DEBUG_MODE is True:
+    if DebugMode ==  True:
         print (Viruses)
     
 def Timekeeper():
@@ -299,17 +302,19 @@ def ClickRegistrar(event):
     triggered the function, such as a mouse click event.
     """
     global Blacklist
-    #print (int(ShipRoot[0])+PLAYER_SIZE, int(ShipRoot[1])+PLAYER_SIZE, int(ShipRoot[0])-PLAYER_SIZE, int(ShipRoot[1])-PLAYER_SIZE)
-    overlaps = c.find_overlapping(int(ShipRoot[0])+PLAYER_SIZE, 
-                                  int(ShipRoot[1])+PLAYER_SIZE, 
-                                  int(ShipRoot[0])-PLAYER_SIZE, 
-                                  int(ShipRoot[1])-PLAYER_SIZE)
+    #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
+    overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
+                                  int(ShipRoot[1])+PlayerSize, 
+                                  int(ShipRoot[0])-PlayerSize, 
+                                  int(ShipRoot[1])-PlayerSize)
     for n1 in range(ALPHA_BEGIN,ALPHA_END):
-        checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
-        for char in checker:
-            #print Checker
-            if (char in overlaps) and (AlphaRelate(n1) not in Blacklist):
-                ServerSelect(AlphaRelate(n1))
+        char = AlphaRelate(n1)
+        checker = set(c.find_withtag("Server %s" % char))
+        has_overlapping_char = not checker.isdisjoint(set(overlaps))
+        hasnt_blacklisted_chars = checker.isdisjoint(set(Blacklist))
+
+        if has_overlapping_char and hasnt_blacklisted_chars:
+            ServerSelect(char)
         
 def ServerSelect(tagstring: str) -> None:
     """
@@ -327,8 +332,6 @@ def ServerSelect(tagstring: str) -> None:
             PromptEnter(Prompt)
             Prompt = ''
             Energy = Energy - CLICK_COST
-        else:
-            pass
     else:
         Prompt = ''.join([str(Prompt),str(tagstring)])
 
@@ -359,11 +362,8 @@ def PromptEnter(Prompt):
 
 def ScrubWrite():
     global ScrubBuffer
-    n1 = 0
-    #print(ScrubBuffer)
-    for x in range(len(ScrubBuffer)):
-        scrub(ScrubBuffer[n1])
-        n1 = n1 + 1
+    for i in range(len(ScrubBuffer)):
+        scrub(ScrubBuffer[i])
     ScrubBuffer = []
 
 def BarSieve():
@@ -399,10 +399,7 @@ def Progressor():
     global Time
     global PromptTicker
     n2 = 0 #Search Pointer
-    #print Time
-    #print(ProgressBars)
-    n3 = 0
-    for x in range(len(ProgressBars)):
+    for _ in range(len(ProgressBars)):
         if (ProgressBars[n2])[2] < Time:
    
             Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
@@ -451,15 +448,14 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
     global ProgressBars
     global Time 
-    n2 = 0
-    #print [str(string),magnitude, (int(Time)+int(delay)),delay,persistance]
+    found = False 
     for i in range(len(ProgressBars)):
         #print len(ProgressBars)
         if (ProgressBars[i])[0] == string:
             del ProgressBars[i]
-            n2 = 1
+            found = True
             ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
-    if n2 == 0:
+    if found is False:
         ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
     #print ProgressBars
 
@@ -474,7 +470,7 @@ def KeyPress(event):
     """
     #print event.keysym
     global Blacklist
-    #print (int(ShipRoot[0])+PLAYER_SIZE, int(ShipRoot[1])+PLAYER_SIZE, int(ShipRoot[0])-PLAYER_SIZE, int(ShipRoot[1])-PLAYER_SIZE)
+    #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
     
     for i in range(ALPHA_BEGIN,ALPHA_END-1):
         if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
@@ -504,11 +500,15 @@ def Scorekeeper(variable,amount):
     global Energy
     global MaxEnergy
     global StartingEnergy
+    global StartingMaxEnergy
     global ProgressBars
     global EnergyRate
+    global MaxEnergyRate
+    global MaxEnergyCap
     global Blacklist
     global News
     global Problem
+    global ProblemLength
     global Health
     
     if variable == 'Music':
@@ -518,7 +518,7 @@ def Scorekeeper(variable,amount):
     if variable == 'ProblemTrigger':
         if len(Problem) > 0:
             Health = Health - 1
-        Problem = RandomString(PROBLEM_LENGTH)
+        Problem = RandomString(ProblemLength)
         
     if variable == 'ClearNews':
         News = ''
@@ -529,15 +529,15 @@ def Scorekeeper(variable,amount):
     if variable == 'CLEAR':
         ProgressBars = []
         Energy = StartingEnergy
-        MaxEnergy = STARTING_MAX_ENERGY
+        MaxEnergy = StartingMaxEnergy
 
     
     #UPDATE
     if variable == 'Energy':
         Energy = Energy + int(amount)
-    if variable == 'MaxEnergy' and MaxEnergy < MAX_ENERGY_CAP:
+    if variable == 'MaxEnergy' and MaxEnergy < MaxEnergyCap:
         MaxEnergy = MaxEnergy + int(amount)
-        if MaxEnergy >= MAX_ENERGY_CAP:
+        if MaxEnergy >= MaxEnergyCap:
             BarAdd('Energy', 1, EnergyRate/2)
 
     # LIMITS
@@ -596,17 +596,19 @@ def ColCyc(EventTime,Delay) -> str | None:
                                             
     # --- Convert to HEX ---    
     if Red >= 0 and Green >=0 and Blue >= 0:                                                                           
-        m_g = "{0:x}".format(Green)
-        m_b = "{0:x}".format(Blue)
-        m_r = "{0:x}".format(Red)
-        if len(m_r) == 1:
-            m_r = ''.join(['0',m_r])
-        if len(m_g) == 1:
-            m_g = ''.join(['0',m_g])
-        m_b = "{0:x}".format(Blue)
-        if len(m_b) == 1:
-            m_b = ''.join(['0',m_b])
-        result = ''.join(['#',m_r, m_g, m_b])
+        MR = ""
+        MG = ""
+        MB = ""
+        MR = "{0:x}".format(Red)
+        if len(MR) == 1:
+            MR = ''.join(['0',MR])
+        MG = "{0:x}".format(Green)
+        if len(MG) == 1:
+            MG = ''.join(['0',MG])
+        MB = "{0:x}".format(Blue)
+        if len(MB) == 1:
+            MB = ''.join(['0',MB])
+        result = ''.join(['#',MR, MG, MB])
     return result
     
 def ColorManager(string):
@@ -717,7 +719,7 @@ def DrawMaster():
     global Prompt
     global News
     global Health
-    global STARTING_HEALTH
+    global StartingHealth
     global Problem
     global GameActive
     global Viruses
@@ -748,7 +750,7 @@ def DrawMaster():
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.15)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
-        c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(STARTING_HEALTH)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
+        c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
@@ -759,9 +761,9 @@ def DrawMaster():
                     
     #Draw Player
     c.delete('ship')
-    c.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PLAYER_SIZE, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PLAYER_SIZE),fill="red",tag='ship')
-    c.create_line((int(ShipRoot[0])-PLAYER_SIZE, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PLAYER_SIZE, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
-    c.create_oval(((int(ShipRoot[0])-PLAYER_SIZE/1.5), (int(ShipRoot[1])-PLAYER_SIZE/1.5), (int(ShipRoot[0])+PLAYER_SIZE/1.5), (int(ShipRoot[1])+PLAYER_SIZE/1.5)),outline='red')
+    c.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
+    c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
+    c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
     c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=str(AlphaRelate(random.randint(ALPHA_BEGIN,ALPHA_END))),font=('Inhuman BB', 12))  
                             
 def GameState():
@@ -773,42 +775,41 @@ def GameState():
     global GameActive
     global Health
     global Energy
-    global CLICK_COST
     global ProblemRate
     global MaxEnergy
     global Viruses
     global News
     if MaxEnergy < CLICK_COST and GameActive ==1:
         GameActive = 2
-    if GameActive == 0: #Pre-Start
-        BarAdd('ClearNews',0,100,0)
-    if GameActive == 1: #Game
-        if len(Viruses) == 0:
-            SoundManager.play_sound("MUS", "end", False)
-            SoundManager.play_sound("SFX", 'deus', False)
-            GameActive = 4
-        if MaxEnergy < CLICK_COST:
-            GameActive = 2
-        if Health <= 0:
-            SoundManager.play_sound("MUS", "die", False)
-            SoundManager.play_sound("BG", "silence", False)
-            GameActive = 3
-    if GameActive == 2: #FastDying
-        ProblemRate = (2000,3000)
-        News = 'Out of Energy! Accepting fate...'
-        if Health <= 0:
-            GameActive = 3
-            SoundManager.play_sound("MUS", "die", False)
-            SoundManager.play_sound("BG", "silence", False)
-    if GameActive == 3: #Dead
-        BarAdd('ClearNews',0,100,0)
-        pass
-    if GameActive == 4: #Win
-        BarAdd('ClearNews',0,100,0)
-        pass       
+    
+    assert (GameActive < 5) and (GameActive >= 0)
+    match GameActive:
+        case 0: #Pre-Start
+            BarAdd('ClearNews',0,100,0)
+        case 1: #Game
+            if len(Viruses) == 0:
+                SoundManager.play_sound("MUS", "end", False)
+                SoundManager.play_sound("SFX", 'deus', False)
+                GameActive = 4
+            if MaxEnergy < CLICK_COST:
+                GameActive = 2
+            if Health <= 0:
+                SoundManager.play_sound("MUS", "die", False)
+                SoundManager.play_sound("BG", "silence", False)
+                GameActive = 3
+        case 2: #FastDying
+            ProblemRate = (2000,3000)
+            News = 'Out of Energy! Accepting fate...'
+            if Health <= 0:
+                GameActive = 3
+                SoundManager.play_sound("MUS", "die", False)
+                SoundManager.play_sound("BG", "silence", False)
+
+        case _:
+            BarAdd('ClearNews',0,100,0)
 
 # --- Game Commands ---
-def scrub(letter):
+def scrub(letter: str):
     """
     The `scrub` function in Python manages a list of blacklisted items, viruses, progress bars, news
     updates, and previous scans, with the ability to add or remove items based on input letters.
@@ -817,26 +818,26 @@ def scrub(letter):
     global variables like `Blacklist`, `ScrubLength`, `Viruses`, `ProgressBars`, `News`,
     """
     global Blacklist
-    global ScrubLength
     global Viruses
     global ProgressBars
     global News
     global PrevScans
     #print ('aaa',letter,Blacklist,Viruses)
     if len(letter) == 1:
-        Blacklist.append(str(letter))
-        BarAdd(''.join(['virus',str(letter)]),"1",int(ScrubLength),0)
-    else:
-        letter_read = str(letter[-1])
-        if letter[0:4] == 'done':
-            if letter_read not in PrevScans:
-                PrevScans.append(str(letter_read))
-            if letter_read in Viruses:
-                Viruses.remove(letter_read)
-                News = ''.join(['Virus Found in ', letter_read, '!'])
-                BarAdd('ClearNews',0,3000,0)
-            if letter_read in Blacklist:
-                Blacklist.remove(letter_read)
+        Blacklist.append(letter)
+        BarAdd(''.join(['virus',str(letter)]),"1",SCRUB_LENGTH,0)
+    
+        return
+    letter_read = letter[-1]
+    if letter[0:4] == 'done':
+        if letter_read not in PrevScans:
+            PrevScans.append(str(letter_read))
+        if letter_read in Viruses:
+            Viruses.remove(letter_read)
+            News = ''.join(['Virus Found in ', letter_read, '!'])
+            BarAdd('ClearNews',0,3000,0)
+        if letter_read in Blacklist:
+            Blacklist.remove(letter_read)
 
 # --- Executives ---
 def TOTAL_MAIN():
