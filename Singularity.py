@@ -13,8 +13,8 @@ from typing import List, Tuple, Dict
 # --- Config ---
 StartingEnergy = 0 # >=0
 StartingMaxEnergy = 100
-ClickCost = 25 # <= StartingMaxEnergy
-PlayerSize = 20
+ClickCost = 25 # how much energy to deduct for certain actions # <= StartingMaxEnergy
+PlayerSize = 20 #the width of the player's cursor
 EnergyRate = 100
 MaxEnergyRate = 5000
 MaxEnergyCap = 200
@@ -22,7 +22,6 @@ JitterRate = 200
 ScrubLength = 5000
 StartingHealth = 10
 StartingViruses: int = 5 # <= 26
-StartingProblemRate: Tuple = (10000,20000)
 ProblemLength: int = 6
 CanvasWidth: int = 1000
 CanvasHeight: int = 700
@@ -35,10 +34,15 @@ PrevScansShow: bool = False
 cwd = os.path.join(os.path.dirname(__file__))
 print(cwd)
 ShipRoot: Tuple = (0,0)
-Energy = 0
-MaxEnergy = 100
-ProblemRate = (0,0)
-ProgressBars = [] #Name, inc/dec amount, time when next tick
+Energy = 0 # How much energy the user currently has. Increases over time. Is consumed by certain actions.
+MaxEnergy = 100 # Upper-bound to the user's energy. Decreases over time.
+ProblemRate = (10000,20000) # how long between problems (ms)
+ProgressBars = [] #[(TITLE, MAGNITUDE, TIME, DELAY, PERSISTENCE)]
+#TITLE = The name of the functionality it accomplishes
+#MAGNITUDE = The "amount" to act by; EX: Energy 1 = Increase the Energy by 1
+#TIME = The UNIX timestamp when the even should be considered to have elapsed by (If NOW is greater than TIME, complete)
+#DELAY = The amount of milliseconds that should be added to NOW if we were to create another instance of the Bar
+#PERSISTENCE = If 0, the bar is destroyed when its time is up. If 1, we create a new bar with TIME = NOW + DELAY and the same TITLE, MAGNITUDE, and PERSISTENCE Values. This allows us to have repeated functions
 Time = 0
 Jitter = (0,0)
 Prompt = 'aaa'
@@ -129,7 +133,39 @@ class SoundManager:
         volume = int(val) / 100
         for mixer in cls.channel_dict.values():
             mixer.set_volume(volume)
-        
+
+class ProgressBars:
+    Bars = [] # [{"Key":str,"Magnitude":int,"Activation":int,"Delay":Tuple,"Persistence":bool}]
+
+    @classmethod
+    # Add a new progressbar to cls.Bars based on instantiation data
+    def BarAdd(cls, Key: str, Magnitude: int, Delay: Tuple, Persistence: bool) -> None:
+        #check what time it is from the global Time variable
+        global Time 
+        Now = Time
+
+        #Gather values needed to instantiate a new progress bar item
+        Key = Key # the string value of the action this bar represents
+        Magnitude = Magnitude # the "amount"/"intensity" of an action to take
+        Delay = Delay # a length-2 Tuple describing upper and lower bounds for a delay value
+        Delay_LowerBound = Delay[0] # the lower bounds of the delay range
+        Delay_UpperBound = Delay[1] # the upper bound of the delay range
+        Activation = Now + random.randint(Delay_LowerBound, Delay_UpperBound) # a unix timestamp. when Now > this value, the time is considered to have elapsed
+        Persistence = Persistence #  should this bar be iteratively re-instantiated, or can it just expire without replacement
+
+        #Create the new bar and add it to this class's list of bars
+        newBar = {"Key":Key, "Magnitude":Magnitude, "Activation":Activation, "Delay":Delay, "Persistence":Persistence}
+        cls.Bars.insert(newBar)
+
+    @classmethod
+    # MaintainConsistency() checks each item of this class's Bars list, and removes duplicate items with the same value for their "Key" property
+    # In effect, this means that if there was [{"Key":"Value1","Data":7},{"Key":"Value1","Data:9"}], the second dictionary would be removed because
+    # an earlier dictionary in the list already has "Key":"Value1"
+    def RemoveDuplicates(cls) -> None:
+        seen_keys = set()
+        cls.Bars = [d for d in cls.Bars if not (d["Key"] in seen_keys or seen_keys.add(d["Key"]))]
+
+
     
 # --- functions ---    
 def clearCanvas() -> None:
@@ -199,7 +235,7 @@ def StartAll():
     global StartingProblemRate
     global DebugMode
     Blacklist = []
-    ProblemRate = StartingProblemRate
+    ProblemRate = (10000,20000)
     ProgressBars = []
     PrevScans = []
     Problem = ''
@@ -208,7 +244,7 @@ def StartAll():
     Viruses = []
     tempString = ''
     Health = StartingHealth
-    Scorekeeper('CLEAR',0)
+    BarExecute('CLEAR',0)
     BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
     BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
     BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
@@ -366,6 +402,8 @@ def ScrubWrite():
         n1 = n1 + 1
     ScrubBuffer = []
 
+def
+
 def BarSieve():
     """
     The function `BarSieve` iterates through `ProgressBars` to filter out duplicate entries and add
@@ -398,39 +436,29 @@ def Progressor():
     global ProgressBars
     global Time
     global PromptTicker
-    n2 = 0 #Search Pointer
-    #print Time
-    #print(ProgressBars)
-    n3 = 0
-    for x in range(len(ProgressBars)):
-        if (ProgressBars[n2])[2] < Time:
-   
-            Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
+    for index, bar in enumerate(ProgressBars):
+        print(bar, Time)
+        if (bar)[2] < Time:
+            BarExecute(str((bar)[0]),((bar)[1])) # do the action here. BarExecute will identify what to do based on the NAME @ [0] and will do it by the AMOUNT @ [1]
 
-            OldTitle = str((ProgressBars[n2])[0])
-            Mag = str((ProgressBars[n2])[1])
-            OldTick = int((ProgressBars[n2])[2])
-            OldDelay = int((ProgressBars[n2])[3])
-            Persistance = int((ProgressBars[n2])[4])
-            if Persistance == 1:
-                if OldTitle == 'ProblemTrigger':
-                    OldDelay = ProblemRate[0]
-                if OldTitle == 'PromptTicker':
-                    if PromptTicker == "":
-                        PromptTicker = "|"
-                    else:
-                        PromptTicker = ""
-                ProgressBars[n2] = (OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
+            Title = str((bar)[0]) # The name of the event/action
+            Magnitude = str((bar)[1]) # The "amount" of the event, EX: Energy+1
+            Time = int((bar)[2]) # A UNIX timestamp. If NOW > Time, it is considered to have elapsed.
+            Delay = int((bar)[3]) # A number of milliseconds. Useful for instantiating additional bars at a fixed interval.
+            Persistance = int((bar)[4]) # Whether or not we should create a new bar of Time = Time + Delay to replace this one, or if we should just let it be deleted. 1 = make additional, 0 = let die.
+
+            if Title == 'ProblemTrigger':
+                Delay = random.randint(ProblemRate[0], ProblemRate[1]) # pick a new delay for the next problem, between the min and max time
+            
+            print(Title, Magnitude, Time, Delay, Persistance)
+
+            if Persistance == 1: # we should create a replacement bar for this one
+                ProgressBars[index] = (Title,Magnitude,Time+Delay, Delay, Persistance) # create the same bar but <Delay> in the future
             if Persistance == 0:
-                if Mag == 'Deus':
-                    OldDelay = 2751
-                    ProgressBars[n2] = (OldTitle,'Music',OldTick+OldDelay, OldDelay, Persistance)
-                else:
-                    del ProgressBars[n2]
-                    n2 = n2 -1
-                
-            #print ProgressBars    
-        n2 = n2 + 1
+                ProgressBars[index] = "REAPME" #delete the bar, as it is not persistent
+
+    ProgressBars = [bar for bar in ProgressBars if bar != "REAPME"] # remove items that want to be removed
+
   
 def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
@@ -488,15 +516,15 @@ def KeyPress(event):
     if event.keysym == 'parenright':
         ServerSelect(')')
     
-def Scorekeeper(variable,amount):
+def BarExecute(variable,amount):
     """
-    The function `Scorekeeper` in Python manages various game variables and conditions based on the
+    The function `BarExecute` in Python manages various game variables and conditions based on the
     input variable and amount provided.
-    @param variable - The `variable` parameter in the `Scorekeeper` function is used to determine the
+    @param variable - The `variable` parameter in the `BarExecute` function is used to determine the
     action to be taken based on its value. It is a string that specifies the type of operation or action
     to be performed within the function. The function contains conditional statements that check the
     value of the `variable` parameter
-    @param amount - The `amount` parameter in the `Scorekeeper` function represents the value by which a
+    @param amount - The `amount` parameter in the `BarExecute` function represents the value by which a
     certain variable will be updated. Depending on the `variable` parameter passed to the function, the
     `amount` will be used to update different aspects of the game state such as Energy, MaxEnergy,
     ProgressBars
@@ -514,6 +542,7 @@ def Scorekeeper(variable,amount):
     global Problem
     global ProblemLength
     global Health
+    global PromptTicker
     
     if variable == 'Music':
         print  (ProgressBars, variable, amount)
@@ -534,6 +563,12 @@ def Scorekeeper(variable,amount):
         ProgressBars = []
         Energy = StartingEnergy
         MaxEnergy = StartingMaxEnergy
+
+    if variable  == 'PromptTicker':
+        if PromptTicker == "":
+            PromptTicker = "|"
+        else:
+            PromptTicker = ""
 
     
     #UPDATE
