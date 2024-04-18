@@ -451,16 +451,9 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     """
     global ProgressBars
     global Time 
-    n2 = 0
     #print [str(string),magnitude, (int(Time)+int(delay)),delay,persistance]
-    for i in range(len(ProgressBars)):
-        #print len(ProgressBars)
-        if (ProgressBars[i])[0] == string:
-            del ProgressBars[i]
-            n2 = 1
-            ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
-    if n2 == 0:
-        ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
+    ProgressBars = [bar for bar in ProgressBars if bar[0] != string]
+    ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
     #print ProgressBars
 
 def KeyPress(event):
