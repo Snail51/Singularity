@@ -299,16 +299,19 @@ def ClickRegistrar(event):
     """
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
+    overlaps = set(c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
                                   int(ShipRoot[1])+PlayerSize, 
                                   int(ShipRoot[0])-PlayerSize, 
-                                  int(ShipRoot[1])-PlayerSize)
+                                  int(ShipRoot[1])-PlayerSize))
     for n1 in range(ALPHA_BEGIN,ALPHA_END):
-        checker = c.find_withtag(''.join(['Server',AlphaRelate(n1)]))
-        for char in checker:
-            #print Checker
-            if (char in overlaps) and (AlphaRelate(n1) not in Blacklist):
-                ServerSelect(AlphaRelate(n1))
+        char = AlphaRelate(n1)
+        checker = set(c.find_withtag("Server %s" % char))
+
+        has_overlapping_char = not checker.isdisjoint(overlaps)
+        hasnt_blacklisted_chars = checker.isdisjoint(set(Blacklist))
+
+        if has_overlapping_char and hasnt_blacklisted_chars:
+            ServerSelect(char)
         
 def ServerSelect(tagstring: str) -> None:
     """
