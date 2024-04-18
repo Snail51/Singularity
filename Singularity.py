@@ -456,6 +456,8 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
     #print ProgressBars
 
+
+ALPHA_RESULTS = set([AlphaRelate(i) for i in range(ALPHA_BEGIN, ALPHA_END-1)])
 def KeyPress(event):
     """
     The function `KeyPress` handles key press events in Python, checking for specific key presses and
@@ -469,9 +471,9 @@ def KeyPress(event):
     global Blacklist
     #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
     
-    for i in range(ALPHA_BEGIN,ALPHA_END-1):
-        if event.keysym == AlphaRelate(i) and event.keysym not in Blacklist:
-            ServerSelect(AlphaRelate(i))
+    if event.keysym in ALPHA_RESULTS and event.keysym not in Blacklist:
+        ServerSelect(event.keysym)
+
     if event.keysym == 'Return' and event.keysym not in Blacklist:
         ServerSelect('enter')
     if event.keysym == 'space' and event.keysym not in Blacklist:
