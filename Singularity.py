@@ -204,6 +204,7 @@ def StartAll():
     Problem = ''
     Prompt = ''
     News = ''
+    Viruses = []
     Health = StartingHealth
     Scorekeeper('CLEAR',0)
     BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
@@ -274,11 +275,11 @@ def RandomString(length) -> str:
     related to the alphabet.
     """
     global Prompts
-    Return = ""
+    Return = ''
     if len(Prompts) > 0:
         Return = str(random.choice(Prompts))
     else:
-        Return = random.choices(ALPHA_RESULTS,k=length)
+        Return = "".join(random.choices(ALPHA_RESULTS,k=length))
     return Return
     
 def ClickRegistrar(event):
@@ -316,9 +317,12 @@ def ServerSelect(tagstring: str) -> None:
     global ClickCost
     global Prompt
     if tagstring == 'enter':
+
+        # Where even is Energy declared ??????
         if Energy >= ClickCost:
             PromptEnter(Prompt)
             Prompt = ''
+        
             Energy = Energy - ClickCost
     else:
         Prompt = ''.join([str(Prompt),str(tagstring)])
@@ -372,8 +376,10 @@ def BarSieve():
         #print Sieve
     if GameActive == 1 or GameActive == 2:          
         if 'Energy' not in sieve:
+            # Casting these to strings but they should probably be ints
             BarAdd('Energy',1,str(EnergyRate),1)
         if 'MaxEnergy' not in sieve:
+            # Here too
             BarAdd('MaxEnergy',1,str(MaxEnergyRate),1)
         if 'ProblemTrigger' not in sieve:
             BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)  
@@ -471,7 +477,10 @@ def KeyPress(event):
     if event.keysym == 'parenright':
         ServerSelect(')')
     
-def Scorekeeper(variable,amount):
+
+# Amount should always be int but it is always a string
+# idk why it is a string but is always string
+def Scorekeeper(title: str,amount):
     """
     The function `Scorekeeper` in Python manages various game variables and conditions based on the
     input variable and amount provided.
@@ -497,39 +506,37 @@ def Scorekeeper(variable,amount):
     global Problem
     global ProblemLength
     global Health
-    
-    if variable == 'Music':
-        print  (ProgressBars, variable, amount)
-        SoundManager.play_sound("MUS", amount, True)
 
-    if variable == 'ProblemTrigger':
-        if len(Problem) > 0:
-            Health = Health - 1
-        Problem = RandomString(ProblemLength)
-        
-    if variable == 'ClearNews':
-        News = ''
-
-    if variable[0:5] == 'virus':
-        ScrubBuffer.append(''.join(['done',str(variable[-1])]))
-
-    if variable == 'CLEAR':
-        ProgressBars = []
-        Energy = StartingEnergy
-        MaxEnergy = StartingMaxEnergy
-
-    
-    #UPDATE
-    if variable == 'Energy':
-        Energy = Energy + int(amount)
-    if variable == 'MaxEnergy' and MaxEnergy < MaxEnergyCap:
-        MaxEnergy = MaxEnergy + int(amount)
-        if MaxEnergy >= MaxEnergyCap:
-            BarAdd('Energy', 1, EnergyRate/2)
-
-    # LIMITS
+    # Energy variable is never initialized at global scope
     if Energy > MaxEnergy:
         Energy = MaxEnergy
+
+    if title[0:5] == 'virus':
+        ScrubBuffer.append("done" + title[-1])
+        return
+
+    match title: 
+        case "Music":
+            print  (ProgressBars, title, amount)
+            SoundManager.play_sound("MUS", amount, True)
+        case "ProblemTrigger":
+            if len(Problem) > 0:
+                Health = Health - 1
+            Problem = RandomString(ProblemLength)
+        case "ClearNews":
+            News = ''
+        case "CLEAR":
+            ProgressBars = []
+            Energy = StartingEnergy
+            MaxEnergy = StartingMaxEnergy
+        case "Energy":
+            Energy = Energy + int(amount)
+        case "MaxEnergy":
+            if MaxEnergy > MaxEnergyCap:
+                pass
+            MaxEnergy = MaxEnergy + int(amount)
+            if MaxEnergy >= MaxEnergyCap:
+                BarAdd('Energy', 1, EnergyRate/2)
           
 def MiscDecay():
     """
@@ -545,7 +552,10 @@ def MiscDecay():
     Output = 1.0
     if GameActive == 1:
         for i in range(len(ProgressBars)):
-            if str((ProgressBars[i])[0]) == 'ProblemTrigger':
+            if (ProgressBars[i])[0] == 'ProblemTrigger':
+
+                # We should really get rid of all this casting
+
                 EventTime = int((ProgressBars[i])[2])
                 Delay = int((ProgressBars[i])[3])
         Output = float((float(EventTime)-float(Time))/float(Delay))
@@ -582,7 +592,10 @@ def ColCyc(EventTime,Delay) -> str | None:
     result = None
                                             
     # --- Convert to HEX ---    
-    if Red >= 0 and Green >=0 and Blue >= 0:                                                                           
+    if Red >= 0 and Green >=0 and Blue >= 0:    
+
+        # Anything in all caps is constant by convention
+        # should be lower                                                               
         MR = ""
         MG = ""
         MB = ""
@@ -651,11 +664,25 @@ def DrawServers():
             Width = CanvasWidth/7.5
             Width = Width * n1
             Holder = random.randint(1,500)
+
+            thing1 = AlphaRelate(n3)
+            thing2 = Jitter(JitterRate)
+            thing3 = ColorManager(thing1)
+
             if Holder == 500:
                 c.create_image(Width+25, Height+25,image=c.image,anchor='c')
             else:
-                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(AlphaRelate(n3)),tag=(''.join(['Server',AlphaRelate(n3)])))
-                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(AlphaRelate(n3)), font=('Inhuman BB', 36), fill=ColorManager(AlphaRelate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',AlphaRelate(n3)])))
+                c.create_rectangle((Width+thing2, Height+thing2, Width+50+thing2, Height+50+thing2),\
+                                   fill="black",\
+                                   outline=thing3,\
+                                   tag="Server%s" % thing1)
+                c.create_text((Width+25+thing2, Height+5+thing2),\
+                              text=thing1, \
+                              font=('Inhuman BB', 36), \
+                              fill=thing3, \
+                              justify='center', \
+                              anchor='n', \
+                              tag="ServerText%s" % thing1)
             n3 = n3 + 1
             n1 = n1 + 1
     n2 = n2 + 1
@@ -769,32 +796,32 @@ def GameState():
     global News
     if MaxEnergy < ClickCost and GameActive ==1:
         GameActive = 2
-    if GameActive == 0: #Pre-Start
-        BarAdd('ClearNews',0,100,0)
-    if GameActive == 1: #Game
-        if len(Viruses) == 0:
-            SoundManager.play_sound("MUS", "end", False)
-            SoundManager.play_sound("SFX", 'deus', False)
-            GameActive = 4
-        if MaxEnergy < ClickCost:
-            GameActive = 2
-        if Health <= 0:
-            SoundManager.play_sound("MUS", "die", False)
-            SoundManager.play_sound("BG", "silence", False)
-            GameActive = 3
-    if GameActive == 2: #FastDying
-        ProblemRate = (2000,3000)
-        News = 'Out of Energy! Accepting fate...'
-        if Health <= 0:
-            GameActive = 3
-            SoundManager.play_sound("MUS", "die", False)
-            SoundManager.play_sound("BG", "silence", False)
-    if GameActive == 3: #Dead
-        BarAdd('ClearNews',0,100,0)
-        pass
-    if GameActive == 4: #Win
-        BarAdd('ClearNews',0,100,0)
-        pass       
+
+    match GameActive:
+        case 0: #Pre-Start
+            BarAdd('ClearNews',0,100,0)
+        case 1: #Game
+            if len(Viruses) == 0:
+                SoundManager.play_sound("MUS", "end", False)
+                SoundManager.play_sound("SFX", 'deus', False)
+                GameActive = 4
+            if MaxEnergy < ClickCost:
+                GameActive = 2
+            if Health <= 0:
+                SoundManager.play_sound("MUS", "die", False)
+                SoundManager.play_sound("BG", "silence", False)
+                GameActive = 3
+        case 2: #FastDying
+            ProblemRate = (2000,3000)
+            News = 'Out of Energy! Accepting fate...'
+            if Health <= 0:
+                GameActive = 3
+                SoundManager.play_sound("MUS", "die", False)
+                SoundManager.play_sound("BG", "silence", False)
+        case 3: #Dead
+            BarAdd('ClearNews',0,100,0)
+        case 4: #Win
+            BarAdd('ClearNews',0,100,0)
 
 # --- Game Commands ---
 def scrub(letter):
