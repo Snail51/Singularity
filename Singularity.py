@@ -7,8 +7,19 @@ import datetime
 import platform
 from pygame import mixer
 from pygame import font
-from PIL import Image, ImageTk, ImageDraw, ImageGrab
+from PIL import Image, ImageTk
 from typing import List, Tuple, Dict
+
+from dataclasses import dataclass, field
+
+
+@dataclass
+class ProgressBar:
+    title: str = field(default_factory=str)
+    mag: str = field(default_factory=str)
+    tick: int = field(default_factory=int)
+    delay: int = field(default_factory=int)
+    persistance: int = field(default_factory=int)
 
 # --- Config ---
 StartingEnergy = 0 # >=0
@@ -38,7 +49,7 @@ ShipRoot: Tuple = (0,0)
 Energy = 0
 MaxEnergy = 100
 ProblemRate = (0,0)
-ProgressBars = [] #Name, inc/dec amount, time when next tick
+ProgressBars: List[ProgressBar] = [] #Name, inc/dec amount, time when next tick
 Time = 0
 Jitter = (0,0)
 Prompt = 'aaa'
@@ -209,9 +220,9 @@ def StartAll():
     tempString = ''
     Health = StartingHealth
     Scorekeeper('CLEAR',0)
-    BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
-    BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
-    BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
+    BarAdd('Energy',1,EnergyRate,1) #Title, Magnitude,Tick Delay, Persistance.
+    BarAdd('MaxEnergy',-1,MaxEnergyRate,1)
+    BarAdd('ProblemTrigger',1,random.randint(ProblemRate[0],ProblemRate[1]),1)
     BarAdd('PromptTicker', 0, 666, 1)
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
@@ -375,19 +386,19 @@ def BarSieve():
     global GameActive
     sieve = []
     for i in range(len(ProgressBars)):
-        if ((ProgressBars[i])[0]) not in sieve:    
-            sieve.append((ProgressBars[i])[0])
-        elif ((ProgressBars[i])[0]) in sieve:
+        if ((ProgressBars[i]).title) not in sieve:    
+            sieve.append((ProgressBars[i]).title)
+        elif ((ProgressBars[i]).title) in sieve:
             del ProgressBars[i]
             i = i - 1
         #print Sieve
     if GameActive == 1 or GameActive == 2:          
         if 'Energy' not in sieve:
-            BarAdd('Energy',1,str(EnergyRate),1)
+            BarAdd('Energy',1,EnergyRate,1)
         if 'MaxEnergy' not in sieve:
-            BarAdd('MaxEnergy',1,str(MaxEnergyRate),1)
+            BarAdd('MaxEnergy',1,MaxEnergyRate,1)
         if 'ProblemTrigger' not in sieve:
-            BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)  
+            BarAdd('ProblemTrigger',1,random.randint(ProblemRate[0],ProblemRate[1]),1)  
                         
 def Progressor():
     """
@@ -403,36 +414,41 @@ def Progressor():
     #print(ProgressBars)
     n3 = 0
     for x in range(len(ProgressBars)):
-        if (ProgressBars[n2])[2] < Time:
-   
-            Scorekeeper(str((ProgressBars[n2])[0]),((ProgressBars[n2])[1]))
+        try:
+            if ProgressBars[n2].delay < Time:
+    
+                Scorekeeper(str((ProgressBars[n2]).title),((ProgressBars[n2]).mag))
 
-            OldTitle = str((ProgressBars[n2])[0])
-            Mag = str((ProgressBars[n2])[1])
-            OldTick = int((ProgressBars[n2])[2])
-            OldDelay = int((ProgressBars[n2])[3])
-            Persistance = int((ProgressBars[n2])[4])
-            if Persistance == 1:
-                if OldTitle == 'ProblemTrigger':
-                    OldDelay = ProblemRate[0]
-                if OldTitle == 'PromptTicker':
-                    if PromptTicker == "":
-                        PromptTicker = "|"
+                OldTitle = str((ProgressBars[n2]).title)
+                Mag = str((ProgressBars[n2]).mag)
+                OldTick = int((ProgressBars[n2]).tick)
+                OldDelay = int((ProgressBars[n2]).delay)
+                Persistance = int((ProgressBars[n2]).persistance)
+                if Persistance == 1:
+                    if OldTitle == 'ProblemTrigger':
+                        OldDelay = ProblemRate[0]
+                    if OldTitle == 'PromptTicker':
+                        if PromptTicker == "":
+                            PromptTicker = "|"
+                        else:
+                            PromptTicker = ""
+                    ProgressBars[n2] = ProgressBar(OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
+                if Persistance == 0:
+                    if Mag == 'Deus':
+                        OldDelay = 2751
+                        ProgressBars[n2] = ProgressBar(OldTitle,'Music',OldTick+OldDelay, OldDelay, Persistance)
                     else:
-                        PromptTicker = ""
-                ProgressBars[n2] = (OldTitle,Mag,OldTick+OldDelay, OldDelay, Persistance)
-            if Persistance == 0:
-                if Mag == 'Deus':
-                    OldDelay = 2751
-                    ProgressBars[n2] = (OldTitle,'Music',OldTick+OldDelay, OldDelay, Persistance)
-                else:
-                    del ProgressBars[n2]
-                    n2 = n2 -1
-                
-            #print ProgressBars    
-        n2 = n2 + 1
+                        del ProgressBars[n2]
+                        n2 = n2 -1
+                    
+                #print ProgressBars    
+            n2 = n2 + 1
+        except:
+            print(ProgressBars[n2].delay)
+            print(type(Time),type(ProgressBars[n2].delay))
+            exit()
   
-def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
+def BarAdd(string, magnitude: int, delay: int, persistance: int): #Create a new progress bar
     """
     The function `BarAdd` creates a new progress bar and manages its properties in a list called
     `ProgressBars`.
@@ -452,8 +468,8 @@ def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
     global ProgressBars
     global Time 
     #print [str(string),magnitude, (int(Time)+int(delay)),delay,persistance]
-    ProgressBars = [bar for bar in ProgressBars if bar[0] != string]
-    ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
+    ProgressBars = [bar for bar in ProgressBars if bar.title != string]
+    ProgressBars.insert(0,ProgressBar(string, magnitude, int(Time)+int(delay),delay,persistance))
     #print ProgressBars
 
 
@@ -557,9 +573,9 @@ def MiscDecay():
     Output = 1.0
     if GameActive == 1:
         for i in range(len(ProgressBars)):
-            if ProgressBars[i][0] == 'ProblemTrigger':
-                EventTime = float((ProgressBars[i])[2])
-                Delay = float((ProgressBars[i])[3])
+            if ProgressBars[i].title == 'ProblemTrigger':
+                EventTime = float((ProgressBars[i]).tick)
+                Delay = float((ProgressBars[i]).delay)
         Output = float((EventTime - float(Time) ) / Delay)
         #print Output
         Output = (((Output*-1.0) + 1.0) * 5)
@@ -630,9 +646,9 @@ def ColorManager(string):
     result = 'white'
     if string == 'ProblemDecay':
         for i in range(len(ProgressBars)):
-            if (ProgressBars[i])[0] == 'ProblemTrigger':
-                result = ColCyc(((ProgressBars[i])[2]),
-                                ((ProgressBars[i])[3]))   
+            if (ProgressBars[i]).title == 'ProblemTrigger':
+                result = ColCyc(((ProgressBars[i]).tick),
+                                ((ProgressBars[i]).delay))   
     elif len(string) == 1:
         if Blacklist.count(string)  != 0:
             result = 'red'
@@ -859,7 +875,7 @@ def TOTAL_MAIN():
         DrawMaster()
         Timekeeper()
         postFrame = Time # the time at the end of the frame
-        frameWait=max(0,17-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
+        frameWait=max(0,60-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
         #print(postFrame-preFrame)
         c.after(frameWait, TOTAL_MAIN)
     except Exception as e:
