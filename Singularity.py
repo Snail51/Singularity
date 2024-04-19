@@ -1,6 +1,10 @@
 import tkinter as tk
+from tkinter import font
 from tkinter import *
 import os
+import subprocess
+import shutil
+import ctypes
 import random
 import traceback
 import time
@@ -251,7 +255,71 @@ class Alphabet:
         if result == "_":
             result = "t"
         return result
+
+class FontInstaller:
+    FontSource = ResourcePrefix() + "exe/InhumanBB.ttf"
+    FileName =  "Inhuman BB.ttf"
+
+    @classmethod
+    def Install(cls) -> None:
+        if platform.system().upper() == "WINDOWS":
+            cls.Windows()
+        elif platform.system().upper() == "LINUX":
+            cls.Linux()
+        elif platform.system().upper() == "DARWIN":
+            cls.Mac()
+        else:
+            cls.Other()
+
+    @classmethod
+    def Windows(cls) -> None:
+        # Destination path for the user's Fonts directory
+        fonts_dir = os.path.join(os.environ['LOCALAPPDATA'], 'Microsoft', 'Windows', 'Fonts')
+
+        if not os.path.isfile(os.path.join(fonts_dir, cls.FileName)):
+            # Copy the font file to the user's Fonts directory
+            shutil.copy(cls.FontSource, fonts_dir)
+
+            # Load the font into the system font table
+            font_path = os.path.join(fonts_dir, os.path.basename(cls.FontSource))
+            font_path_w = font_path.encode('utf-16-le') # Convert to wide string
+
+            # Use ctypes to call AddFontResourceEx
+            ctypes.windll.gdi32.AddFontResourceExW(font_path_w, 0x10, 0)
+
+    @classmethod
+    def Linux(cls) -> None:
+
+        # Destination path for the user's Fonts directory
+        fonts_dir = os.path.expanduser('~/.fonts')
+
+        if not os.path.isfile(os.path.join(fonts_dir, cls.FileName)):
+            # Copy the font file to the user's Fonts directory
+            shutil.copy(cls.FontSource, fonts_dir)
+
+            # Update the font cache
+            subprocess.run(['fc-cache', '-fv'], check=True)
     
+    @classmethod
+    def macOS(cls) -> None:
+        # Destination path for the system's Fonts directory
+        fonts_dir = '/Library/Fonts'
+
+        if not os.path.isfile(os.path.join(fonts_dir, cls.FileName)):
+            # Copy the font file to the system's Fonts directory
+            shutil.copy(cls.FontSource, fonts_dir)
+
+            # Load the font into the system font table
+            font_path = os.path.join(fonts_dir, cls.FileName)
+            font_path_c = font_path.encode('utf-8') # Convert to C string
+
+            # Use ctypes to call ATSFontActivateFontsWithText
+            ctypes.CDLL('/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreText.framework/CoreText').ATSFontActivateFontsWithText(font_path_c, len(font_path_c), None, kATSOptionFlagsDefault, None)
+
+    @classmethod
+    def Other(cls) -> None:
+        print("WARNING: Unrecognized OS. Could not install game fonts automatically. Please install ./_internal/exe/InhumanBB.ttf")
+
 # --- functions ---    
 def clearCanvas() -> None:
     # Remove all items from the canvas
@@ -745,6 +813,8 @@ def resize_canvas(event) -> None:
 
 if __name__ == "__main__":
     # init    
+    FontInstaller.Install() # Make sure the user has "Inhuman BB" installed as a font
+
     root = tk.Tk()
 
     root.bind('<Key>', KeyPress)
@@ -757,6 +827,11 @@ if __name__ == "__main__":
         root.state('zoomed')
     else:
         root.wm_attributes("-zoomed", True)
+
+    #fontPath = ResourcePrefix() + "assets/Inhuman BB.ttf"
+    #root.tk.call('tk', 'scaling', 1.0)
+    #root.tk.call('tk', 'call', 'font', 'create', 'Inhuman BB', 'from', fontPath)
+    #tk.font.loadFont()
 
     #Make Canvas
     c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
