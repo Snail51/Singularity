@@ -37,7 +37,6 @@ ShipRoot: Tuple = (0,0)
 Energy = 0 # How much energy the user currently has. Increases over time. Is consumed by certain actions.
 MaxEnergy = 100 # Upper-bound to the user's energy. Decreases over time.
 ProblemRate = (10000,20000) # how long between problems (ms)
-ProgressBars = [] #[(TITLE, MAGNITUDE, TIME, DELAY, PERSISTENCE)]
 #TITLE = The name of the functionality it accomplishes
 #MAGNITUDE = The "amount" to act by; EX: Energy 1 = Increase the Energy by 1
 #TIME = The UNIX timestamp when the even should be considered to have elapsed by (If NOW is greater than TIME, complete)
@@ -135,10 +134,12 @@ class SoundManager:
             mixer.set_volume(volume)
 
 class ProgressBars:
-    Bars = [] # [{"Key":str,"Magnitude":int,"Activation":int,"Delay":Tuple,"Persistence":bool}]
+
+    Bars = [] # [{"Key":str,"Magnitude":int,"Activation":int,"Delay":{"Actual":int,"Lower":int,"Upper":int},"Persistence":bool}]
 
     @classmethod
     # Add a new progressbar to cls.Bars based on instantiation data
+    # If a bar already exists with the provided key, it is updated (no new one is made)
     def BarAdd(cls, Key: str, Magnitude: int, Delay: Tuple, Persistence: bool) -> None:
         #check what time it is from the global Time variable
         global Time 
@@ -147,15 +148,32 @@ class ProgressBars:
         #Gather values needed to instantiate a new progress bar item
         Key = Key # the string value of the action this bar represents
         Magnitude = Magnitude # the "amount"/"intensity" of an action to take
-        Delay = Delay # a length-2 Tuple describing upper and lower bounds for a delay value
+        Delay = Delay # a Tuple (Lower:int,Upper:int)
         Delay_LowerBound = Delay[0] # the lower bounds of the delay range
         Delay_UpperBound = Delay[1] # the upper bound of the delay range
-        Activation = Now + random.randint(Delay_LowerBound, Delay_UpperBound) # a unix timestamp. when Now > this value, the time is considered to have elapsed
+        Delay_Actual = random.randint(Delay_LowerBound, Delay_UpperBound)
+        Activation = Now + Delay_Actual # a unix timestamp. when Now > this value, the time is considered to have elapsed
         Persistence = Persistence #  should this bar be iteratively re-instantiated, or can it just expire without replacement
 
         #Create the new bar and add it to this class's list of bars
-        newBar = {"Key":Key, "Magnitude":Magnitude, "Activation":Activation, "Delay":Delay, "Persistence":Persistence}
-        cls.Bars.insert(newBar)
+        newBar = {"Key":Key, "Magnitude":Magnitude, "Activation":Activation, "Delay":{"Actual":Delay_Actual,"Lower":Delay_LowerBound,"Upper":Delay_UpperBound}, "Persistence":Persistence }
+        
+        # Does the bar with this key already exist?
+        # If so, find its index
+        bar_index = next((index for index, bar in enumerate(cls.Bars) if bar["Key"] == Key), None)
+        
+        if bar_index is not None:
+            cls.Bars[bar_index] = newBar
+        else:
+            cls.Bars.insert(0, newBar)
+
+    @classmethod
+    # Return the bar in cls.Bars who's "Key" value = key
+    def GetBarByKey(cls, key:str) -> dict | None:
+        for bar in cls.Bars:
+            if bar["Key"] == key:
+                return bar
+        return None
 
     @classmethod
     # MaintainConsistency() checks each item of this class's Bars list, and removes duplicate items with the same value for their "Key" property
@@ -164,6 +182,55 @@ class ProgressBars:
     def RemoveDuplicates(cls) -> None:
         seen_keys = set()
         cls.Bars = [d for d in cls.Bars if not (d["Key"] in seen_keys or seen_keys.add(d["Key"]))]
+
+    @classmethod
+    # Iterates over all bars in cls.Bars and checks them for updates
+    # If the bar's activation timestamp is less than Now's timestamp, the bar's time is up
+    # The Bar's Key and Magnitude are given to the scorekeeper to preform game functions
+    # If the bar is persistent, we overwrite the current bar with a new bar of equivalent Key, Magnitude, and Persistence,
+    # but where a new delay is selected between the Lower and Upper bound, and the bar is set to expire at Now + That Delay
+    # If the bar is not persistent, that entry is removed from cls.Bars without replacement
+    def Progressor(cls) -> None:
+        global Time
+        for index, bar in enumerate(cls.Bars):
+            if (bar)["Activation"] < Time:
+                Scorekeeper(bar) # do the action here. Scorekeeper will identify what to do based on the NAME @ [0] and will do it by the AMOUNT @ [1]
+
+                Key = bar["Key"] # The name of the event/action
+                Magnitude = bar["Magnitude"] # The "amount" of the event, EX: Energy+1
+                Activation = bar["Activation"] # A UNIX timestamp. If NOW > Activation, it is considered to have elapsed.
+                Delay = bar["Delay"] # A dictionary. {"Lower":int,"Upper":int} Useful for instantiating additional bars at a fixed interval.
+                Persistence = bar["Persistence"] # Whether or not we should create a new bar of Activation = Activation + Delay to replace this one, or if we should just let it be deleted. 1 = make additional, 0 = let die.
+
+                if Persistence == 1: # we should create a replacement bar for this one
+                    NewDelay = random.randint(Delay["Lower"], Delay["Upper"]) # pick a new delay for the next problem, between the min and max time
+                    DelayDict = {"Actual":NewDelay,"Lower":Delay["Lower"],"Upper":Delay["Upper"]}
+                    cls.Bars[index] = {"Key":Key,"Magnitude":Magnitude,"Activation":Activation+NewDelay,"Delay":DelayDict,"Persistence":Persistence} # create the same bar but <Delay> in the future
+                if Persistence == 0: # we should let this bar expire without replacement
+                    cls.Bars[index] = "REAPME" #delete the bar, as it is not persistent
+
+        cls.Bars = [bar for bar in cls.Bars if bar != "REAPME"] # remove items that want to be removed
+    
+    @classmethod
+    # Drop all progressbars from this class
+    # Sets cls.Bars = []
+    def Dump(cls) -> None:
+        cls.Bars = []
+
+    @classmethod
+    # Given a string Key, returns a float 0-1 representing how far
+    # along a progress bar is into its life. 0.0 = just born, 1.0 = being killed
+    def CompletionPercent(cls, BarKey:str) -> float:
+        global Time
+
+        ProblemBar = cls.GetBarByKey(BarKey)
+        RemainingTime = ProblemBar["Activation"] - Time
+        Delay = ProblemBar["Delay"]["Actual"]
+        
+        PercentComplete = float(RemainingTime) / float(Delay)
+        PercentComplete = 1.0 - PercentComplete
+
+        return PercentComplete
 
 
     
@@ -230,13 +297,10 @@ def StartAll():
     global Prompt
     global News
     global GameActive
-    global ProgressBars
     global Blacklist
-    global StartingProblemRate
     global DebugMode
     Blacklist = []
     ProblemRate = (10000,20000)
-    ProgressBars = []
     PrevScans = []
     Problem = ''
     Prompt = ''
@@ -244,11 +308,11 @@ def StartAll():
     Viruses = []
     tempString = ''
     Health = StartingHealth
-    BarExecute('CLEAR',0)
-    BarAdd('Energy',1,str(EnergyRate),1) #Title, Magnitude,Tick Delay, Persistance.
-    BarAdd('MaxEnergy',-1,str(MaxEnergyRate),1)
-    BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)
-    BarAdd('PromptTicker', 0, 666, 1)
+    Scorekeeper({"Key":'CLEAR',"Magnitude":0})
+    ProgressBars.BarAdd('Energy',1,(100,100),True)
+    ProgressBars.BarAdd('MaxEnergy',-1,(MaxEnergyRate,MaxEnergyRate),True)
+    ProgressBars.BarAdd('ProblemTrigger',1,(ProblemRate[0],ProblemRate[1]),True)
+    ProgressBars.BarAdd('PromptTicker', 0, (666,666), True)
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
     for x in range(StartingViruses):
@@ -376,8 +440,6 @@ def PromptEnter(Prompt):
     to perform different actions based on its value. The function checks the value of `Prompt` and
     executes specific tasks accordingly.
     """
-    #print(Prompt)
-    global ProgressBars
     global Problem
     global Blacklist
     global Viruses
@@ -388,6 +450,8 @@ def PromptEnter(Prompt):
         print (Viruses)
     if Prompt == "deus_ex_machina":
         SoundManager.play_sound("SFX", 'deus', False)
+    if Prompt == "kill_me_now_pls":
+        ProgressBars.BarAdd('ProblemTrigger',1,(2000,3000),True)
     if Prompt == Problem:
         Problem = ''
     scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
@@ -401,95 +465,6 @@ def ScrubWrite():
         scrub(ScrubBuffer[n1])
         n1 = n1 + 1
     ScrubBuffer = []
-
-def
-
-def BarSieve():
-    """
-    The function `BarSieve` iterates through `ProgressBars` to filter out duplicate entries and add
-    specific bars if they are not already present.
-    """
-    global ProgressBars
-    global GameActive
-    sieve = []
-    for i in range(len(ProgressBars)):
-        if ((ProgressBars[i])[0]) not in sieve:    
-            sieve.append((ProgressBars[i])[0])
-        elif ((ProgressBars[i])[0]) in sieve:
-            del ProgressBars[i]
-            i = i - 1
-        #print Sieve
-    if GameActive == 1 or GameActive == 2:          
-        if 'Energy' not in sieve:
-            BarAdd('Energy',1,str(EnergyRate),1)
-        if 'MaxEnergy' not in sieve:
-            BarAdd('MaxEnergy',1,str(MaxEnergyRate),1)
-        if 'ProblemTrigger' not in sieve:
-            BarAdd('ProblemTrigger',1,str(random.randint(ProblemRate[0],ProblemRate[1])),1)  
-                        
-def Progressor():
-    """
-    The `Progressor` function iterates through `ProgressBars`, updates progress based on time, and
-    adjusts progress bars based on certain conditions.
-    """
-    global ProblemRate
-    global ProgressBars
-    global Time
-    global PromptTicker
-    for index, bar in enumerate(ProgressBars):
-        print(bar, Time)
-        if (bar)[2] < Time:
-            BarExecute(str((bar)[0]),((bar)[1])) # do the action here. BarExecute will identify what to do based on the NAME @ [0] and will do it by the AMOUNT @ [1]
-
-            Title = str((bar)[0]) # The name of the event/action
-            Magnitude = str((bar)[1]) # The "amount" of the event, EX: Energy+1
-            Time = int((bar)[2]) # A UNIX timestamp. If NOW > Time, it is considered to have elapsed.
-            Delay = int((bar)[3]) # A number of milliseconds. Useful for instantiating additional bars at a fixed interval.
-            Persistance = int((bar)[4]) # Whether or not we should create a new bar of Time = Time + Delay to replace this one, or if we should just let it be deleted. 1 = make additional, 0 = let die.
-
-            if Title == 'ProblemTrigger':
-                Delay = random.randint(ProblemRate[0], ProblemRate[1]) # pick a new delay for the next problem, between the min and max time
-            
-            print(Title, Magnitude, Time, Delay, Persistance)
-
-            if Persistance == 1: # we should create a replacement bar for this one
-                ProgressBars[index] = (Title,Magnitude,Time+Delay, Delay, Persistance) # create the same bar but <Delay> in the future
-            if Persistance == 0:
-                ProgressBars[index] = "REAPME" #delete the bar, as it is not persistent
-
-    ProgressBars = [bar for bar in ProgressBars if bar != "REAPME"] # remove items that want to be removed
-
-  
-def BarAdd(string, magnitude, delay, persistance): #Create a new progress bar
-    """
-    The function `BarAdd` creates a new progress bar and manages its properties in a list called
-    `ProgressBars`.
-    @param string - The `string` parameter in the `BarAdd` function is used to specify the name or
-    identifier of the progress bar being created or updated.
-    @param magnitude - The `magnitude` parameter in the `BarAdd` function represents the size or scale
-    of the progress bar that you want to create. It could be the total number of steps or units that the
-    progress bar will represent. This value helps determine the overall length or completion of the
-    progress bar as it advances
-    @param delay - The `delay` parameter in the `BarAdd` function represents the amount of time (in
-    seconds) to wait before displaying the progress bar. It is used to introduce a delay before showing
-    the progress of a particular task.
-    @param persistance - The `persistance` parameter in the `BarAdd` function seems to be used to
-    determine how long the progress bar should persist or remain visible. It likely specifies the
-    duration for which the progress bar should be displayed before it disappears or completes.
-    """
-    global ProgressBars
-    global Time 
-    n2 = 0
-    #print [str(string),magnitude, (int(Time)+int(delay)),delay,persistance]
-    for i in range(len(ProgressBars)):
-        #print len(ProgressBars)
-        if (ProgressBars[i])[0] == string:
-            del ProgressBars[i]
-            n2 = 1
-            ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
-    if n2 == 0:
-        ProgressBars.insert(0,(str(string),magnitude, (int(Time)+int(delay)),delay,persistance))
-    #print ProgressBars
 
 def KeyPress(event):
     """
@@ -516,24 +491,14 @@ def KeyPress(event):
     if event.keysym == 'parenright':
         ServerSelect(')')
     
-def BarExecute(variable,amount):
-    """
-    The function `BarExecute` in Python manages various game variables and conditions based on the
-    input variable and amount provided.
-    @param variable - The `variable` parameter in the `BarExecute` function is used to determine the
-    action to be taken based on its value. It is a string that specifies the type of operation or action
-    to be performed within the function. The function contains conditional statements that check the
-    value of the `variable` parameter
-    @param amount - The `amount` parameter in the `BarExecute` function represents the value by which a
-    certain variable will be updated. Depending on the `variable` parameter passed to the function, the
-    `amount` will be used to update different aspects of the game state such as Energy, MaxEnergy,
-    ProgressBars
-    """
+def Scorekeeper(bar):
+    variable = bar["Key"]
+    amount = bar["Magnitude"]
+
     global Energy
     global MaxEnergy
     global StartingEnergy
     global StartingMaxEnergy
-    global ProgressBars
     global EnergyRate
     global MaxEnergyRate
     global MaxEnergyCap
@@ -545,7 +510,6 @@ def BarExecute(variable,amount):
     global PromptTicker
     
     if variable == 'Music':
-        print  (ProgressBars, variable, amount)
         SoundManager.play_sound("MUS", amount, True)
 
     if variable == 'ProblemTrigger':
@@ -560,7 +524,7 @@ def BarExecute(variable,amount):
         ScrubBuffer.append(''.join(['done',str(variable[-1])]))
 
     if variable == 'CLEAR':
-        ProgressBars = []
+        ProgressBars.Dump()
         Energy = StartingEnergy
         MaxEnergy = StartingMaxEnergy
 
@@ -576,58 +540,15 @@ def BarExecute(variable,amount):
         Energy = Energy + int(amount)
     if variable == 'MaxEnergy' and MaxEnergy < MaxEnergyCap:
         MaxEnergy = MaxEnergy + int(amount)
-        if MaxEnergy >= MaxEnergyCap:
-            BarAdd('Energy', 1, EnergyRate/2)
+        #if MaxEnergy >= MaxEnergyCap:
+            #ProgressBars.BarAdd('Energy', 1, EnergyRate/2)
 
     # LIMITS
     if Energy > MaxEnergy:
         Energy = MaxEnergy
-          
-def MiscDecay():
-    """
-    The function `MiscDecay` calculates and returns an output value based on the progress bars, time,
-    and game activity status.
-    @returns The function `MiscDecay` returns the calculated `Output` value.
-    """
-    global ProgressBars
-    global Time
-    global GameActive
-    EventTime = 0
-    Delay = 0
-    Output = 1.0
-    if GameActive == 1:
-        for i in range(len(ProgressBars)):
-            if str((ProgressBars[i])[0]) == 'ProblemTrigger':
-                EventTime = int((ProgressBars[i])[2])
-                Delay = int((ProgressBars[i])[3])
-        Output = float((float(EventTime)-float(Time))/float(Delay))
-        #print Output
-        Output = (((Output*-1.0) + 1.0) * 5)
-    return Output
         
-def ColCyc(EventTime,Delay) -> str | None: 
-    """
-    This Python function calculates a color value based on the input event time and delay, and returns
-    the color in hexadecimal format.
-    @param EventTime - EventTime is the time of the event that you want to calculate the color for. It
-    is a numerical value representing the time of the event.
-    @param Delay - The `Delay` parameter in the `ColCyc` function represents the time delay between
-    events. It is used to calculate the color output based on the difference between the current event
-    time and the previous event time.
-    @returns The function `ColCyc(EventTime, Delay)` is returning a hexadecimal color code based on the
-    input parameters `EventTime` and `Delay`. The color code is calculated based on the difference
-    between `EventTime` and a global variable `Time`, and then converted to a hexadecimal format
-    representing a color. The function returns the final hexadecimal color code as a string.
-    """
-    global Time
-    #print (Time, EventTime,Delay)
-
-    Output = float((float(EventTime)-float(Time))/float(Delay))
-    #print Output
-    Output = (Output*-1.0) + 1.0
-    #print Output
-    
-    Red = int(float(Output) * float(255.0))
+def ColCyc(fraction:float) -> str | None: 
+    Red = int(float(fraction) * float(255.0))
     Green = 0
     Blue = int(255.0-float(Red))
     
@@ -669,10 +590,7 @@ def ColorManager(string):
     global PrevScansShow
     result = 'white'
     if string == 'ProblemDecay':
-        for i in range(len(ProgressBars)):
-            if (ProgressBars[i])[0] == 'ProblemTrigger':
-                result = ColCyc(((ProgressBars[i])[2]),
-                                ((ProgressBars[i])[3]))   
+        result = ColCyc(ProgressBars.CompletionPercent("ProblemTrigger"))
     elif len(string) == 1:
         if Blacklist.count(string)  != 0:
             result = 'red'
@@ -788,7 +706,7 @@ def DrawMaster():
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.15)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*MiscDecay(),(CanvasHeight/1)+Jitter(JitterRate/25)*MiscDecay()),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
+        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5),(CanvasHeight/1)+Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
@@ -815,14 +733,13 @@ def GameState():
     global Health
     global Energy
     global ClickCost
-    global ProblemRate
     global MaxEnergy
     global Viruses
     global News
     if MaxEnergy < ClickCost and GameActive ==1:
         GameActive = 2
     if GameActive == 0: #Pre-Start
-        BarAdd('ClearNews',0,100,0)
+        ProgressBars.BarAdd('ClearNews',0,(100,100),0)
     if GameActive == 1: #Game
         if len(Viruses) == 0:
             SoundManager.play_sound("MUS", "end", False)
@@ -835,17 +752,17 @@ def GameState():
             SoundManager.play_sound("BG", "silence", False)
             GameActive = 3
     if GameActive == 2: #FastDying
-        ProblemRate = (2000,3000)
+        ProgressBars.BarAdd('ProblemTrigger',1,(2000,3000),True)
         News = 'Out of Energy! Accepting fate...'
         if Health <= 0:
             GameActive = 3
             SoundManager.play_sound("MUS", "die", False)
             SoundManager.play_sound("BG", "silence", False)
     if GameActive == 3: #Dead
-        BarAdd('ClearNews',0,100,0)
+        ProgressBars.BarAdd('ClearNews',0,(100,100),0)
         pass
     if GameActive == 4: #Win
-        BarAdd('ClearNews',0,100,0)
+        ProgressBars.BarAdd('ClearNews',0,(100,100),0)
         pass       
 
 # --- Game Commands ---
@@ -866,7 +783,7 @@ def scrub(letter):
     #print ('aaa',letter,Blacklist,Viruses)
     if len(letter) == 1:
         Blacklist.append(str(letter))
-        BarAdd(''.join(['virus',str(letter)]),"1",int(ScrubLength),0)
+        ProgressBars.BarAdd("virus"+letter,1,(ScrubLength,ScrubLength),0)
     else:
         letter_read = str(letter[-1])
         if letter[0:4] == 'done':
@@ -875,7 +792,7 @@ def scrub(letter):
             if letter_read in Viruses:
                 Viruses.remove(letter_read)
                 News = ''.join(['Virus Found in ', letter_read, '!'])
-                BarAdd('ClearNews',0,3000,0)
+                ProgressBars.BarAdd('ClearNews',0,(3000,3000),0)
             if letter_read in Blacklist:
                 Blacklist.remove(letter_read)
 
@@ -893,8 +810,8 @@ def TOTAL_MAIN():
         Timekeeper()
         preFrame = Time #the time at the start of this frame
         GameState()
-        BarSieve()
-        Progressor()
+        ProgressBars.RemoveDuplicates()
+        ProgressBars.Progressor()
         ScrubWrite()
         DrawMaster()
         Timekeeper()
@@ -903,16 +820,15 @@ def TOTAL_MAIN():
         #print(postFrame-preFrame)
         c.after(frameWait, TOTAL_MAIN)
     except Exception as e:
-        global ProgressBars
-        global Blacklist
-        global ScrubBuffer
-        print("███████<crash>███████")
-        print("game is crashing... dumping memory to console NOW!")
-        print("Error: ", e)
-        print("Progress Bars: ", ProgressBars)
-        print("Blacklist: ", Blacklist)
-        print("ScrubBuffer: ", ScrubBuffer)
-        print("███████</crash>███████")
+        #global Blacklist
+        #global ScrubBuffer
+        #print("███████<crash>███████")
+        #print("game is crashing... dumping memory to console NOW!")
+        #print("Error: ", e)
+        #print("Progress Bars: ", ProgressBars.bars)
+        #print("Blacklist: ", Blacklist)
+        #print("ScrubBuffer: ", ScrubBuffer)
+        #print("███████</crash>███████")
         traceback.print_exc()
     
 
