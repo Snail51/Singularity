@@ -247,9 +247,9 @@ class Alphabet:
     def RandomSafe(cls) -> str:
         result = random.choice(cls.alphabet)
         if result == "~":
-            result = "_"
+            result = "E"
         if result == "_":
-            result = "_"
+            result = "T"
         return result
     
 # --- functions ---    
