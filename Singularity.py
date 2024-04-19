@@ -9,248 +9,13 @@ from pygame import mixer
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
 
-# --- Config ---
-StartingEnergy = 0 # >=0
-StartingMaxEnergy = 100
-ClickCost = 25 # how much energy to deduct for certain actions # <= StartingMaxEnergy
-PlayerSize = 20 #the width of the player's cursor
-EnergyRate = 100
-MaxEnergyRate = 5000
-MaxEnergyCap = 200
-JitterRate = 200
-ScrubLength = 5000
-StartingHealth = 10
-StartingViruses: int = 5 # <= 26
-ProblemLength: int = 6
-CanvasWidth: int = 1000
-CanvasHeight: int = 700
-UseBinaryBG: bool = True
-ProblemType: str = "String" # Prompts or String
-DebugMode: bool = False
-PrevScansShow: bool = False
+from ResourcePrefix import ResourcePrefix
+from MusicManager import SoundManager
+from ProgressBars import ProgressBars
+from Alphabet import Alphabet
 
-# --- variables ---
-cwd = os.path.join(os.path.dirname(__file__))
-print(cwd)
-ShipRoot: Tuple = (0,0)
-Energy = 0 # How much energy the user currently has. Increases over time. Is consumed by certain actions.
-MaxEnergy = 100 # Upper-bound to the user's energy. Decreases over time.
-ProblemRate = (10000,20000) # how long between problems (ms)
-#TITLE = The name of the functionality it accomplishes
-#MAGNITUDE = The "amount" to act by; EX: Energy 1 = Increase the Energy by 1
-#TIME = The UNIX timestamp when the even should be considered to have elapsed by (If NOW is greater than TIME, complete)
-#DELAY = The amount of milliseconds that should be added to NOW if we were to create another instance of the Bar
-#PERSISTENCE = If 0, the bar is destroyed when its time is up. If 1, we create a new bar with TIME = NOW + DELAY and the same TITLE, MAGNITUDE, and PERSISTENCE Values. This allows us to have repeated functions
-Time = 0
-Jitter = (0,0)
-Prompt = 'aaa'
-Blacklist = []
-Viruses = []
-News = 'bbb'
-Problem = 'ccc'
-Health = 0
-ScrubBuffer = []
-GameActive = 0
-SimpleDict = []
-Prompts = []
-Dictionary = []
-PrevScans = []
-PromptTicker = ""
-WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
+from global_vars import *
 
-def ResourcePrefix() -> str:
-    """
-    The function `ResourcePrefix` returns specific resource path prefixes based on if the game
-    is in a dev or built state.
-    @returns The function `ResourcePrefix()` is returning a string value. The returned value depends on
-    whether the directory `_internal` exists. If the directory `_internal` exists, the function will
-    return `"_internal/assets/"`, otherwise it will return `"assets/"`.
-    """
-    if os.path.isdir('_internal'):
-        return "_internal/"
-    else:
-        return ""
-
-class SoundManager:
-    mixer.init()
-    prefix = ResourcePrefix()
-
-    channel_dict: Dict[ str, mixer.Channel ] = {
-        "MUS"   : mixer.Channel(0),
-        "BG"    : mixer.Channel(1),
-        "SFX"   : mixer.Channel(2)
-    }
-    sound_dict: Dict[ str, mixer.Sound ] = {
-        "intro"     : mixer.Sound(prefix + "assets/intro.ogg"),
-        "phase1"    : mixer.Sound(prefix + "assets/phase1.ogg"),
-        "phase2"    : mixer.Sound(prefix + "assets/phase2.ogg"),
-        "phase3"    : mixer.Sound(prefix + "assets/phase3.ogg"),
-        "end"       : mixer.Sound(prefix + "assets/end.ogg"),
-        "chug"      : mixer.Sound(prefix + "assets/chug.ogg"),
-        "deus"      : mixer.Sound(prefix + "assets/deus_ex_machina.ogg"),
-        "die"       : mixer.Sound(prefix + "assets/die.ogg"),
-        "silence"   : mixer.Sound(prefix + "assets/silence.ogg")
-    }
-
-    """
-    @function play_sound Plays the music file indicated by filename,
-    if filename exists in song_dict.
-
-
-    @return True if the song was able to be played, else False
-    """
-    @classmethod
-    def play_sound(cls, channel: str, filename: str, loop: BooleanVar) -> bool:
-        if(filename not in cls.sound_dict.keys()) or (channel not in cls.channel_dict.keys()):
-            return False
-        target_sound = cls.sound_dict[filename]
-        target_channel = cls.channel_dict[channel]
-        target_channel.play(target_sound, -1 if loop else 0)
-        return True
-    
-    """
-    @function set_volume Adjusts all channel's volumes to,
-    the given value between 0.0  and 1.0.
-    """
-    @classmethod
-    def set_volume(cls, val: int) -> None:
-        volume = int(val) / 100
-        for mixer in cls.channel_dict.values():
-            mixer.set_volume(volume)
-
-class ProgressBars:
-
-    Bars = [] # [{"Key":str,"Magnitude":int,"Activation":int,"Delay":{"Actual":int,"Lower":int,"Upper":int},"Persistence":bool}]
-
-    @classmethod
-    # Add a new progressbar to cls.Bars based on instantiation data
-    # If a bar already exists with the provided key, it is updated (no new one is made)
-    def BarAdd(cls, Key: str, Magnitude: int, Delay: Tuple, Persistence: bool) -> None:
-        #check what time it is from the global Time variable
-        global Time 
-        Now = Time
-
-        #Gather values needed to instantiate a new progress bar item
-        Key = Key # the string value of the action this bar represents
-        Magnitude = Magnitude # the "amount"/"intensity" of an action to take
-        Delay = Delay # a Tuple (Lower:int,Upper:int)
-        Delay_LowerBound = Delay[0] # the lower bounds of the delay range
-        Delay_UpperBound = Delay[1] # the upper bound of the delay range
-        Delay_Actual = random.randint(Delay_LowerBound, Delay_UpperBound)
-        Activation = Now + Delay_Actual # a unix timestamp. when Now > this value, the time is considered to have elapsed
-        Persistence = Persistence #  should this bar be iteratively re-instantiated, or can it just expire without replacement
-
-        #Create the new bar and add it to this class's list of bars
-        newBar = {"Key":Key, "Magnitude":Magnitude, "Activation":Activation, "Delay":{"Actual":Delay_Actual,"Lower":Delay_LowerBound,"Upper":Delay_UpperBound}, "Persistence":Persistence }
-        
-        # Does the bar with this key already exist?
-        # If so, find its index
-        bar_index = next((index for index, bar in enumerate(cls.Bars) if bar["Key"] == Key), None)
-        
-        if bar_index is not None:
-            cls.Bars[bar_index] = newBar
-        else:
-            cls.Bars.insert(0, newBar)
-
-    @classmethod
-    # Return the bar in cls.Bars who's "Key" value = key
-    def GetBarByKey(cls, key:str) -> dict | None:
-        for bar in cls.Bars:
-            if bar["Key"] == key:
-                return bar
-        return None
-
-    @classmethod
-    # MaintainConsistency() checks each item of this class's Bars list, and removes duplicate items with the same value for their "Key" property
-    # In effect, this means that if there was [{"Key":"Value1","Data":7},{"Key":"Value1","Data:9"}], the second dictionary would be removed because
-    # an earlier dictionary in the list already has "Key":"Value1"
-    def RemoveDuplicates(cls) -> None:
-        seen_keys = set()
-        cls.Bars = [d for d in cls.Bars if not (d["Key"] in seen_keys or seen_keys.add(d["Key"]))]
-
-    @classmethod
-    # Iterates over all bars in cls.Bars and checks them for updates
-    # If the bar's activation timestamp is less than Now's timestamp, the bar's time is up
-    # The Bar's Key and Magnitude are given to the scorekeeper to preform game functions
-    # If the bar is persistent, we overwrite the current bar with a new bar of equivalent Key, Magnitude, and Persistence,
-    # but where a new delay is selected between the Lower and Upper bound, and the bar is set to expire at Now + That Delay
-    # If the bar is not persistent, that entry is removed from cls.Bars without replacement
-    def Progressor(cls) -> None:
-        global Time
-        for index, bar in enumerate(cls.Bars):
-            if (bar)["Activation"] < Time:
-                Scorekeeper(bar) # do the action here. Scorekeeper will identify what to do based on the NAME @ [0] and will do it by the AMOUNT @ [1]
-
-                Key = bar["Key"] # The name of the event/action
-                Magnitude = bar["Magnitude"] # The "amount" of the event, EX: Energy+1
-                Activation = bar["Activation"] # A UNIX timestamp. If NOW > Activation, it is considered to have elapsed.
-                Delay = bar["Delay"] # A dictionary. {"Lower":int,"Upper":int} Useful for instantiating additional bars at a fixed interval.
-                Persistence = bar["Persistence"] # Whether or not we should create a new bar of Activation = Activation + Delay to replace this one, or if we should just let it be deleted. 1 = make additional, 0 = let die.
-
-                if Persistence == 1: # we should create a replacement bar for this one
-                    NewDelay = random.randint(Delay["Lower"], Delay["Upper"]) # pick a new delay for the next problem, between the min and max time
-                    DelayDict = {"Actual":NewDelay,"Lower":Delay["Lower"],"Upper":Delay["Upper"]}
-                    cls.Bars[index] = {"Key":Key,"Magnitude":Magnitude,"Activation":Activation+NewDelay,"Delay":DelayDict,"Persistence":Persistence} # create the same bar but <Delay> in the future
-                if Persistence == 0: # we should let this bar expire without replacement
-                    cls.Bars[index] = "REAPME" #delete the bar, as it is not persistent
-
-        cls.Bars = [bar for bar in cls.Bars if bar != "REAPME"] # remove items that want to be removed
-    
-    @classmethod
-    # Drop all progressbars from this class
-    # Sets cls.Bars = []
-    def Dump(cls) -> None:
-        cls.Bars = []
-
-    @classmethod
-    # Given a string Key, returns a float 0-1 representing how far
-    # along a progress bar is into its life. 0.0 = just born, 1.0 = being killed
-    def CompletionPercent(cls, BarKey:str) -> float:
-        global Time
-
-        ProblemBar = cls.GetBarByKey(BarKey)
-        RemainingTime = ProblemBar["Activation"] - Time
-        Delay = ProblemBar["Delay"]["Actual"]
-        
-        PercentComplete = float(RemainingTime) / float(Delay)
-        PercentComplete = 1.0 - PercentComplete
-
-        return PercentComplete
-
-class Alphabet:
-    alphabet="abcdefghijklmnopqrstuvwxyz_~"
-    #alphabet="abcdefghijklmnopqrstuvwxyz1234567890!@#$%=?*_~"
-    special_chars: Dict[ str, str ] = {
-        '!': 'excl',
-        '@': 'at',
-        '#': 'hash',
-        '$': 'dollar',
-        '%': 'percent',
-        '=': 'equals',
-        '?': 'question',
-        '*': 'asterisk',
-        '~': "Return"
-    }
-
-    @classmethod
-    def Relate(cls, index: int) -> str:
-        if(index < 0) or (index > 45):
-            return "+"
-        result = cls.alphabet[index]
-        return result
- 
-    @classmethod
-    def Escape(cls, unescaped: str) -> str:
-        return cls.special_chars.get(unescaped, unescaped)
-    
-    @classmethod
-    def RandomSafe(cls) -> str:
-        result = random.choice(cls.alphabet)
-        if result == "~":
-            result = "e"
-        if result == "_":
-            result = "t"
-        return result
     
 # --- functions ---    
 def clearCanvas() -> None:
@@ -351,7 +116,6 @@ def ClickRegistrar(event):
                                   int(ShipRoot[1])+1, 
                                   int(ShipRoot[0])-1, 
                                   int(ShipRoot[1])-1)
-    print(overlaps)
     for letter in Alphabet.alphabet:
         checker = c.find_withtag('Server'+Alphabet.Escape(letter))
         for check in checker:
@@ -410,9 +174,8 @@ def ScrubWrite():
 
 def KeyPress(event):
     # Handles keyboard pressing, mapping them to ServerSelect as necessary
-
     global Blacklist
-    
+    WallSource[Time%1024:].ljust(len(WallSource), "0")
     for char in Alphabet.alphabet:
         if event.keysym == char and event.keysym not in Blacklist:
             ServerSelect(char)
