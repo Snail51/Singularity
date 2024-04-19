@@ -434,7 +434,7 @@ def ServerSelect(tagstring: str) -> None:
         else:
             pass
     else:
-        Prompt = ''.join([str(Prompt),str(tagstring)])
+        Prompt = Prompt + tagstring
 
 def PromptEnter(Prompt):
     """
@@ -525,7 +525,7 @@ def Scorekeeper(bar):
         News = ''
 
     if variable[0:5] == 'virus':
-        ScrubBuffer.append(''.join(['done',str(variable[-1])]))
+        ScrubBuffer.append('done'+variable[-1])
 
     if variable == 'CLEAR':
         ProgressBars.Dump()
@@ -555,25 +555,13 @@ def ColCyc(fraction:float) -> str | None:
     Red = int(float(fraction) * float(255.0))
     Green = 0
     Blue = int(255.0-float(Red))
-    
-    result = None
                                             
     # --- Convert to HEX ---    
     if Red >= 0 and Green >=0 and Blue >= 0:                                                                           
-        MR = ""
-        MG = ""
-        MB = ""
-        MR = "{0:x}".format(Red)
-        if len(MR) == 1:
-            MR = ''.join(['0',MR])
-        MG = "{0:x}".format(Green)
-        if len(MG) == 1:
-            MG = ''.join(['0',MG])
-        MB = "{0:x}".format(Blue)
-        if len(MB) == 1:
-            MB = ''.join(['0',MB])
-        result = ''.join(['#',MR, MG, MB])
-    return result
+        return '#{:02x}{:02x}{:02x}'.format(Red, Green, Blue)
+    else:
+        print("ColCyc is having a problem!")
+        return "lime"
     
 def ColorManager(string):
     """
@@ -628,8 +616,8 @@ def DrawServers():
             if Holder == 500:
                 c.create_image(Width+25, Height+25,image=c.image,anchor='c')
             else:
-                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Relate(n3)])))
-                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Relate(n3)])))
+                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag='Server'+Alphabet.Relate(n3))
+                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag='ServerText'+Alphabet.Relate(n3))
             n3 = n3 + 1
             n1 = n1 + 1
     n2 = n2 + 1
@@ -638,8 +626,8 @@ def DrawServers():
         Width = CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10) * 5
-        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag=(''.join(['Server',Alphabet.Relate(n3)])))
-        c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag=(''.join(['ServerText',Alphabet.Relate(n3)])))
+        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag='Server'+Alphabet.Relate(n3))
+        c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag='ServerText'+Alphabet.Relate(n3))
         n1 = n1 + 5
         n3 = n3 + 1
     n1 = 2
@@ -706,12 +694,12 @@ def DrawMaster():
         #Draw Servers
         DrawServers()
         #Draw Text
-        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Energy: ",str(Energy),'/',str(MaxEnergy)])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text=(''.join(["Viruses Remaining: ",str((len(Viruses)))])), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Energy: "+str(Energy)+'/'+str(MaxEnergy), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text="Viruses Remaining: "+str((len(Viruses))), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.15)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
         c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5),(CanvasHeight/1)+Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
-        c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text=(''.join(["Health: ",str(Health),'/',str(StartingHealth)])), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
+        c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Health: "+str(Health)+'/'+str(StartingHealth), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
@@ -795,7 +783,7 @@ def scrub(letter):
                 PrevScans.append(str(letter_read))
             if letter_read in Viruses:
                 Viruses.remove(letter_read)
-                News = ''.join(['Virus Found in ', letter_read, '!'])
+                News = 'Virus Found in '+letter_read+'!'
                 ProgressBars.BarAdd('ClearNews',0,(3000,3000),0)
             if letter_read in Blacklist:
                 Blacklist.remove(letter_read)
