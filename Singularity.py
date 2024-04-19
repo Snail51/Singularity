@@ -6,7 +6,6 @@ import traceback
 import time
 import platform
 from pygame import mixer
-from pygame import font
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
 
