@@ -3,7 +3,7 @@ from tkinter import *
 import os
 import random
 import traceback
-import datetime
+import time
 import platform
 from pygame import mixer
 from pygame import font
@@ -71,15 +71,6 @@ def ResourcePrefix() -> str:
         return "_internal/"
     else:
         return ""
-
-# --- FONTS ---
-prefix = ResourcePrefix()
-font.init()
-Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
-Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
-Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
-Interference = font.Font(prefix + "exe/multivac-interference.ttf")
-
 
 class SoundManager:
     mixer.init()
@@ -264,19 +255,12 @@ class Alphabet:
     
 # --- functions ---    
 def clearCanvas() -> None:
-    """
-    The `clearCanvas` function in Python clears all items from a canvas.
-    """
+    # Remove all items from the canvas
     c.delete('all')
     
 def motion(event) -> None:
-    """
-    The `motion` function updates the position of a ship on a canvas based on user input.
-    @param event - The `event` parameter in the `motion` function is typically an event object that
-    contains information about the event that triggered the function. In this case, it seems like the
-    function is handling mouse motion events, as it is using `event.x` and `event.y` to get the
-    coordinates of
-    """
+    # Asynchronously draws the mouse cursor for better response time
+
     global ShipRoot
     global GameActive
     global PlayerSize
@@ -288,19 +272,16 @@ def motion(event) -> None:
         c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
 
 def CloseAll() -> None:
-    """
-    The CloseAll function stops the game, closes the window, and prints a thank you message.
-    """
+    # Stops the game, closes the window, and prints a thank you message.
     global GameActive
     root.destroy()
     GameActive = 0
     print("Thanks for playing!")
     
 def StartLogic():
-    """
-    The function `StartLogic` checks if the game is active and either starts all components or sets
-    `GameActive` to 0 and plays the intro music.
-    """
+    # Instructions run at the very start of the program
+    # Is only run once
+
     global GameActive
     if GameActive == 0:
         StartAll()
@@ -310,10 +291,8 @@ def StartLogic():
         SoundManager.play_sound("BG", 'chug', True)
 
 def StartAll():
-    """
-    The `StartAll` function initializes various global variables and sets up the game environment,
-    including creating a list of viruses and adding progress bars.
-    """
+    # Initalizes a ton of stuff for the transition from 
+    # GameActive 0 (main menu) to GameActive 1 (game)
     global EnergyRate
     global MaxEnergyRate
     global Viruses
@@ -352,62 +331,28 @@ def StartAll():
         print (Viruses)
     
 def Timekeeper():
-    """
-    The `Timekeeper` function calculates the current time in milliseconds.
-    """
+    # The calculates the current time in milliseconds from the OS clock.
     global Time
-    timeget = datetime.datetime.now()
-    temptime = str(timeget)[11:]
-    hours = int(temptime[0:2])
-    minutes = int(temptime[3:5])
-    seconds = int(temptime[6:8])
-    milla = 0
-    try:
-        milla = int(temptime[9:12])
-    except:
-        milla = 0
-    #print milla
-    finally:
-        minutes = minutes + (hours * 60)
-        seconds = seconds + (minutes) * 60
-        milla = milla + (seconds * 1000)
-
-        Time = milla
+    Time = int(time.time_ns() / 1_000_000)
 
 def RandomString(length) -> str:
-    """
-    The function `RandomString` generates a random string of a specified length using a set of prompts
-    or random alphabets if no prompts are provided.
-    @param length - The `length` parameter in the `RandomString` function represents the desired length
-    of the random string that will be generated.
-    @returns The function `RandomString` returns a randomly generated string of a specified length. If
-    the global variable `Prompts` has elements, it selects a random element from `Prompts` as the return
-    value. If `Prompts` is empty, it generates a random string of the specified length using characters
-    related to the alphabet.
-    """
-    global Prompts
+    # Generates a string of length from Alphabet.RandomSafe
     Return = ''
-    if len(Prompts) > 0:
-        Return = str(random.choice(Prompts))
-    else:
-        for _ in range(length):
-            Return += Alphabet.RandomSafe()
+    for _ in range(length):
+        Return += Alphabet.RandomSafe()
     return Return
     
 def ClickRegistrar(event):
-    """
-    This function checks for overlaps between a player's ship and certain server objects, and calls a
-    function to select a server if there is an overlap.
-    @param event - The function `ClickRegistrar` seems to be handling mouse click events in a graphical
-    user interface. The `event` parameter in this function typically represents the event object that
-    triggered the function, such as a mouse click event.
-    """
+    # Whenever the canvas is clicked, create a list of all tkinter elements right near the mouse cursor.
+    # We then iterate over all server names until we find collisions. Collisions indicate that we have both
+    # found the object that was clicked, and that it was a Server (and not the background or something).
+    # If that server isn't in the blacklist, process it as normal.
     global Blacklist
-    #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
-    overlaps = c.find_overlapping(int(ShipRoot[0])+PlayerSize, 
-                                  int(ShipRoot[1])+PlayerSize, 
-                                  int(ShipRoot[0])-PlayerSize, 
-                                  int(ShipRoot[1])-PlayerSize)
+    overlaps = c.find_overlapping(int(ShipRoot[0])+1, 
+                                  int(ShipRoot[1])+1, 
+                                  int(ShipRoot[0])-1, 
+                                  int(ShipRoot[1])-1)
+    print(overlaps)
     for letter in Alphabet.alphabet:
         checker = c.find_withtag('Server'+Alphabet.Escape(letter))
         for check in checker:
@@ -415,14 +360,8 @@ def ClickRegistrar(event):
                 ServerSelect(Alphabet.Escape(letter))
         
 def ServerSelect(tagstring: str) -> None:
-    """
-    The function `ServerSelect` checks if a given tag string is 'ENTER' and deducts energy if conditions
-    are met, otherwise it appends the tag string to the `Prompt` variable.
-    @param tagstring - It looks like the `ServerSelect` function takes a parameter called `tagstring`.
-    This parameter is used to determine whether the user wants to enter a value or not. If the
-    `tagstring` is 'ENTER', the function will check if there is enough energy to perform the action and
-    then call
-    """
+    # Simulates the selectrion of a server. If it isn't the "enter" server,
+    # the server's value is added to Prompt
     global Energy
     global ClickCost
     global Prompt
@@ -437,13 +376,9 @@ def ServerSelect(tagstring: str) -> None:
         Prompt = Prompt + tagstring
 
 def PromptEnter(Prompt):
-    """
-    The function `PromptEnter` takes a prompt as input and performs various actions based on the prompt,
-    such as displaying progress bars, managing music, and scrubbing data for specific keywords.
-    @param Prompt - It looks like the `PromptEnter` function takes a `Prompt` parameter, which is used
-    to perform different actions based on its value. The function checks the value of `Prompt` and
-    executes specific tasks accordingly.
-    """
+    # Executed when enter is pressed, consuming the prompt and doing various things
+    # If the prompt starts with a scan alias, Prompt[-1] is added to the ScrubBuffer
+    # Handles easter eggs / debug functions
     global Problem
     global Blacklist
     global Viruses
@@ -462,26 +397,16 @@ def PromptEnter(Prompt):
     ScrubBuffer += [Prompt[-1] for entry in scrub_list if Prompt.startswith(entry)]
 
 def ScrubWrite():
+    # Consumes all characters in the scrub buffer and actually executes scrub() on them
     global ScrubBuffer
-    n1 = 0
-    #print(ScrubBuffer)
-    for x in range(len(ScrubBuffer)):
-        scrub(ScrubBuffer[n1])
-        n1 = n1 + 1
+    for item in ScrubBuffer:
+        scrub(item)
     ScrubBuffer = []
 
 def KeyPress(event):
-    """
-    The function `KeyPress` handles key press events in Python, checking for specific key presses and
-    calling the `ServerSelect` function accordingly.
-    @param event - The `event` parameter in the `KeyPress` function is used to capture the key press
-    event that occurs when a key is pressed on the keyboard. The function then checks the `keysym`
-    attribute of the event to determine which key was pressed. The function then performs certain
-    actions based on the key
-    """
-    #print event.keysym
+    # Handles keyboard pressing, mapping them to ServerSelect as necessary
+
     global Blacklist
-    #print (int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])-PlayerSize)
     
     for char in Alphabet.alphabet:
         if event.keysym == char and event.keysym not in Blacklist:
@@ -496,6 +421,7 @@ def KeyPress(event):
         ServerSelect(')')
     
 def Scorekeeper(bar):
+    # Main function for updating global variables, handles ProgressBar bars that have been completed
     variable = bar["Key"]
     amount = bar["Magnitude"]
 
@@ -515,43 +441,37 @@ def Scorekeeper(bar):
     
     if variable == 'Music':
         SoundManager.play_sound("MUS", amount, True)
-
     if variable == 'ProblemTrigger':
         if len(Problem) > 0:
             Health = Health - 1
         Problem = RandomString(ProblemLength)
-        
     if variable == 'ClearNews':
         News = ''
-
     if variable[0:5] == 'virus':
         ScrubBuffer.append('done'+variable[-1])
-
     if variable == 'CLEAR':
         ProgressBars.Dump()
         Energy = StartingEnergy
         MaxEnergy = StartingMaxEnergy
-
     if variable  == 'PromptTicker':
         if PromptTicker == "":
             PromptTicker = "|"
         else:
             PromptTicker = ""
 
-    
     #UPDATE
     if variable == 'Energy':
         Energy = Energy + int(amount)
     if variable == 'MaxEnergy' and MaxEnergy < MaxEnergyCap:
         MaxEnergy = MaxEnergy + int(amount)
-        #if MaxEnergy >= MaxEnergyCap:
-            #ProgressBars.BarAdd('Energy', 1, EnergyRate/2)
 
     # LIMITS
     if Energy > MaxEnergy:
         Energy = MaxEnergy
         
 def ColCyc(fraction:float) -> str | None: 
+    # Convert a float, 0.0->1.0 into Blue->Red
+
     Red = int(float(fraction) * float(255.0))
     Green = 0
     Blue = int(255.0-float(Red))
@@ -564,17 +484,10 @@ def ColCyc(fraction:float) -> str | None:
         return "lime"
     
 def ColorManager(string):
-    """
-    The ColorManager function in Python determines the color to be displayed based on input strings and
-    global variables.
-    @param string - The `ColorManager` function takes a string as input and returns a color based on
-    certain conditions. The function checks the input string against the `Blacklist` and `PrevScans`
-    lists, as well as the `ProgressBars` list to determine the color to return.
-    @returns The ColorManager function returns the color value based on the input string. The color
-    value is determined by the conditions specified in the function, such as checking if the input
-    string matches any items in the Blacklist, or if it is a specific string like 'ProblemDecay'. The
-    final color value is stored in the variable 'Return' and is returned at the end of the function.
-    """
+    # returns a certain color based on the provided key
+    # if "ProblemDecay" it indicates it is the Problem text, which gradually transitions from blue to red
+    # if len(string) == 1, it indicates a check as to what color an individual server should be.
+
     global Blacklist
     global ProgressBars
     global Time
@@ -591,10 +504,8 @@ def ColorManager(string):
     return result
     
 def DrawServers():
-    """
-    The `DrawServers` function in Python creates a visual representation of servers on a canvas with
-    specified dimensions, using images and rectangles with text labels.
-    """
+    # Draws the servers exclusively
+
     global JitterRate
     global CanvasHeight
     global CanvasWidth
@@ -641,24 +552,17 @@ def DrawServers():
         n3 = n3 + 1
         
 def Jitter(jit: int):
-    """
-    The function `Jitter` generates a random jitter value based on a given rate.
-    @param Rate - The `Rate` parameter in the `Jitter` function represents the frequency at which the
-    jitter occurs. The function generates a random number between 1 and the integer value of `Rate`. If
-    the generated number is equal to `Rate`, it assigns a random choice of either -1 or 1
-    @returns The function `Jitter` returns either -1, 1, or 0 based on the conditions inside the
-    function.
-    """
+    # Produces a random small value to be used to make graphics "jitter"
+    # Used to create a glitchy effect
     jitteriness = random.randint(1, int(jit)) # Convert Rate to an integer
     if jitteriness != jit:
         return 0
     return random.choice([-1,1])
     
 def DrawMaster():
-    """
-    The `DrawMaster` function in Python is responsible for drawing various elements on the canvas based
-    on the current state of the game, including text, player ship, servers, and background.
-    """
+    # Handles drawing of all game features onto the canvas
+    # Highly dependent on the game state (GameActive)
+
     global JitterRate
     global CanvasHeight
     global CanvasWidth
@@ -716,11 +620,12 @@ def DrawMaster():
     c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=Alphabet.RandomSafe(),font=('Inhuman BB', 12))  
                             
 def GameState():
-    """
-    The `GameState` function manages the game state based on various conditions such as energy levels,
-    health status, and the presence of viruses.
-    """
-    #print GameActive
+    # Controls the main functions of the game by updating the GameActive variable
+    # GameActive = 0 - Main Menu
+    # GameActive = 1 - The Game
+    # GameActive = 2 - Still in the Game, but dying quickly because of insufficient power
+    # GameActive = 3 - Player is Dead / Blue Screen of Death
+    # GameActive = 4 - Victory Screen
     global GameActive
     global Health
     global Energy
@@ -759,20 +664,15 @@ def GameState():
 
 # --- Game Commands ---
 def scrub(letter):
-    """
-    The `scrub` function in Python manages a list of blacklisted items, viruses, progress bars, news
-    updates, and previous scans, with the ability to add or remove items based on input letters.
-    @param letter - The `scrub` function seems to be a part of a larger program that deals with scanning
-    and removing viruses. The function takes a parameter `letter`, which is used to update various
-    global variables like `Blacklist`, `ScrubLength`, `Viruses`, `ProgressBars`, `News`,
-    """
+    # Simulates game command "scrub", where a server is investigated, and if a virus is within, is destroyed
+    # If len(letter) == 1 (a single letter), that server is scanned
+    # If letter[0:4] == "done", it indicates this is the callback after a scan has concluded
     global Blacklist
     global ScrubLength
     global Viruses
     global ProgressBars
     global News
     global PrevScans
-    #print ('aaa',letter,Blacklist,Viruses)
     if len(letter) == 1:
         Blacklist.append(str(letter))
         ProgressBars.BarAdd("virus"+letter,1,(ScrubLength,ScrubLength),0)
@@ -790,10 +690,8 @@ def scrub(letter):
 
 # --- Executives ---
 def TOTAL_MAIN():
-    """
-    The TOTAL_MAIN function in Python contains global variables and calls multiple other functions in a
-    loop using the c.after method.
-    """
+    #The main loop, called every frame
+
     global GameActive
     global Time
     global ScrubBuffer
@@ -812,25 +710,23 @@ def TOTAL_MAIN():
         #print(postFrame-preFrame)
         c.after(frameWait, TOTAL_MAIN)
     except Exception as e:
-        #global Blacklist
-        #global ScrubBuffer
-        #print("███████<crash>███████")
-        #print("game is crashing... dumping memory to console NOW!")
-        #print("Error: ", e)
-        #print("Progress Bars: ", ProgressBars.bars)
-        #print("Blacklist: ", Blacklist)
-        #print("ScrubBuffer: ", ScrubBuffer)
-        #print("███████</crash>███████")
+        global Blacklist
+        global ScrubBuffer
+        print("███████<crash>███████")
+        print("game is crashing... dumping memory to console NOW!")
+        print("Error: ", e)
+        print("Progress Bars: ", ProgressBars.Bars)
+        print("Blacklist: ", Blacklist)
+        print("ScrubBuffer: ", ScrubBuffer)
+        print("███████</crash>███████")
         traceback.print_exc()
     
 
 def resize_canvas(event) -> None:
-    """
-    Update the canvas size to take up the top 90% of the window.
-    This function is called every time the window is updated for any reason
-    (Window resizes count as a reason)
-    In the future it may be prudent to do nothing during events where the window size stays the same
-    """
+    # Update the canvas size to take up the top 90% of the window.
+    # This function is called every time the window is updated for any reason (Window resizes count as a reason)
+    # In the future it may be prudent to do nothing during events where the window size stays the same
+
     global CanvasWidth
     global CanvasHeight
     CanvasWidth = root.winfo_width()
@@ -851,8 +747,6 @@ if __name__ == "__main__":
         root.state('zoomed')
     else:
         root.wm_attributes("-zoomed", True)
-
-
 
     #Make Canvas
     c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
