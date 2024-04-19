@@ -247,9 +247,9 @@ class Alphabet:
     def RandomSafe(cls) -> str:
         result = random.choice(cls.alphabet)
         if result == "~":
-            result = "E"
+            result = "e"
         if result == "_":
-            result = "T"
+            result = "t"
         return result
     
 # --- functions ---    
@@ -371,6 +371,12 @@ def ServerSelect(tagstring: str) -> None:
             Energy = Energy - ClickCost
         else:
             pass
+    elif tagstring.lower() == "backspace":
+        if Energy >= ClickCost:
+            Prompt = Prompt[0:-1]
+            Energy = Energy - ClickCost
+        else:
+            pass
     else:
         Prompt = Prompt + tagstring
 
@@ -412,6 +418,8 @@ def KeyPress(event):
             ServerSelect(char)
     if event.keysym == 'Return' and event.keysym not in Blacklist:
         ServerSelect('enter')
+    if event.keysym == "BackSpace":
+        ServerSelect("Backspace")
     if event.keysym == 'space' and event.keysym not in Blacklist:
         ServerSelect('_')
     if event.keysym == 'parenleft':
@@ -596,12 +604,15 @@ def DrawMaster():
     if GameActive == 1 or GameActive == 2:
         #Draw Servers
         DrawServers()
+
         #Draw Text
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Energy: "+str(Energy)+'/'+str(MaxEnergy), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
         c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text="Viruses Remaining: "+str((len(Viruses))), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.35)+Jitter(JitterRate/25)),text='C:\\>' + str(Prompt) + PromptTicker, font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25),(CanvasHeight/1.15)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth/4)+Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5),(CanvasHeight/1)+Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)),text=str(Problem),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
+        shared_jitter_x = Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
+        shared_jitter_y = Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
+        c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Problem)).upper(),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
+        c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Prompt) + PromptTicker).upper(), font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
+        c.create_text(((CanvasWidth*0.8)+Jitter(JitterRate/25),(CanvasHeight/1)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='right',anchor='e')
         c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Health: "+str(Health)+'/'+str(StartingHealth), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
     if GameActive == 3:
         c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
