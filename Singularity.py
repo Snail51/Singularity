@@ -266,20 +266,20 @@ class FontInstaller:
     FontSource = ResourcePrefix() + "exe/InhumanBB.ttf"
     FileName =  "Inhuman BB.ttf"
 
-    # Load CoreText framework
-    CoreText = cdll.LoadLibrary(find_library('CoreText'))
+    # # Load CoreText framework
+    # CoreText = cdll.LoadLibrary(find_library('CoreText'))
 
-    # Define necessary types and constants
-    CFURLRef = c_void_p
-    CFArrayRef = c_void_p
-    kCTFontManagerScopeProcess = 1
+    # # Define necessary types and constants
+    # CFURLRef = c_void_p
+    # CFArrayRef = c_void_p
+    # kCTFontManagerScopeProcess = 1
 
-    # Define C functions
-    CoreText.CTFontManagerRegisterFontsForURLs.argtypes = [CFArrayRef, c_bool, c_void_p, CFUNCTYPE(None, c_void_p, c_void_p)]
-    CoreText.CTFontManagerRegisterFontsForURLs.restype = c_bool
+    # # Define C functions
+    # CoreText.CTFontManagerRegisterFontsForURLs.argtypes = [CFArrayRef, c_bool, c_void_p, CFUNCTYPE(None, c_void_p, c_void_p)]
+    # CoreText.CTFontManagerRegisterFontsForURLs.restype = c_bool
 
-    # Define callback function type
-    CallbackType = CFUNCTYPE(None, c_void_p, c_void_p)
+    # # Define callback function type
+    # CallbackType = CFUNCTYPE(None, c_void_p, c_void_p)
 
     @classmethod
     def Install(cls) -> None:
