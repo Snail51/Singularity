@@ -266,20 +266,20 @@ class FontInstaller:
     FontSource = ResourcePrefix() + "exe/InhumanBB.ttf"
     FileName =  "Inhuman BB.ttf"
 
-    # # Load CoreText framework
-    # CoreText = cdll.LoadLibrary(find_library('CoreText'))
+    # Load CoreText framework
+    CoreText = cdll.LoadLibrary(find_library('CoreText'))
 
-    # # Define necessary types and constants
-    # CFURLRef = c_void_p
-    # CFArrayRef = c_void_p
-    # kCTFontManagerScopeProcess = 1
+    # Define necessary types and constants
+    CFURLRef = c_void_p
+    CFArrayRef = c_void_p
+    kCTFontManagerScopeProcess = 1
 
-    # # Define C functions
-    # CoreText.CTFontManagerRegisterFontsForURLs.argtypes = [CFArrayRef, c_bool, c_void_p, CFUNCTYPE(None, c_void_p, c_void_p)]
-    # CoreText.CTFontManagerRegisterFontsForURLs.restype = c_bool
+    # Define C functions
+    CoreText.CTFontManagerRegisterFontsForURLs.argtypes = [CFArrayRef, c_bool, c_void_p, CFUNCTYPE(None, c_void_p, c_void_p)]
+    CoreText.CTFontManagerRegisterFontsForURLs.restype = c_bool
 
-    # # Define callback function type
-    # CallbackType = CFUNCTYPE(None, c_void_p, c_void_p)
+    # Define callback function type
+    CallbackType = CFUNCTYPE(None, c_void_p, c_void_p)
 
     @classmethod
     def Install(cls) -> None:
@@ -323,28 +323,21 @@ class FontInstaller:
     
     @classmethod
     def macOS(cls) -> None:
-        # Load CoreText framework
-        coretext = ctypes.CDLL(find_library('CoreText'))
-
-        # Define argument and return types for ATSFontActivateFontsWithText
-        coretext.ATSFontActivateFontsWithText.argtypes = [ctypes.c_void_p, ctypes.c_long, ctypes.POINTER(ctypes.c_void_p), ctypes.c_uint32, ctypes.POINTER(ctypes.c_void_p)]
-        coretext.ATSFontActivateFontsWithText.restype = ctypes.c_int
-
         # Destination path for the system's Fonts directory
         fonts_dir = '/Library/Fonts'
 
         if not os.path.isfile(os.path.join(fonts_dir, cls.FileName)):
             # Copy the font file to the system's Fonts directory
             shutil.copy(cls.FontSource, fonts_dir)
+ 
+            # Create a CFURLRef for the font file
+            font_url = CoreText.CFURLCreateWithFileSystemPath(None, cls.FileName.encode('utf-8'), 0, False)
 
-            # Load the font into the system font table
-            font_path = os.path.join(fonts_dir, cls.FileName)
-            font_path_c = ctypes.c_char_p(font_path.encode('utf-8')) # Convert to C string
+            # Create an array with the font URL
+            font_urls = CoreText.CFArrayCreate(None, [font_url], 1, None)
 
-            # Call ATSFontActivateFontsWithText
-            result = coretext.ATSFontActivateFontsWithText(font_path_c, len(font_path_c), None, 0, None)
-            if result != 0:
-                print("Font activation failed")
+            # Register the font
+            CoreText.CTFontManagerRegisterFontsForURLs(font_urls, True, None, None)
  
     @classmethod
     def Other(cls) -> None:
