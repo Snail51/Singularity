@@ -1,15 +1,17 @@
 import tkinter as tk
 from tkinter import *
+from tkinter.font import Font
 import os
 import random
 import traceback
 import datetime
 import pyglet
+import pygame
 from pyglet import font
 from pyglet import resource
-from pygame import mixer
-from pygame import font
-from PIL import Image, ImageTk, ImageDraw, ImageGrab
+from pygame import mixer 
+from pygame import font 
+from PIL import Image, ImageTk, ImageDraw, ImageGrab 
 from typing import List, Tuple, Dict
 
 # --- Config ---
@@ -77,26 +79,42 @@ def ResourcePrefix() -> str:
 # --- FONTS ---
 prefix = ResourcePrefix()
 font.init()
-#Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
-#Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
-#Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
-#Interference = font.Font(prefix + "exe/multivac-interference.ttf")
+Inhuman = font.Font(prefix + "exe/InhumanBB.ttf")
+Inhuman_I = font.Font(prefix + "exe/InhumanBB_ital.ttf")
+Ghost = font.Font(prefix + "exe/multivac-ghost.ttf")
+Interference = font.Font(prefix + "exe/multivac-interference.ttf")
+
+
 
 # Going to insert new font management stuff here
 
-pyglet.resource.add_directory('~/./exe')
+root = tk.Tk()
+root.title('InhumanBB')
+
+#loading font path with tkinter
+custom_font_path = '~/exe/InhumanBB.ttf'
+root.tk.call('tk', 'scaling', 1.0)
+root.tk.call('tk', 'call', 'font', 'create', 'InhumanBB', 'from', custom_font_path)
+
+# Creating label using custom font
+label = Label(root, text="InhumanBB, font used for Singularity", font=("InhumanBB", 16))
+label.pack()
+
+root.mainloop()
+
+
+#pyglet.resource.add_directory('~/./exe')
 #technically this should add everything but I'll be explicit just in case
 
-pyglet.resource.add_font('InhumanBB.ttf')
-pyglet.resource.add_font('InhumanBB_ital.ttf')
-pyglet.resource.add_font('multivac-ghost.ttf')
-pyglet.resource.add_font('multivac-interference.ttf')
+#pyglet.resource.add_font('InhumanBB.ttf')
+#pyglet.resource.add_font('InhumanBB_ital.ttf')
+#pyglet.resource.add_font('multivac-ghost.ttf')
+#pyglet.resource.add_font('multivac-interference.ttf')
 
-
-Inhuman = pyglet.font.load('inhuman')
-Inhuman_I = pyglet.font.load('inhuman_ital')
-Ghost = pyglet.font.load('ghost')
-Interference = pyglet.font.load('interference')
+#Inhuman = pyglet.font.load('inhumanBB')
+#Inhuman_I = pyglet.font.load('inhumanBB_ital')
+#Ghost = pyglet.font.load('ghost')
+#Interference = pyglet.font.load('interference')
 
 class SoundManager:
     mixer.init()
