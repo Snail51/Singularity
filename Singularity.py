@@ -9,6 +9,12 @@ import random
 import traceback
 import time
 import platform
+import CoreText
+#import Cocoa
+#import objc
+from CoreText import CTFontManagerRegisterFontsForURL
+from ctypes import cdll, c_void_p, c_bool, CFUNCTYPE, POINTER
+from ctypes.util import find_library
 from pygame import mixer
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
@@ -260,6 +266,21 @@ class FontInstaller:
     FontSource = ResourcePrefix() + "exe/InhumanBB.ttf"
     FileName =  "Inhuman BB.ttf"
 
+    # Load CoreText framework
+    CoreText = cdll.LoadLibrary(find_library('CoreText'))
+
+    # Define necessary types and constants
+    CFURLRef = c_void_p
+    CFArrayRef = c_void_p
+    kCTFontManagerScopeProcess = 1
+
+    # Define C functions
+    CoreText.CTFontManagerRegisterFontsForURLs.argtypes = [CFArrayRef, c_bool, c_void_p, CFUNCTYPE(None, c_void_p, c_void_p)]
+    CoreText.CTFontManagerRegisterFontsForURLs.restype = c_bool
+
+    # Define callback function type
+    CallbackType = CFUNCTYPE(None, c_void_p, c_void_p)
+
     @classmethod
     def Install(cls) -> None:
         if platform.system().upper() == "WINDOWS":
@@ -302,6 +323,13 @@ class FontInstaller:
     
     @classmethod
     def macOS(cls) -> None:
+        # Load CoreText framework
+        coretext = ctypes.CDLL(find_library('CoreText'))
+
+        # Define argument and return types for ATSFontActivateFontsWithText
+        coretext.ATSFontActivateFontsWithText.argtypes = [ctypes.c_void_p, ctypes.c_long, ctypes.POINTER(ctypes.c_void_p), ctypes.c_uint32, ctypes.POINTER(ctypes.c_void_p)]
+        coretext.ATSFontActivateFontsWithText.restype = ctypes.c_int
+
         # Destination path for the system's Fonts directory
         fonts_dir = '/Library/Fonts'
 
@@ -311,11 +339,13 @@ class FontInstaller:
 
             # Load the font into the system font table
             font_path = os.path.join(fonts_dir, cls.FileName)
-            font_path_c = font_path.encode('utf-8') # Convert to C string
+            font_path_c = ctypes.c_char_p(font_path.encode('utf-8')) # Convert to C string
 
-            # Use ctypes to call ATSFontActivateFontsWithText
-            ctypes.CDLL('/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreText.framework/CoreText').ATSFontActivateFontsWithText(font_path_c, len(font_path_c), None, kATSOptionFlagsDefault, None)
-
+            # Call ATSFontActivateFontsWithText
+            result = coretext.ATSFontActivateFontsWithText(font_path_c, len(font_path_c), None, 0, None)
+            if result != 0:
+                print("Font activation failed")
+ 
     @classmethod
     def Other(cls) -> None:
         print("WARNING: Unrecognized OS. Could not install game fonts automatically. Please install ./_internal/exe/InhumanBB.ttf")
