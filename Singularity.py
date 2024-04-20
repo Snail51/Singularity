@@ -262,14 +262,31 @@ class FontInstaller:
 
     @classmethod
     def Install(cls) -> None:
-        if platform.system().upper() == "WINDOWS":
-            cls.Windows()
-        elif platform.system().upper() == "LINUX":
-            cls.Linux()
-        elif platform.system().upper() == "DARWIN":
-            cls.macOS()
-        else:
-            cls.Other()
+        try:
+            if platform.system().upper() == "WINDOWS":
+                cls.Windows()
+            elif platform.system().upper() == "LINUX":
+                cls.Linux()
+            elif platform.system().upper() == "DARWIN":
+                cls.macOS()
+            else:
+                pass
+        except:
+            traceback.print_exc()
+        cls.Warn()
+
+    @classmethod
+    def Warn(cls) -> None:
+        global GameActive
+        global ErrorHeading
+        global ErrorSubtitle
+        available_fonts = font.families()
+        if("Inhuman BB" not in available_fonts):
+            GameActive = -1
+            ErrorHeading = "Fonts Not Installed"
+            ErrorSubtitle = "The font \"Inhuman BB\" is not installed.\nPlease install it manually or proceed\nwith a sub-optimal graphical experience.\n\nIt is located alongside this executible as \"InhumanBB.ttf\"."
+
+
 
     @classmethod
     def Windows(cls) -> None:
@@ -316,10 +333,6 @@ class FontInstaller:
             # Use ctypes to call ATSFontActivateFontsWithText
             ctypes.CDLL('/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreText.framework/CoreText').ATSFontActivateFontsWithText(font_path_c, len(font_path_c), None, kATSOptionFlagsDefault, None)
 
-    @classmethod
-    def Other(cls) -> None:
-        print("WARNING: Unrecognized OS. Could not install game fonts automatically. Please install ./_internal/exe/InhumanBB.ttf")
-
 # --- functions ---    
 def clearCanvas() -> None:
     # Remove all items from the canvas
@@ -346,16 +359,18 @@ def CloseAll() -> None:
     print("Thanks for playing!")
     
 def StartLogic():
-    # Instructions run at the very start of the program
-    # Is only run once
+    # Functionality of clicling the "Start" button
 
     global GameActive
-    if GameActive == 0:
+
+    if GameActive == 0: #start the game from title
         StartAll()
-    else:
-        GameActive = 0
-        SoundManager.play_sound("MUS", "intro", True)
+    else: #abort the game and return to title
         SoundManager.play_sound("BG", 'chug', True)
+        SoundManager.play_sound("MUS", 'intro', True)
+        GameActive = 0
+        
+        
 
 def StartAll():
     # Initalizes a ton of stuff for the transition from 
@@ -656,40 +671,47 @@ def DrawMaster():
     global WallSource
     global PromptTicker
     global Time
+    global ErrorHeading
+    global ErrorSubtitle
 
     clearCanvas()
-    if UseBinaryBG == True:
-        if GameActive != 3:
-            BinaryWall = WallSource[Time%1024:].ljust(len(WallSource), "0")
-        if GameActive == 3: #BLUE SCREEN OF DEATH
-            c.create_text(-100, -100, fill="#00004f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
-        else: #NORMAL GAMEPLAY
-            c.create_text(-100, -100, fill="#2f2f2f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
-    
-    if GameActive == 0:
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Singularity',font=('Inhuman BB', 64))
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3+Jitter(JitterRate)),fill='white',text='A typing management game',font=('Inhuman BB', 24))
-    if GameActive == 1 or GameActive == 2:
-        #Draw Servers
-        DrawServers()
 
-        #Draw Text
-        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Energy: "+str(Energy)+'/'+str(MaxEnergy), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text="Viruses Remaining: "+str((len(Viruses))), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        shared_jitter_x = Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
-        shared_jitter_y = Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
-        c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Problem)).upper(),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
-        c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Prompt) + PromptTicker).upper(), font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth*0.8)+Jitter(JitterRate/25),(CanvasHeight/1)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='right',anchor='e')
-        c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Health: "+str(Health)+'/'+str(StartingHealth), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
-    if GameActive == 3:
-        c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
-        c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
-    if GameActive == 4:
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4.5+Jitter(JitterRate)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64),anchor='c', justify='center')
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.1+Jitter(JitterRate)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='c', justify='center')   
-        c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/2.5+Jitter(JitterRate)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='c', justify='center')   
-                    
+    if GameActive == -1:
+        c.create_text((CanvasWidth/2, CanvasHeight/4),fill='red',text=ErrorHeading,font=('Inhuman BB', 64), justify="center")
+        c.create_text((CanvasWidth/2, CanvasHeight/1.5),fill='white',text=ErrorSubtitle,font=('Inhuman BB', 24), justify="center")
+    else:
+        if UseBinaryBG == True:
+            if GameActive != 3:
+                BinaryWall = WallSource[Time%1024:].ljust(len(WallSource), "0")
+            if GameActive == 3: #BLUE SCREEN OF DEATH
+                c.create_text(-100, -100, fill="#00004f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
+            else: #NORMAL GAMEPLAY
+                c.create_text(-100, -100, fill="#2f2f2f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
+        
+        if GameActive == 0:
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Singularity',font=('Inhuman BB', 64))
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3+Jitter(JitterRate)),fill='white',text='A typing management game',font=('Inhuman BB', 24))
+        if GameActive == 1 or GameActive == 2:
+            #Draw Servers
+            DrawServers()
+
+            #Draw Text
+            c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Energy: "+str(Energy)+'/'+str(MaxEnergy), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+            c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text="Viruses Remaining: "+str((len(Viruses))), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+            shared_jitter_x = Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
+            shared_jitter_y = Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
+            c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Problem)).upper(),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
+            c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Prompt) + PromptTicker).upper(), font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
+            c.create_text(((CanvasWidth*0.8)+Jitter(JitterRate/25),(CanvasHeight/1)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='right',anchor='e')
+            c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Health: "+str(Health)+'/'+str(StartingHealth), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
+        if GameActive == 3:
+            c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
+            c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
+        if GameActive == 4:
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4.5+Jitter(JitterRate)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64),anchor='c', justify='center')
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.1+Jitter(JitterRate)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/2.5+Jitter(JitterRate)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+                        
     #Draw Player
     c.delete('ship')
     c.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
@@ -813,25 +835,22 @@ def resize_canvas(event) -> None:
 
 if __name__ == "__main__":
     # init    
-    FontInstaller.Install() # Make sure the user has "Inhuman BB" installed as a font
-
     root = tk.Tk()
-
     root.bind('<Key>', KeyPress)
     root.title('Singularity')
     root.configure(bg='#000000') # set the window background to black
     root.bind('<Configure>', resize_canvas) # every time the window is changed (in this case resized), do something
     root.wm_iconphoto(True, tk.PhotoImage(file=(ResourcePrefix()+"assets/icon.png"))) # set the taskbar icon to a file
-    
     if platform.uname()[0].upper() == "WINDOWS":
         root.state('zoomed')
     else:
         root.wm_attributes("-zoomed", True)
 
-    #fontPath = ResourcePrefix() + "assets/Inhuman BB.ttf"
-    #root.tk.call('tk', 'scaling', 1.0)
-    #root.tk.call('tk', 'call', 'font', 'create', 'Inhuman BB', 'from', fontPath)
-    #tk.font.loadFont()
+    # Make sure the user has "Inhuman BB" installed as a font
+    FontInstaller.Install()
+    if(GameActive == 0):
+        SoundManager.play_sound("BG", 'chug', True)
+        SoundManager.play_sound("MUS", 'intro', True)
 
     #Make Canvas
     c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
@@ -860,8 +879,6 @@ if __name__ == "__main__":
     volume_slider.pack(anchor="n", side="top")
 
     #Specific programs to be run once on startup.
-    SoundManager.play_sound("MUS", 'intro', True)
-    SoundManager.play_sound("BG", 'chug', True)
     SoundManager.set_volume(50)
     TOTAL_MAIN()
 
