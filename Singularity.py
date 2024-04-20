@@ -686,8 +686,8 @@ def TOTAL_MAIN() -> None:
     global Time
     global ScrubBuffer
     
-    t1 = threading.Thread(group=None,target=DrawMaster(),daemon=True)
-    t1.start()
+    t1 = threading.Thread(group=None,target=DrawMaster())
+   # t1.start()
     try:
         Timekeeper()
         preFrame = Time #the time at the start of this frame
@@ -700,7 +700,6 @@ def TOTAL_MAIN() -> None:
         postFrame = Time # the time at the end of the frame
         frameWait=max(0,17-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
         #print(postFrame-preFrame)
-        t1.join()
         c.after(frameWait, TOTAL_MAIN)
     except Exception as e:
         global Blacklist
