@@ -13,7 +13,7 @@ import CoreText
 #import Cocoa
 #import objc
 from CoreText import CTFontManagerRegisterFontsForURL
-from ctypes import cdll, c_void_p, c_bool, CFUNCTYPE, POINTER
+from ctypes import cdll, c_void_p, c_bool, c_char_p, c_int, CFUNCTYPE, POINTER
 from ctypes.util import find_library
 from pygame import mixer
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
@@ -38,6 +38,29 @@ UseBinaryBG: bool = True
 ProblemType: str = "String" # Prompts or String
 DebugMode: bool = False
 PrevScansShow: bool = False
+
+
+#FontConfig
+# Load CoreText framework
+CoreText = cdll.LoadLibrary(find_library('CoreText'))
+
+# Define necessary types and constants
+CFURLRef = c_void_p
+CFArrayRef = c_void_p
+CFStringRef = c_void_p
+kCTFontManagerScopeProcess = 1
+kCFAllocatorDefault = c_void_p.in_dll(ctypes.CDLL(find_library('CoreFoundation')), 'kCFAllocatorDefault')
+
+# Define C functions
+CoreText.CFURLCreateWithFileSystemPath.argtypes = [c_void_p, c_char_p, c_bool, c_bool, c_void_p]
+CoreText.CFURLCreateWithFileSystemPath.restype = CFURLRef
+CoreText.CFStringCreateWithCString.argtypes = [c_void_p, c_char_p, c_int]
+CoreText.CFStringCreateWithCString.restype = CFStringRef
+CoreText.CTFontManagerRegisterFontsForURLs.argtypes = [CFArrayRef, c_bool, c_void_p, CFUNCTYPE(None, c_void_p, c_void_p)]
+CoreText.CTFontManagerRegisterFontsForURLs.restype = c_bool
+
+# Define callback function type
+CallbackType = CFUNCTYPE(None, c_void_p, c_void_p)
 
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
@@ -266,21 +289,6 @@ class FontInstaller:
     FontSource = ResourcePrefix() + "exe/InhumanBB.ttf"
     FileName =  "Inhuman BB.ttf"
 
-    # Load CoreText framework
-    CoreText = cdll.LoadLibrary(find_library('CoreText'))
-
-    # Define necessary types and constants
-    CFURLRef = c_void_p
-    CFArrayRef = c_void_p
-    kCTFontManagerScopeProcess = 1
-
-    # Define C functions
-    CoreText.CTFontManagerRegisterFontsForURLs.argtypes = [CFArrayRef, c_bool, c_void_p, CFUNCTYPE(None, c_void_p, c_void_p)]
-    CoreText.CTFontManagerRegisterFontsForURLs.restype = c_bool
-
-    # Define callback function type
-    CallbackType = CFUNCTYPE(None, c_void_p, c_void_p)
-
     @classmethod
     def Install(cls) -> None:
         if platform.system().upper() == "WINDOWS":
@@ -329,15 +337,29 @@ class FontInstaller:
         if not os.path.isfile(os.path.join(fonts_dir, cls.FileName)):
             # Copy the font file to the system's Fonts directory
             shutil.copy(cls.FontSource, fonts_dir)
- 
+
+
+            # Create a CFStringRef for the font file path
+            font_path_str = cls.FileName.encode('utf-8')
+            font_path_cfstr = CoreText.CFStringCreateWithCString(None, font_path_str, 0)
+
             # Create a CFURLRef for the font file
-            font_url = CoreText.CFURLCreateWithFileSystemPath(None, cls.FileName.encode('utf-8'), 0, False)
+            font_url = CoreText.CFURLCreateWithFileSystemPath(kCFAllocatorDefault, font_path_cfstr, True, False, None)
 
             # Create an array with the font URL
             font_urls = CoreText.CFArrayCreate(None, [font_url], 1, None)
 
             # Register the font
             CoreText.CTFontManagerRegisterFontsForURLs(font_urls, True, None, None)
+
+            # # Create a CFURLRef for the font file
+            # font_url = CoreText.CFURLCreateWithFileSystemPath(None, cls.FileName.encode('utf-8'), 0, False)
+
+            # # Create an array with the font URL
+            # font_urls = CoreText.CFArrayCreate(None, [font_url], 1, None)
+
+            # # Register the font
+            # CoreText.CTFontManagerRegisterFontsForURLs(font_urls, True, None, None)
  
     @classmethod
     def Other(cls) -> None:
