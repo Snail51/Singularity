@@ -3,5 +3,8 @@
     "cSpell.words": [
         "Progressor",
         "pygame"
+    ],
+    "python.analysis.extraPaths": [
+        "./py_src"
     ]
 }
