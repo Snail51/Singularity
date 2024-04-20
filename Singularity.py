@@ -252,6 +252,90 @@ class Alphabet:
             result = "t"
         return result
     
+class GameCommands:
+
+    @classmethod
+    # Executed when enter is pressed, consuming the prompt and doing various things
+    # If the prompt starts with a scan alias, Prompt[-1] is added to the ScrubBuffer
+    # Handles easter eggs / debug functions
+    def PromptEnter(cls, Prompt):
+        global Problem
+        global Blacklist
+        global Viruses
+        global ScrubBuffer
+        if Prompt == 'bars':
+            print (ProgressBars.Bars)
+            print (Blacklist)
+            print (Viruses)
+        if Prompt == "deus_ex_machina":
+            SoundManager.play_sound("SFX", 'deus', False)
+        if Prompt == "kill_me_now_pls":
+            ProgressBars.BarAdd('ProblemTrigger',1,(2000,3000),True)
+        if Prompt == Problem:
+            Problem = ''
+        if Prompt.lower() == "ping":
+            cls.ping("new")
+        scrub_list = ['scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean']
+        ScrubBuffer += [Prompt[-1] for entry in scrub_list if Prompt.startswith(entry)]
+
+    @classmethod
+    # Simulates game command "scrub", where a server is investigated, and if a virus is within, is destroyed
+    # If len(letter) == 1 (a single letter), that server is scanned
+    # If letter[0:4] == "done", it indicates this is the callback after a scan has concluded
+    def scrub(cls, letter):
+        global Blacklist
+        global ScrubLength
+        global Viruses
+        global News
+        global PrevScans
+        if len(letter) == 1:
+            Blacklist.append(str(letter))
+            ProgressBars.BarAdd("virus"+letter,1,(ScrubLength,ScrubLength),False)
+        else:
+            letter_read = str(letter[-1])
+            if letter[0:4] == 'done':
+                if letter_read not in PrevScans:
+                    PrevScans.append(str(letter_read))
+                if letter_read in Viruses:
+                    Viruses.remove(letter_read)
+                    News = 'Virus Found in '+letter_read+'!'
+                    ProgressBars.BarAdd('ClearNews',0,(3000,3000),False)
+                if letter_read in Blacklist:
+                    Blacklist.remove(letter_read)
+
+    @classmethod
+    # a
+    def ping(cls, flag:str):
+        global Blacklist
+        global ScrubLength
+        global Viruses
+        global News
+        global PrevScans
+
+        #print("flag", flag)
+
+        if(flag == "new"):
+            random_characters = set()
+            while len(random_characters) < 5:
+                random_characters.add(Alphabet.RandomSafe())
+            command = "ping"
+            for letter in random_characters:
+                Blacklist.append(letter)
+                command += "," + letter
+            ProgressBars.BarAdd(command,0,(ScrubLength,ScrubLength),False)
+        if(flag[0:4] == "done"):
+            pings = flag.split(",")[1:]
+            results = []
+            for letter in pings:
+                #print("letter", letter)
+                if(letter in Viruses):
+                    results.append(letter)
+                if(letter in Blacklist):
+                    Blacklist.remove(letter)
+            message = str(len(results)) + " viruses found across " + ','.join(pings)
+            News = message
+            ProgressBars.BarAdd('ClearNews',0,(3000,3000),False)
+    
 # --- functions ---    
 def clearCanvas() -> None:
     # Remove all items from the canvas
@@ -405,7 +489,7 @@ def ScrubWrite():
     # Consumes all characters in the scrub buffer and actually executes scrub() on them
     global ScrubBuffer
     for item in ScrubBuffer:
-        scrub(item)
+        GameCommands.scrub(item)
     ScrubBuffer = []
 
 def KeyPress(event):
@@ -670,33 +754,7 @@ def GameState():
         pass
     if GameActive == 4: #Win
         ProgressBars.BarAdd('ClearNews',0,(100,100),0)
-        pass       
-
-# --- Game Commands ---
-def scrub(letter):
-    # Simulates game command "scrub", where a server is investigated, and if a virus is within, is destroyed
-    # If len(letter) == 1 (a single letter), that server is scanned
-    # If letter[0:4] == "done", it indicates this is the callback after a scan has concluded
-    global Blacklist
-    global ScrubLength
-    global Viruses
-    global ProgressBars
-    global News
-    global PrevScans
-    if len(letter) == 1:
-        Blacklist.append(str(letter))
-        ProgressBars.BarAdd("virus"+letter,1,(ScrubLength,ScrubLength),0)
-    else:
-        letter_read = str(letter[-1])
-        if letter[0:4] == 'done':
-            if letter_read not in PrevScans:
-                PrevScans.append(str(letter_read))
-            if letter_read in Viruses:
-                Viruses.remove(letter_read)
-                News = 'Virus Found in '+letter_read+'!'
-                ProgressBars.BarAdd('ClearNews',0,(3000,3000),0)
-            if letter_read in Blacklist:
-                Blacklist.remove(letter_read)
+        pass
 
 # --- Executives ---
 def TOTAL_MAIN():
