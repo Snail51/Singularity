@@ -267,7 +267,7 @@ class FontInstaller:
         elif platform.system().upper() == "LINUX":
             cls.Linux()
         elif platform.system().upper() == "DARWIN":
-            cls.Mac()
+            cls.macOS()
         else:
             cls.Other()
 
