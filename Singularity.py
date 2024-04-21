@@ -679,7 +679,7 @@ def scrub(letter: str):
             Blacklist.remove(letter_read)
 
 # --- Executives ---
-def TOTAL_MAIN() -> None:
+def TOTAL_MAIN(pthread: threading.Thread) -> None:
     #The main loop, called every frame
 
     global GameActive
@@ -700,8 +700,8 @@ def TOTAL_MAIN() -> None:
         postFrame = Time # the time at the end of the frame
         frameWait=max(0,17-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
         #print(postFrame-preFrame)
-        t1.join()
-        c.after(frameWait, TOTAL_MAIN)
+
+        c.after(frameWait, TOTAL_MAIN, pthread)
     except Exception as e:
         global Blacklist
         global ScrubBuffer
@@ -780,7 +780,9 @@ if __name__ == "__main__":
     SoundManager.play_sound("BG", 'chug', True)
     SoundManager.set_volume(50)
 
-    TOTAL_MAIN()
+    t1 = threading.Thread(group=None,target=DrawMaster())
+    TOTAL_MAIN(t1)
+
     # "start the engine"
     
     root.mainloop()
