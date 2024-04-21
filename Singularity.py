@@ -841,10 +841,15 @@ if __name__ == "__main__":
     root.configure(bg='#000000') # set the window background to black
     root.bind('<Configure>', resize_canvas) # every time the window is changed (in this case resized), do something
     root.wm_iconphoto(True, tk.PhotoImage(file=(ResourcePrefix()+"assets/icon.png"))) # set the taskbar icon to a file
-    if platform.uname()[0].upper() == "WINDOWS":
+    
+    if platform.system().upper() == "WINDOWS":
         root.state('zoomed')
-    else:
+    elif platform.system().upper() == "DARWIN":
+        root.wm_state('zoomed')
+    elif platform.system().upper() == "LINUX":
         root.wm_attributes("-zoomed", True)
+    else:
+        pass #not supported
 
     # Make sure the user has "Inhuman BB" installed as a font
     FontInstaller.Install()
