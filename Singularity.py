@@ -62,6 +62,8 @@ PrevScans = []
 PromptTicker = ""
 WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
 
+# --- tkinter instances ---
+
 def ResourcePrefix() -> str:
     """
     The function `ResourcePrefix` returns specific resource path prefixes based on if the game
@@ -829,6 +831,8 @@ def resize_canvas(event) -> None:
 
     global CanvasWidth
     global CanvasHeight
+    global root
+    global c
     CanvasWidth = root.winfo_width()
     CanvasHeight = root.winfo_height() * 0.8
     c.config(height=CanvasHeight, width=CanvasWidth)
