@@ -63,6 +63,8 @@ PromptTicker = ""
 WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
 
 # --- tkinter instances ---
+root = tk.Tk()
+c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
 
 def ResourcePrefix() -> str:
     """
@@ -839,7 +841,6 @@ def resize_canvas(event) -> None:
 
 if __name__ == "__main__":
     # init    
-    root = tk.Tk()
     root.bind('<Key>', KeyPress)
     root.title('Singularity')
     root.configure(bg='#000000') # set the window background to black
@@ -862,7 +863,6 @@ if __name__ == "__main__":
         SoundManager.play_sound("MUS", 'intro', True)
 
     #Make Canvas
-    c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
     c.bind('<Motion>', motion)
     c.bind('<ButtonPress>', ClickRegistrar)
     c.pack(pady=10, fill='both', expand=True, anchor="n")
