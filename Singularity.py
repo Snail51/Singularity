@@ -262,17 +262,17 @@ class FontInstaller:
 
     @classmethod
     def Install(cls) -> None:
-        try:
-            if platform.system().upper() == "WINDOWS":
-                cls.Windows()
-            elif platform.system().upper() == "LINUX":
-                cls.Linux()
-            elif platform.system().upper() == "DARWIN":
-                cls.macOS()
-            else:
-                pass
-        except:
-            traceback.print_exc()
+        #try:
+        #    if platform.system().upper() == "WINDOWS":
+        #        cls.Windows()
+        #    elif platform.system().upper() == "LINUX":
+        #        cls.Linux()
+        #    elif platform.system().upper() == "DARWIN":
+        #        cls.macOS()
+        #    else:
+        #        pass
+        #except:
+        #    traceback.print_exc()
         cls.Warn()
 
     @classmethod
