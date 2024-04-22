@@ -39,5 +39,5 @@ Good Luck!
 
 
 ## Addendum:
-If you encounter significant performance issues, go to the config section of the game file and change 
+If you encounter significant performance issues, go to Singularity.cfg and change
 "BinaryBG = True" to "BinaryBG = False"
