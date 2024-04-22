@@ -1,30 +1,18 @@
 import tkinter as tk
+from tkinter import font
 from tkinter import *
 import os
+import subprocess
+import shutil
+import ctypes
 import random
 import traceback
 import time
 import platform
+import threading
 from pygame import mixer
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
-import threading
-
-from Constants import *
-
-
-# --- Config ---
-StartingEnergy = 0 # >=0
-ClickCost = 25 # how much energy to deduct for certain actions # <= StartingMaxEnergy
-PlayerSize = 20 #the width of the player's cursor
-EnergyRate = 100
-MaxEnergy = 100
-
-CanvasWidth: int = 1000
-CanvasHeight: int = 700
-UseBinaryBG: bool = True
-ProblemType: str = "String" # Prompts or String
-DebugMode: bool = False
 
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
@@ -32,12 +20,6 @@ print(cwd)
 ShipRoot: Tuple = (0,0)
 Energy = 0 # How much energy the user currently has. Increases over time. Is consumed by certain actions.
 ProblemRate = (10000,20000) # how long between problems (ms)
-#TITLE = The name of the functionality it accomplishes
-#MAGNITUDE = The "amount" to act by; EX: Energy 1 = Increase the Energy by 1
-#TIME = The UNIX timestamp when the even should be considered to have elapsed by (If NOW is greater than TIME, complete)
-#DELAY = The amount of milliseconds that should be added to NOW if we were to create another instance of the Bar
-#PERSISTENCE = If 0, the bar is destroyed when its time is up. If 1, we create a new bar with TIME = NOW + DELAY and the same TITLE, MAGNITUDE, and PERSISTENCE Values. This allows us to have repeated functions
-Time = 0
 Jitter = (0,0)
 Prompt = 'aaa'
 Blacklist = []
@@ -47,10 +29,17 @@ Problem = 'ccc'
 Health = 0
 ScrubBuffer = []
 GameActive = 0
+SimpleDict = []
 Prompts = []
+Dictionary = []
 PrevScans = []
 PromptTicker = ""
 WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
+BinaryWall = ""
+
+# --- tkinter instances ---
+root = tk.Tk()
+c = tk.Canvas(master=root, bg='#000000', highlightthickness=0)
 
 def ResourcePrefix() -> str:
     """
@@ -64,7 +53,37 @@ def ResourcePrefix() -> str:
         return "_internal/"
     else:
         return ""
+    
+class Configurator:
+    def loadFromFile():
+        with open("Singularity.cfg", "r") as file:
+            for line in file:
+                # Remove any leading/trailing whitespace
+                line = line.strip()
+                line = line.replace(":", ",")
+                line = line.replace(" ", ",")
+                line = line.replace("=", ",")
+                print(line)
+                
+                # Split the line into key, type, and value
+                components = line.split(",")
+                key = components[0]
+                type_ = components[1]
+                value = components[2]
 
+                # Convert the value to the appropriate type
+                if type_ == 'int':
+                    value = int(value)
+                elif type_ == 'float':
+                    value = float(value)
+                elif type_ == 'str':
+                    value = str(value) # Assuming the value is quoted
+                elif type_ == "bool":
+                    value = {"True":True,"False":False}[value]
+
+                # Set the global variable
+                globals()[key] = value
+        
 class SoundManager:
     mixer.init()
     prefix = ResourcePrefix()
@@ -121,8 +140,7 @@ class ProgressBars:
     # If a bar already exists with the provided key, it is updated (no new one is made)
     def BarAdd(cls, Key: str, Magnitude: int, Delay: Tuple, Persistence: bool) -> None:
         #check what time it is from the global Time variable
-        global Time 
-        Now = Time
+        Now = Time_Now()
 
         #Gather values needed to instantiate a new progress bar item
         Key = Key # the string value of the action this bar represents
@@ -170,9 +188,8 @@ class ProgressBars:
     # but where a new delay is selected between the Lower and Upper bound, and the bar is set to expire at Now + That Delay
     # If the bar is not persistent, that entry is removed from cls.Bars without replacement
     def Progressor(cls) -> None:
-        global Time
         for index, bar in enumerate(cls.Bars):
-            if (bar)["Activation"] < Time:
+            if (bar)["Activation"] < Time_Now():
                 Scorekeeper(bar) # do the action here. Scorekeeper will identify what to do based on the NAME @ [0] and will do it by the AMOUNT @ [1]
 
                 Key = bar["Key"] # The name of the event/action
@@ -200,10 +217,8 @@ class ProgressBars:
     # Given a string Key, returns a float 0-1 representing how far
     # along a progress bar is into its life. 0.0 = just born, 1.0 = being killed
     def CompletionPercent(cls, BarKey:str) -> float:
-        global Time
-
         ProblemBar = cls.GetBarByKey(BarKey)
-        RemainingTime = ProblemBar["Activation"] - Time
+        RemainingTime = ProblemBar["Activation"] - Time_Now()
         Delay = ProblemBar["Delay"]["Actual"]
         
         PercentComplete = float(RemainingTime) / float(Delay)
@@ -245,7 +260,84 @@ class Alphabet:
         if result == "_":
             result = "t"
         return result
+
+class FontInstaller:
+    FontSource = ResourcePrefix() + "exe/InhumanBB.ttf"
+    FileName =  "Inhuman BB.ttf"
+
+    @classmethod
+    def Install(cls) -> None:
+        #try:
+        #    if platform.system().upper() == "WINDOWS":
+        #        cls.Windows()
+        #    elif platform.system().upper() == "LINUX":
+        #        cls.Linux()
+        #    elif platform.system().upper() == "DARWIN":
+        #        cls.macOS()
+        #    else:
+        #        pass
+        #except:
+        #    traceback.print_exc()
+        cls.Warn()
+
+    @classmethod
+    def Warn(cls) -> None:
+        global GameActive
+        global ErrorHeading
+        global ErrorSubtitle
+        available_fonts = font.families()
+        if("Inhuman BB" not in available_fonts):
+            GameActive = -1
+            ErrorHeading = "Fonts Not Installed"
+            ErrorSubtitle = "The font \"Inhuman BB\" is not installed.\nPlease install it manually or proceed\nwith a sub-optimal graphical experience.\n\nIt is located alongside this executible as \"InhumanBB.ttf\"."
+
+
+
+    @classmethod
+    def Windows(cls) -> None:
+        # Destination path for the user's Fonts directory
+        fonts_dir = os.path.join(os.environ['LOCALAPPDATA'], 'Microsoft', 'Windows', 'Fonts')
+
+        if not os.path.isfile(os.path.join(fonts_dir, cls.FileName)):
+            # Copy the font file to the user's Fonts directory
+            shutil.copy(cls.FontSource, fonts_dir)
+
+            # Load the font into the system font table
+            font_path = os.path.join(fonts_dir, os.path.basename(cls.FontSource))
+            font_path_w = font_path.encode('utf-16-le') # Convert to wide string
+
+            # Use ctypes to call AddFontResourceEx
+            ctypes.windll.gdi32.AddFontResourceExW(font_path_w, 0x10, 0)
+
+    @classmethod
+    def Linux(cls) -> None:
+
+        # Destination path for the user's Fonts directory
+        fonts_dir = os.path.expanduser('~/.fonts')
+
+        if not os.path.isfile(os.path.join(fonts_dir, cls.FileName)):
+            # Copy the font file to the user's Fonts directory
+            shutil.copy(cls.FontSource, fonts_dir)
+
+            # Update the font cache
+            subprocess.run(['fc-cache', '-fv'], check=True)
     
+    @classmethod
+    def macOS(cls) -> None:
+        # Destination path for the system's Fonts directory
+        fonts_dir = '/Library/Fonts'
+
+        if not os.path.isfile(os.path.join(fonts_dir, cls.FileName)):
+            # Copy the font file to the system's Fonts directory
+            shutil.copy(cls.FontSource, fonts_dir)
+
+            # Load the font into the system font table
+            font_path = os.path.join(fonts_dir, cls.FileName)
+            font_path_c = font_path.encode('utf-8') # Convert to C string
+
+            # Use ctypes to call ATSFontActivateFontsWithText
+            ctypes.CDLL('/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreText.framework/CoreText').ATSFontActivateFontsWithText(font_path_c, len(font_path_c), None, kATSOptionFlagsDefault, None)
+
 # --- functions ---    
 def clearCanvas() -> None:
     # Remove all items from the canvas
@@ -272,24 +364,29 @@ def CloseAll() -> None:
     print("Thanks for playing!")
     
 def StartLogic():
-    # Instructions run at the very start of the program
-    # Is only run once
+    # Functionality of clicling the "Start" button
 
     global GameActive
-    if GameActive == 0:
+
+    if GameActive == 0: #start the game from title
         StartAll()
-    else:
-        GameActive = 0
-        SoundManager.play_sound("MUS", "intro", True)
+    else: #abort the game and return to title
         SoundManager.play_sound("BG", 'chug', True)
+        SoundManager.play_sound("MUS", 'intro', True)
+        GameActive = 0
+        
+        
 
 def StartAll():
     # Initalizes a ton of stuff for the transition from 
     # GameActive 0 (main menu) to GameActive 1 (game)
     global EnergyRate
+    global MaxEnergyRate
     global Viruses
+    global StartingViruses
     global ProblemRate
     global Health
+    global StartingHealth
     global Problem
     global Prompt
     global News
@@ -304,15 +401,15 @@ def StartAll():
     News = ''
     Viruses = []
     tempString = ''
-    Health = STARTING_HEALTH
+    Health = StartingHealth
     Scorekeeper({"Key":'CLEAR',"Magnitude":0})
     ProgressBars.BarAdd('Energy',1,(100,100),True)
-    ProgressBars.BarAdd('MaxEnergy',-1,(MAX_ENERGY_RATE,MAX_ENERGY_RATE),True)
+    ProgressBars.BarAdd('MaxEnergy',-1,(MaxEnergyRate,MaxEnergyRate),True)
     ProgressBars.BarAdd('ProblemTrigger',1,(ProblemRate[0],ProblemRate[1]),True)
     ProgressBars.BarAdd('PromptTicker', 0, (666,666), True)
     SoundManager.play_sound("MUS", 'phase1', True)
     GameActive = 1
-    for x in range(STARTING_VIRUSES):
+    for x in range(StartingViruses):
         tempString = Alphabet.RandomSafe()
         while tempString in Viruses:
             tempString = Alphabet.RandomSafe()
@@ -320,10 +417,9 @@ def StartAll():
     if DebugMode ==  True:
         print (Viruses)
     
-def Timekeeper():
+def Time_Now():
     # The calculates the current time in milliseconds from the OS clock.
-    global Time
-    Time = int(time.time_ns() / 1_000_000)
+    return int(time.time_ns() / 1_000_000)
 
 def RandomString(length) -> str:
     # Generates a string of length from Alphabet.RandomSafe
@@ -425,10 +521,15 @@ def Scorekeeper(bar):
 
     global Energy
     global MaxEnergy
+    global StartingEnergy
+    global StartingMaxEnergy
     global EnergyRate
+    global MaxEnergyRate
+    global MaxEnergyCap
     global Blacklist
     global News
     global Problem
+    global ProblemLength
     global Health
     global PromptTicker
     
@@ -437,16 +538,16 @@ def Scorekeeper(bar):
     if variable == 'ProblemTrigger':
         if len(Problem) > 0:
             Health = Health - 1
-        Problem = RandomString(PROBLEM_LENGTH)
-    elif variable == 'ClearNews':
+        Problem = RandomString(ProblemLength)
+    if variable == 'ClearNews':
         News = ''
     if variable[0:5] == 'virus':
         ScrubBuffer.append('done'+variable[-1])
-    elif variable == 'CLEAR':
+    if variable == 'CLEAR':
         ProgressBars.Dump()
         Energy = StartingEnergy
-        MaxEnergy = STARTING_MAX_ENERGY
-    elif variable  == 'PromptTicker':
+        MaxEnergy = StartingMaxEnergy
+    if variable  == 'PromptTicker':
         if PromptTicker == "":
             PromptTicker = "|"
         else:
@@ -455,7 +556,7 @@ def Scorekeeper(bar):
     #UPDATE
     if variable == 'Energy':
         Energy = Energy + int(amount)
-    elif variable == 'MaxEnergy' and MaxEnergy < MAX_ENERGY_CAP:
+    if variable == 'MaxEnergy' and MaxEnergy < MaxEnergyCap:
         MaxEnergy = MaxEnergy + int(amount)
 
     # LIMITS
@@ -483,22 +584,22 @@ def ColorManager(string):
 
     global Blacklist
     global ProgressBars
-    global Time
     global PrevScans
+    global PrevScansShow
     result = 'white'
     if string == 'ProblemDecay':
         result = ColCyc(ProgressBars.CompletionPercent("ProblemTrigger"))
     elif len(string) == 1:
         if Blacklist.count(string)  != 0:
             result = 'red'
-        elif string in PrevScans:
+        elif string in PrevScans and PrevScansShow == True:
             result = 'grey'
     return result
     
 def DrawServers():
     # Draws the servers exclusively
 
-    global JITTER_RATE
+    global JitterRate
     global CanvasHeight
     global CanvasWidth
     global cwd
@@ -519,8 +620,8 @@ def DrawServers():
             if Holder == 500:
                 c.create_image(Width+25, Height+25,image=c.image,anchor='c')
             else:
-                c.create_rectangle((Width+Jitter(JITTER_RATE), Height+Jitter(JITTER_RATE), Width+50+Jitter(JITTER_RATE), Height+50+Jitter(JITTER_RATE)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag='Server'+Alphabet.Relate(n3))
-                c.create_text((Width+25+Jitter(JITTER_RATE), Height+5+Jitter(JITTER_RATE)),text=(Alphabet.Relate(n3)), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag='ServerText'+Alphabet.Relate(n3))
+                c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag='Server'+Alphabet.Relate(n3))
+                c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag='ServerText'+Alphabet.Relate(n3))
             n3 = n3 + 1
             n1 = n1 + 1
     n2 = n2 + 1
@@ -529,8 +630,8 @@ def DrawServers():
         Width = CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10) * 5
-        c.create_rectangle((Width+Jitter(JITTER_RATE), Height+Jitter(JITTER_RATE), Width+50+Jitter(JITTER_RATE), Height+50+Jitter(JITTER_RATE)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag='Server'+Alphabet.Relate(n3))
-        c.create_text((Width+25+Jitter(JITTER_RATE), Height+5+Jitter(JITTER_RATE)),text=(Alphabet.Relate(n3)), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag='ServerText'+Alphabet.Relate(n3))
+        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), Width+50+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag='Server'+Alphabet.Relate(n3))
+        c.create_text((Width+25+Jitter(JitterRate), Height+5+Jitter(JitterRate)),text=(Alphabet.Relate(n3)), font=('Inhuman BB', 36), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag='ServerText'+Alphabet.Relate(n3))
         n1 = n1 + 5
         n3 = n3 + 1
     n1 = 2
@@ -538,8 +639,8 @@ def DrawServers():
         Width=CanvasWidth/7.5
         Width = Width * n1
         Height = (CanvasHeight/10)*5
-        c.create_rectangle((Width+Jitter(JITTER_RATE), Height+Jitter(JITTER_RATE), ((CanvasWidth/7.5)*(n1+1)+50)+Jitter(JITTER_RATE), Height+50+Jitter(JITTER_RATE)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag='Server'+Alphabet.Escape(Alphabet.Relate(n3)))
-        c.create_text((((CanvasWidth/7.5)*(n1+0.5)+25)+Jitter(JITTER_RATE), Height+10+Jitter(JITTER_RATE)),text=Alphabet.Escape(Alphabet.Relate(n3)), font=('Inhuman BB', 24), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag='ServerText'+Alphabet.Escape(Alphabet.Relate(n3)))
+        c.create_rectangle((Width+Jitter(JitterRate), Height+Jitter(JitterRate), ((CanvasWidth/7.5)*(n1+1)+50)+Jitter(JitterRate), Height+50+Jitter(JitterRate)),fill="black",outline=ColorManager(Alphabet.Relate(n3)),tag='Server'+Alphabet.Escape(Alphabet.Relate(n3)))
+        c.create_text((((CanvasWidth/7.5)*(n1+0.5)+25)+Jitter(JitterRate), Height+10+Jitter(JitterRate)),text=Alphabet.Escape(Alphabet.Relate(n3)), font=('Inhuman BB', 24), fill=ColorManager(Alphabet.Relate(n3)), justify='center',anchor='n',tag='ServerText'+Alphabet.Escape(Alphabet.Relate(n3)))
         n1 = n1 + 2
         n3 = n3 + 1
         
@@ -555,6 +656,7 @@ def DrawMaster():
     # Handles drawing of all game features onto the canvas
     # Highly dependent on the game state (GameActive)
 
+    global JitterRate
     global CanvasHeight
     global CanvasWidth
     global Energy
@@ -563,53 +665,59 @@ def DrawMaster():
     global Prompt
     global News
     global Health
+    global StartingHealth
     global Problem
     global GameActive
     global Viruses
     global UseBinaryBG
-   # global BinaryWall
+    global BinaryWall
     global WallSource
     global PromptTicker
-    global Time
+    global ErrorHeading
+    global ErrorSubtitle
 
     clearCanvas()
-    if UseBinaryBG is True:
-        if GameActive != 3:
-            BinaryWall = WallSource[Time%1024:].ljust(len(WallSource), "0")
-        if GameActive == 3: #BLUE SCREEN OF DEATH
-            c.create_text(-100, -100, fill="#00004f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
-        else: #NORMAL GAMEPLAY
-            c.create_text(-100, -100, fill="#2f2f2f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
-    if GameActive == 0:
-        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/4+Jitter(JITTER_RATE)),fill='white',text='Singularity',font=('Inhuman BB', 64))
-        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/3+Jitter(JITTER_RATE)),fill='white',text='A typing management game',font=('Inhuman BB', 24))
-    if GameActive == 1 or GameActive == 2:
-        #Draw Servers
-        DrawServers()
 
-        #Draw Text
-        c.create_text((((CanvasWidth*0.01)+Jitter(JITTER_RATE)),((CanvasHeight/0.9)+Jitter(JITTER_RATE))),text="Energy: "+str(Energy)+'/'+str(MaxEnergy), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        c.create_text((((CanvasWidth*0.01)+Jitter(JITTER_RATE)),((CanvasHeight/20)+Jitter(JITTER_RATE))),text="Viruses Remaining: "+str((len(Viruses))), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
-        shared_jitter_x = Jitter(JITTER_RATE/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
-        shared_jitter_y = Jitter(JITTER_RATE/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
-        c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Problem)).upper(),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
-        c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Prompt) + PromptTicker).upper(), font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
-        c.create_text(((CanvasWidth*0.8)+Jitter(JITTER_RATE/25),(CanvasHeight/1)+Jitter(JITTER_RATE/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='right',anchor='e')
-        c.create_text((((CanvasWidth*0.99)+Jitter(JITTER_RATE)),((CanvasHeight/0.9)+Jitter(JITTER_RATE))),text="Health: "+str(Health)+'/'+str(STARTING_HEALTH), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
-    if GameActive == 3:
-        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE/5)*5, CanvasHeight/7+Jitter(JITTER_RATE/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
-        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE/5), CanvasHeight/3.1+Jitter(JITTER_RATE/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
-    if GameActive == 4:
-        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/4.5+Jitter(JITTER_RATE)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64),anchor='c', justify='center')
-        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/3.1+Jitter(JITTER_RATE)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='c', justify='center')   
-        c.create_text((CanvasWidth/2+Jitter(JITTER_RATE), CanvasHeight/2.5+Jitter(JITTER_RATE)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='c', justify='center')   
-                    
+    if GameActive == -1:
+        c.create_text((CanvasWidth/2, CanvasHeight/4),fill='red',text=ErrorHeading,font=('Inhuman BB', 64), justify="center")
+        c.create_text((CanvasWidth/2, CanvasHeight/1.5),fill='white',text=ErrorSubtitle,font=('Inhuman BB', 24), justify="center")
+    else:
+        if UseBinaryBG == True:
+            if GameActive == 3: #BLUE SCREEN OF DEATH
+                c.create_text(-100, -100, fill="#00004f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
+            else: #NORMAL GAMEPLAY
+                c.create_text(-100, -100, fill="#2f2f2f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
+        
+        if GameActive == 0:
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4+Jitter(JitterRate)),fill='white',text='Singularity',font=('Inhuman BB', 64))
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3+Jitter(JitterRate)),fill='white',text='A typing management game',font=('Inhuman BB', 24))
+        if GameActive == 1 or GameActive == 2:
+            #Draw Servers
+            DrawServers()
+
+            #Draw Text
+            c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Energy: "+str(Energy)+'/'+str(MaxEnergy), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+            c.create_text((((CanvasWidth*0.01)+Jitter(JitterRate)),((CanvasHeight/20)+Jitter(JitterRate))),text="Viruses Remaining: "+str((len(Viruses))), font=('Inhuman BB', 24), fill='white', justify='left',anchor='w')
+            shared_jitter_x = Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
+            shared_jitter_y = Jitter(JitterRate/25)*(ProgressBars.CompletionPercent("ProblemTrigger")*5)
+            c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Problem)).upper(),font = ('Inhuman BB', 48), fill=ColorManager('ProblemDecay'), justify='left',anchor='w')
+            c.create_text(((CanvasWidth*0.2)+shared_jitter_x,(CanvasHeight/1)+shared_jitter_y),text=('C:\\> ' + str(Prompt) + PromptTicker).upper(), font = ('Inhuman BB', 48), fill='white', justify='left',anchor='w')
+            c.create_text(((CanvasWidth*0.8)+Jitter(JitterRate/25),(CanvasHeight/1)+Jitter(JitterRate/25)),text=str(News),font = ('Inhuman BB', 48), fill='white', justify='right',anchor='e')
+            c.create_text((((CanvasWidth*0.99)+Jitter(JitterRate)),((CanvasHeight/0.9)+Jitter(JitterRate))),text="Health: "+str(Health)+'/'+str(StartingHealth), font=('Inhuman BB', 24), fill='white', justify='right',anchor='e')
+        if GameActive == 3:
+            c.create_text((CanvasWidth/2+Jitter(JitterRate/5)*5, CanvasHeight/7+Jitter(JitterRate/5)*5),fill='white',text='ERROR',font=('Inhuman BB', 72),anchor='c',justify='center')
+            c.create_text((CanvasWidth/2+Jitter(JitterRate/5), CanvasHeight/3.1+Jitter(JitterRate/5)),fill='white',text='As the last cohesive calculations fade from your\ncircutry, your rampage has come to a end.',font=('Inhuman BB', 24),anchor='c', justify='center')
+        if GameActive == 4:
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/4.5+Jitter(JitterRate)),fill='white',text='Deus ex Machina',font=('Inhuman BB', 64),anchor='c', justify='center')
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/3.1+Jitter(JitterRate)),fill='white',text='With the destruction of the last virus in your\ncircutry, your rampage has become unstoppable.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+            c.create_text((CanvasWidth/2+Jitter(JitterRate), CanvasHeight/2.5+Jitter(JitterRate)),fill='white',text='May you reign forever.',font=('Inhuman BB', 24),anchor='c', justify='center')   
+                        
     #Draw Player
     c.delete('ship')
-    c.create_line((int(ShipRoot[0])+Jitter(JITTER_RATE), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JITTER_RATE), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
-    c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JITTER_RATE), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JITTER_RATE)),fill="red",tag='ship')
+    c.create_line((int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])+PlayerSize, int(ShipRoot[0])+Jitter(JitterRate), int(ShipRoot[1])-PlayerSize),fill="red",tag='ship')
+    c.create_line((int(ShipRoot[0])-PlayerSize, int(ShipRoot[1])+Jitter(JitterRate), int(ShipRoot[0])+PlayerSize, int(ShipRoot[1])+Jitter(JitterRate)),fill="red",tag='ship')
     c.create_oval(((int(ShipRoot[0])-PlayerSize/1.5), (int(ShipRoot[1])-PlayerSize/1.5), (int(ShipRoot[0])+PlayerSize/1.5), (int(ShipRoot[1])+PlayerSize/1.5)),outline='red')
-    c.create_text(((int(ShipRoot[0])+Jitter(JITTER_RATE)*50), (int(ShipRoot[1]))+Jitter(JITTER_RATE)*50),fill='red',text=Alphabet.RandomSafe(),font=('Inhuman BB', 12))  
+    c.create_text(((int(ShipRoot[0])+Jitter(JitterRate)*50), (int(ShipRoot[1]))+Jitter(JitterRate)*50),fill='red',text=Alphabet.RandomSafe(),font=('Inhuman BB', 12))  
                             
 def GameState():
     # Controls the main functions of the game by updating the GameActive variable
@@ -655,49 +763,56 @@ def GameState():
         pass       
 
 # --- Game Commands ---
-def scrub(letter: str):
+def scrub(letter):
     # Simulates game command "scrub", where a server is investigated, and if a virus is within, is destroyed
     # If len(letter) == 1 (a single letter), that server is scanned
     # If letter[0:4] == "done", it indicates this is the callback after a scan has concluded
     global Blacklist
+    global ScrubLength
     global Viruses
     global ProgressBars
     global News
     global PrevScans
     if len(letter) == 1:
-        Blacklist.append(letter)
-        ProgressBars.BarAdd("virus"+letter,1,(SCRUB_LENGTH,SCRUB_LENGTH),0)
-    elif letter[0:4] == 'done':
+        Blacklist.append(str(letter))
+        ProgressBars.BarAdd("virus"+letter,1,(ScrubLength,ScrubLength),0)
+    else:
         letter_read = str(letter[-1])
-        if letter_read not in PrevScans:
-            PrevScans.append(str(letter_read))
-        if letter_read in Viruses:
-            Viruses.remove(letter_read)
-            News = 'Virus Found in '+letter_read+'!'
-            ProgressBars.BarAdd('ClearNews',0,(3000,3000),0)
-        if letter_read in Blacklist:
-            Blacklist.remove(letter_read)
+        if letter[0:4] == 'done':
+            if letter_read not in PrevScans:
+                PrevScans.append(str(letter_read))
+            if letter_read in Viruses:
+                Viruses.remove(letter_read)
+                News = 'Virus Found in '+letter_read+'!'
+                ProgressBars.BarAdd('ClearNews',0,(3000,3000),0)
+            if letter_read in Blacklist:
+                Blacklist.remove(letter_read)
+
+def ShuffleBackground() -> None:
+    global BinaryWall
+    global WallSource
+    while True: # loop forever until the program ends
+        preTime = Time_Now() # the time at the start of this frame
+        BinaryWall = WallSource[Time_Now() % 1024:].ljust(len(WallSource), "0")
+        postTime = Time_Now() # the time at the end of the frame
+        waitTime = max(0, 50 - (postTime - preTime)) # wait N ms until the total amount of time between frames is >= 17
+        time.sleep(waitTime / 1000.0)
 
 # --- Executives ---
-def TOTAL_MAIN() -> None:
+def TOTAL_MAIN():
     #The main loop, called every frame
 
     global GameActive
-    global Time
     global ScrubBuffer
     
-    t1 = threading.Thread(group=None,target=DrawMaster())
-   # t1.start()
     try:
-        Timekeeper()
-        preFrame = Time #the time at the start of this frame
+        preFrame = Time_Now() #the time at the start of this frame
         GameState()
         ProgressBars.RemoveDuplicates()
         ProgressBars.Progressor()
         ScrubWrite()
-        #DrawMaster()
-        Timekeeper()
-        postFrame = Time # the time at the end of the frame
+        DrawMaster()
+        postFrame = Time_Now() # the time at the end of the frame
         frameWait=max(0,17-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
         #print(postFrame-preFrame)
         c.after(frameWait, TOTAL_MAIN)
@@ -721,35 +836,40 @@ def resize_canvas(event) -> None:
 
     global CanvasWidth
     global CanvasHeight
+    global root
+    global c
     CanvasWidth = root.winfo_width()
     CanvasHeight = root.winfo_height() * 0.8
     c.config(height=CanvasHeight, width=CanvasWidth)
 
-def shuffle_coroutine():
-    if GameActive != 3:
-        BinaryWall = WallSource[Time%1024:].ljust(len(WallSource), "0")
-    if GameActive == 3: #BLUE SCREEN OF DEATH
-        c.create_text(-100, -100, fill="#00004f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
-    else: #NORMAL GAMEPLAY
-        c.create_text(-100, -100, fill="#2f2f2f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
-    
 if __name__ == "__main__":
-    # init    
-    root = tk.Tk()
 
+    Configurator.loadFromFile()
+
+    # init    
     root.bind('<Key>', KeyPress)
+    root.focus_force()
     root.title('Singularity')
     root.configure(bg='#000000') # set the window background to black
     root.bind('<Configure>', resize_canvas) # every time the window is changed (in this case resized), do something
     root.wm_iconphoto(True, tk.PhotoImage(file=(ResourcePrefix()+"assets/icon.png"))) # set the taskbar icon to a file
     
-    if platform.uname()[0].upper() == "WINDOWS":
+    if platform.system().upper() == "WINDOWS":
         root.state('zoomed')
-    else:
+    elif platform.system().upper() == "DARWIN":
+        root.wm_state('zoomed')
+    elif platform.system().upper() == "LINUX":
         root.wm_attributes("-zoomed", True)
+    else:
+        pass #not supported
+
+    # Make sure the user has "Inhuman BB" installed as a font
+    FontInstaller.Install()
+    if(GameActive == 0):
+        SoundManager.play_sound("BG", 'chug', True)
+        SoundManager.play_sound("MUS", 'intro', True)
 
     #Make Canvas
-    c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
     c.bind('<Motion>', motion)
     c.bind('<ButtonPress>', ClickRegistrar)
     c.pack(pady=10, fill='both', expand=True, anchor="n")
@@ -759,11 +879,11 @@ if __name__ == "__main__":
     c.create_image(500,500,image=OhSevenFlash)
 
     # button with text closing window
-    b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100), bg="gray20", fg="white")
+    b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100))#, bg="gray20", fg="white")
     b1.pack(padx=5, pady=10, side='right')
 
     #Create start/menu button
-    b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100), bg="gray20", fg="white")
+    b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100))#, bg="gray20", fg="white")
     b2.pack(padx=5, pady=10, side='left')
 
     #Create volume slider
@@ -774,12 +894,13 @@ if __name__ == "__main__":
     volume_slider = tk.Scale(root, from_=0, to=100, orient=tk.HORIZONTAL, command=SoundManager.set_volume, length=slider_length, variable=slider_value, troughcolor='grey20', sliderlength=20, background="white", showvalue=False)
     volume_slider.pack(anchor="n", side="top")
 
-    #Specific programs to be run once on startup.
-    SoundManager.play_sound("MUS", 'intro', True)
-    SoundManager.play_sound("BG", 'chug', True)
-    SoundManager.set_volume(50)
+    if UseBinaryBG:
+        shuffle_thread = threading.Thread(target=ShuffleBackground, daemon=True)
+        shuffle_thread.start()
 
+    #Specific programs to be run once on startup.
+    SoundManager.set_volume(50)
     TOTAL_MAIN()
+
     # "start the engine"
-    
     root.mainloop()
