@@ -41,3 +41,11 @@ Good Luck!
 ## Addendum:
 If you encounter significant performance issues, go to Singularity.cfg and change
 "BinaryBG = True" to "BinaryBG = False"
+
+If you are a MacOS user, you will need to execute Singularity through the terminal. 
+cd into the directory where Singularity has been installed, into the /Singularity 
+directory containing a directory called _internal as well as the Singularity executable, and the Config,
+then enter ./Singularity to launch.
+If you try to launch it through finder, the terminal window opens wherever your terminal usually starts,
+rather than running the program from within the proper /Singularity directory where it can reference
+its assets.
