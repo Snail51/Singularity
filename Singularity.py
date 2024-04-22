@@ -879,11 +879,11 @@ if __name__ == "__main__":
     c.create_image(500,500,image=OhSevenFlash)
 
     # button with text closing window
-    b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100), bg="gray20", fg="white")
+    b1 = tk.Button(root, text="Close", command=CloseAll, width=int(CanvasWidth/100))#, bg="gray20", fg="white")
     b1.pack(padx=5, pady=10, side='right')
 
     #Create start/menu button
-    b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100), bg="gray20", fg="white")
+    b2 = tk.Button(root, text="Start", command=StartLogic, width=int(CanvasWidth/100))#, bg="gray20", fg="white")
     b2.pack(padx=5, pady=10, side='left')
 
     #Create volume slider
