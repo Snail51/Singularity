@@ -839,6 +839,18 @@ def resize_canvas(event) -> None:
     c.config(height=CanvasHeight, width=CanvasWidth)
 
 if __name__ == "__main__":
+
+    with open("Singularity.cfg", "r") as file:
+        file_content = file.read()
+        lines = file_content.split("\n")
+        for line in lines:
+            components = line.split(":")
+            key = components[0]
+            value = components[1]
+            if(key == "UseBinaryBG"):
+                UseBinaryBG = {"True": True, "False": False}[value]
+
+
     # init    
     root.bind('<Key>', KeyPress)
     root.focus_force()
