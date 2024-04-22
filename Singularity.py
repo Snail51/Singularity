@@ -14,38 +14,12 @@ from pygame import mixer
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
 
-# --- Config ---
-StartingEnergy = 0 # >=0
-StartingMaxEnergy = 100
-ClickCost = 25 # how much energy to deduct for certain actions # <= StartingMaxEnergy
-PlayerSize = 20 #the width of the player's cursor
-EnergyRate = 100
-MaxEnergyRate = 5000
-MaxEnergyCap = 200
-JitterRate = 200
-ScrubLength = 5000
-StartingHealth = 10
-StartingViruses: int = 5 # <= 26
-ProblemLength: int = 6
-CanvasWidth: int = 1000
-CanvasHeight: int = 700
-UseBinaryBG: bool = True
-ProblemType: str = "String" # Prompts or String
-DebugMode: bool = False
-PrevScansShow: bool = False
-
 # --- variables ---
 cwd = os.path.join(os.path.dirname(__file__))
 print(cwd)
 ShipRoot: Tuple = (0,0)
 Energy = 0 # How much energy the user currently has. Increases over time. Is consumed by certain actions.
-MaxEnergy = 100 # Upper-bound to the user's energy. Decreases over time.
 ProblemRate = (10000,20000) # how long between problems (ms)
-#TITLE = The name of the functionality it accomplishes
-#MAGNITUDE = The "amount" to act by; EX: Energy 1 = Increase the Energy by 1
-#TIME = The UNIX timestamp when the even should be considered to have elapsed by (If NOW is greater than TIME, complete)
-#DELAY = The amount of milliseconds that should be added to NOW if we were to create another instance of the Bar
-#PERSISTENCE = If 0, the bar is destroyed when its time is up. If 1, we create a new bar with TIME = NOW + DELAY and the same TITLE, MAGNITUDE, and PERSISTENCE Values. This allows us to have repeated functions
 Jitter = (0,0)
 Prompt = 'aaa'
 Blacklist = []
@@ -65,7 +39,7 @@ BinaryWall = ""
 
 # --- tkinter instances ---
 root = tk.Tk()
-c = tk.Canvas(master=root, width=CanvasWidth, height=CanvasHeight, bg='#000000',highlightthickness=0)
+c = tk.Canvas(master=root, bg='#000000', highlightthickness=0)
 
 def ResourcePrefix() -> str:
     """
@@ -79,7 +53,37 @@ def ResourcePrefix() -> str:
         return "_internal/"
     else:
         return ""
+    
+class Configurator:
+    def loadFromFile():
+        with open("Singularity.cfg", "r") as file:
+            for line in file:
+                # Remove any leading/trailing whitespace
+                line = line.strip()
+                line = line.replace(":", ",")
+                line = line.replace(" ", ",")
+                line = line.replace("=", ",")
+                print(line)
+                
+                # Split the line into key, type, and value
+                components = line.split(",")
+                key = components[0]
+                type_ = components[1]
+                value = components[2]
 
+                # Convert the value to the appropriate type
+                if type_ == 'int':
+                    value = int(value)
+                elif type_ == 'float':
+                    value = float(value)
+                elif type_ == 'str':
+                    value = str(value) # Assuming the value is quoted
+                elif type_ == "bool":
+                    value = {"True":True,"False":False}[value]
+
+                # Set the global variable
+                globals()[key] = value
+        
 class SoundManager:
     mixer.init()
     prefix = ResourcePrefix()
@@ -840,16 +844,7 @@ def resize_canvas(event) -> None:
 
 if __name__ == "__main__":
 
-    with open("Singularity.cfg", "r") as file:
-        file_content = file.read()
-        lines = file_content.split("\n")
-        for line in lines:
-            components = line.split(":")
-            key = components[0]
-            value = components[1]
-            if(key == "UseBinaryBG"):
-                UseBinaryBG = {"True": True, "False": False}[value]
-
+    Configurator.loadFromFile()
 
     # init    
     root.bind('<Key>', KeyPress)
@@ -899,8 +894,9 @@ if __name__ == "__main__":
     volume_slider = tk.Scale(root, from_=0, to=100, orient=tk.HORIZONTAL, command=SoundManager.set_volume, length=slider_length, variable=slider_value, troughcolor='grey20', sliderlength=20, background="white", showvalue=False)
     volume_slider.pack(anchor="n", side="top")
 
-    shuffle_thread = threading.Thread(target=ShuffleBackground, daemon=True)
-    shuffle_thread.start()
+    if UseBinaryBG:
+        shuffle_thread = threading.Thread(target=ShuffleBackground, daemon=True)
+        shuffle_thread.start()
 
     #Specific programs to be run once on startup.
     SoundManager.set_volume(50)
