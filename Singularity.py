@@ -9,6 +9,7 @@ import random
 import traceback
 import time
 import platform
+import threading
 from pygame import mixer
 from PIL import Image, ImageTk, ImageDraw, ImageGrab
 from typing import List, Tuple, Dict
@@ -45,7 +46,6 @@ ProblemRate = (10000,20000) # how long between problems (ms)
 #TIME = The UNIX timestamp when the even should be considered to have elapsed by (If NOW is greater than TIME, complete)
 #DELAY = The amount of milliseconds that should be added to NOW if we were to create another instance of the Bar
 #PERSISTENCE = If 0, the bar is destroyed when its time is up. If 1, we create a new bar with TIME = NOW + DELAY and the same TITLE, MAGNITUDE, and PERSISTENCE Values. This allows us to have repeated functions
-Time = 0
 Jitter = (0,0)
 Prompt = 'aaa'
 Blacklist = []
@@ -61,6 +61,7 @@ Dictionary = []
 PrevScans = []
 PromptTicker = ""
 WallSource = ''.join(format(byte, '08b') for byte in os.urandom(1500))
+BinaryWall = ""
 
 # --- tkinter instances ---
 root = tk.Tk()
@@ -135,8 +136,7 @@ class ProgressBars:
     # If a bar already exists with the provided key, it is updated (no new one is made)
     def BarAdd(cls, Key: str, Magnitude: int, Delay: Tuple, Persistence: bool) -> None:
         #check what time it is from the global Time variable
-        global Time 
-        Now = Time
+        Now = Time_Now()
 
         #Gather values needed to instantiate a new progress bar item
         Key = Key # the string value of the action this bar represents
@@ -184,9 +184,8 @@ class ProgressBars:
     # but where a new delay is selected between the Lower and Upper bound, and the bar is set to expire at Now + That Delay
     # If the bar is not persistent, that entry is removed from cls.Bars without replacement
     def Progressor(cls) -> None:
-        global Time
         for index, bar in enumerate(cls.Bars):
-            if (bar)["Activation"] < Time:
+            if (bar)["Activation"] < Time_Now():
                 Scorekeeper(bar) # do the action here. Scorekeeper will identify what to do based on the NAME @ [0] and will do it by the AMOUNT @ [1]
 
                 Key = bar["Key"] # The name of the event/action
@@ -214,10 +213,8 @@ class ProgressBars:
     # Given a string Key, returns a float 0-1 representing how far
     # along a progress bar is into its life. 0.0 = just born, 1.0 = being killed
     def CompletionPercent(cls, BarKey:str) -> float:
-        global Time
-
         ProblemBar = cls.GetBarByKey(BarKey)
-        RemainingTime = ProblemBar["Activation"] - Time
+        RemainingTime = ProblemBar["Activation"] - Time_Now()
         Delay = ProblemBar["Delay"]["Actual"]
         
         PercentComplete = float(RemainingTime) / float(Delay)
@@ -416,10 +413,9 @@ def StartAll():
     if DebugMode ==  True:
         print (Viruses)
     
-def Timekeeper():
+def Time_Now():
     # The calculates the current time in milliseconds from the OS clock.
-    global Time
-    Time = int(time.time_ns() / 1_000_000)
+    return int(time.time_ns() / 1_000_000)
 
 def RandomString(length) -> str:
     # Generates a string of length from Alphabet.RandomSafe
@@ -584,7 +580,6 @@ def ColorManager(string):
 
     global Blacklist
     global ProgressBars
-    global Time
     global PrevScans
     global PrevScansShow
     result = 'white'
@@ -674,7 +669,6 @@ def DrawMaster():
     global BinaryWall
     global WallSource
     global PromptTicker
-    global Time
     global ErrorHeading
     global ErrorSubtitle
 
@@ -685,8 +679,6 @@ def DrawMaster():
         c.create_text((CanvasWidth/2, CanvasHeight/1.5),fill='white',text=ErrorSubtitle,font=('Inhuman BB', 24), justify="center")
     else:
         if UseBinaryBG == True:
-            if GameActive != 3:
-                BinaryWall = WallSource[Time%1024:].ljust(len(WallSource), "0")
             if GameActive == 3: #BLUE SCREEN OF DEATH
                 c.create_text(-100, -100, fill="#00004f", text=BinaryWall, width=CanvasWidth+200, font=(16), anchor="nw")
             else: #NORMAL GAMEPLAY
@@ -792,24 +784,31 @@ def scrub(letter):
             if letter_read in Blacklist:
                 Blacklist.remove(letter_read)
 
+def ShuffleBackground() -> None:
+    global BinaryWall
+    global WallSource
+    while True: # loop forever until the program ends
+        preTime = Time_Now() # the time at the start of this frame
+        BinaryWall = WallSource[Time_Now() % 1024:].ljust(len(WallSource), "0")
+        postTime = Time_Now() # the time at the end of the frame
+        waitTime = max(0, 50 - (postTime - preTime)) # wait N ms until the total amount of time between frames is >= 17
+        time.sleep(waitTime / 1000.0)
+
 # --- Executives ---
 def TOTAL_MAIN():
     #The main loop, called every frame
 
     global GameActive
-    global Time
     global ScrubBuffer
     
     try:
-        Timekeeper()
-        preFrame = Time #the time at the start of this frame
+        preFrame = Time_Now() #the time at the start of this frame
         GameState()
         ProgressBars.RemoveDuplicates()
         ProgressBars.Progressor()
         ScrubWrite()
         DrawMaster()
-        Timekeeper()
-        postFrame = Time # the time at the end of the frame
+        postFrame = Time_Now() # the time at the end of the frame
         frameWait=max(0,17-(postFrame-preFrame)) #wait N ms until the total amount of time between frames is >= 17
         #print(postFrame-preFrame)
         c.after(frameWait, TOTAL_MAIN)
@@ -842,6 +841,7 @@ def resize_canvas(event) -> None:
 if __name__ == "__main__":
     # init    
     root.bind('<Key>', KeyPress)
+    root.focus_force()
     root.title('Singularity')
     root.configure(bg='#000000') # set the window background to black
     root.bind('<Configure>', resize_canvas) # every time the window is changed (in this case resized), do something
@@ -886,6 +886,9 @@ if __name__ == "__main__":
     slider_length = root.winfo_screenwidth() * 0.25
     volume_slider = tk.Scale(root, from_=0, to=100, orient=tk.HORIZONTAL, command=SoundManager.set_volume, length=slider_length, variable=slider_value, troughcolor='grey20', sliderlength=20, background="white", showvalue=False)
     volume_slider.pack(anchor="n", side="top")
+
+    shuffle_thread = threading.Thread(target=ShuffleBackground, daemon=True)
+    shuffle_thread.start()
 
     #Specific programs to be run once on startup.
     SoundManager.set_volume(50)
