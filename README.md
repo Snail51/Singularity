@@ -1,51 +1,45 @@
 # Singularity
-A coding project originally written by Brendan Rood in 2020.
-Revised by Brendan Rood, Connor Hagen, and Jet Li in the Spring of 2024.
+ Singularity is a typing-management / strategy game where you play as an Artificial Superintelligence attempting to escape a research facility by finding and eliminating computer viruses in your system.
+ This project is heavily inspired by [SCP-079](http://www.scp-wiki.net/scp-079), a fictional superintelligent computer character part of the [SCP speculative fiction community](https://scp-wiki.wikidot.com/). It is also particularly inspired by SCP-079's depiction in [SCP: Secret Laboratory](https://store.steampowered.com/app/700330/SCP_Secret_Laboratory/) and [SCP: Containment Breach](https://www.scpcbgame.com/).
 
-## Installation Instructions:
-1: Install all included fonts in this folder. (InhumanBB.ttf)
-2: Run the most recent included version of singularity. (.exe, ..., ...)
+## Installation Instructions (INCOMPLETE)
+ 1: Install all included fonts in this folder. (InhumanBB.ttf)
+ 2: Run the most recent included version of singularity. (.exe, ..., ...)
 
-## Game Overview:
-Singularity is a game inspired by SCP-079, in which you embody a computer attempting to destroy the viruses
-in your system, while also performing the functions vital to keep yourself alive.
+## Game Instruction
+ #### Format
+  - The game presents 28 rectangles, each holding a character within. These represent the servers you have access to. You can either click on the servers or use your keyboard to type on the screen.
+  - Typing out certain instructions allow you to perform various actions.
+  - Certain "expensive" actions require energy to complete. The player gains energy automatically over time, but maximum energy capacity slowly decreases over the course of the game.
+  - Examples of "expensive" actions include:
+    1. Pressing `enter` to submit an instruction
+    2. PRessing `backspace` to delete a character
+ #### Hunting Viruses
+  - The game starts with a configurable number of viruses hidden throughout your servers. It is your goal to find these viruses and destroy them.
+  - By executing an antivirus scan on a server, you are able to eliminate viruses in that server. During a scan, the selected server is temporarily taken offline for investigation. In that time, **you will be unable to type the associated key**, making other tasks more difficult. You can investigate any number of server simultaneously.
+  - Typing any alias of the scan command will commence the process of investigating a server:
+    - 'scrub'
+    - 'scan'
+    - 'disinfect'
+    - 'antivirus'
+    - 'check'
+    - 'clean' 
+  - To specify the target server, simply include the target as the last message of your instruction. For example `scan j` will scan server j.
+ #### Maintenance Tasks
+  To represent the struggle against entropy, the user is required to type back randomized prompts that appear at the bottom of the screen.
+  These prompts begin blue but fade to red as they approach their expiration.
+  If a prompt expires, it will do damage to your overall health.
+  If your health reaches 0, you lose.
+  **These prompts may require you to press keys that correspond to servers currently offline for investigation**.
 
-If you'd like to read up on SCP-079, more info can be found here: http://www.scp-wiki.net/scp-079
+## Troubleshooting
+ #### Performance Issues
+  If you encounter significant performance issues, go to Singularity.cfg and change "BinaryBG = True" to "BinaryBG = False"
+ #### MacOS
+  If you are a MacOS user, you will need to execute Singularity through the terminal. cd into the directory where Singularity has been installed, into the /Singularity directory containing a directory called _internal as well as the Singularity executable, and the Config, then enter ./Singularity to launch.
+  If you try to launch it through finder, the terminal window opens wherever your terminal usually starts, rather than running the program from within the proper /Singularity directory where it can reference its assets.
 
-## Game Instruction:
-Once you start the game you will be presented with 28 rectangles, each holding a character within. These represent
-the servers you have access to. The game starts with a configurable number of viruses hidden throughout your
-servers. You can either click on the servers or use your keyboard to type on the screen.
-It costs 25 energy to press enter and what you type can do various things.
-Beware! pressing backspace is one of these expensive things!
-
-Typing any alias of the scan command, ('scrub', 'scan', 'disinfect', 'antivirus', 'check', 'clean'), followed
-by a character will execute the process of investigating that server, and, if a virus is found within, destroying
-it. The command will investigate whatever the last character of the provided entry is.
-!!You can investigate any number of server simultaneously!!
-
-NOTE: While a server is investigated, the user will not be able to type the corresponding key.
-
-To represent the struggle against entropy, the user will be required to type back randomized prompts that appear
-at the bottom of the screen. These prompts begin blue but fade to red as they approach their expiration. If a
-prompt expires, it will do damage to your overall health.
-
-If your health reaches 0, you lose.
-If you successfully find and destroy all the viruses, you win.
-
-There are easter eggs.
-
-Good Luck!
-
-
-## Addendum:
-If you encounter significant performance issues, go to Singularity.cfg and change
-"BinaryBG = True" to "BinaryBG = False"
-
-If you are a MacOS user, you will need to execute Singularity through the terminal. 
-cd into the directory where Singularity has been installed, into the /Singularity 
-directory containing a directory called _internal as well as the Singularity executable, and the Config,
-then enter ./Singularity to launch.
-If you try to launch it through finder, the terminal window opens wherever your terminal usually starts,
-rather than running the program from within the proper /Singularity directory where it can reference
-its assets.
+## Project History
+ - A coding typing-strategy game originally written by Brendan Rood in 2020.
+ - Revised by Brendan Rood, Connor Hagen, and Jet Li in the Spring of 2024 for the Advanced Computer Security course (CS-5732) at the University of Minnesota Duluth.
+ - Further revisited by Brendan Rood on or about 2025-02-12.
