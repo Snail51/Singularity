@@ -5,7 +5,7 @@ a = Analysis(
     ['Singularity.py'],
     pathex=[],
     binaries=[],
-    datas=[('./assets/*', 'assets'), ('./exe/*', 'exe'), ('./Singularity.cfg', 'Singularity.cfg')],
+    datas=[('./assets/*', 'assets'), ('./exe/*', 'exe'), ('./Singularity.cfg', 'Singularity.cfg'), ('./README.md', 'README.md')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
