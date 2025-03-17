@@ -20,25 +20,25 @@ This CSS controls the various "title" screens of the application, i.e. when the 
 }
 
 .title .titleSpacer {
-    height: 33vh;
+    height: 10vh;
 }
 
 /* Subheader Contents */
 .title * 
 {
-    font-size: 4vmin;
+    font-size: 6vmin;
 }
 
 /* Main Header */
 .title :nth-child(1)
 {
-    font-size: 6vmin;
+    font-size: 8vmin;
 }
 
 /* Button  Contents */
 .title :nth-last-child(1)
 {
-    font-size: 4vmin;
+    font-size: 6vmin;
 }
 
 .title button {

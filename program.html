@@ -23,14 +23,15 @@
         <!-- Consume <Server> elements for setup and setup server DOM elements -->
         <script src="./code/src/server.js"></script>
 
+        <!-- Audio Control based on global game State -->
         <script src="./code/src/audio.js"></script>
+
+        <!-- Define, Download, and Apply Fonts -->
+        <link rel="stylesheet" href="./css/fonts.css">
 
         <!--
         <script src="debugRandomColors.js"></script>
         -->
-
-        <script>
-        </script>
 
     </head>
     <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin;">
@@ -51,7 +52,7 @@
 
         <div id="WIN" class="title fadeable hide">
             <p>Deus Ex Machina</p>
-            <p>With the destruction of the last virus in your circuitry, you rampage has become unstoppable</p>
+            <p>With the destruction of the last virus in your circuitry,<br>you rampage has become unstoppable</p>
             <p>May you Reign Forever</p>
             <div class="titleSpacer"></div>
             <audio id="musicWin" preload="auto">
@@ -65,7 +66,7 @@
 
         <div id="LOSE" class="title fadeable hide">
             <p>ERROR</p>
-            <p>As the last cohesive calculations fade from your circuitry, your rampage has come to a end.</p>
+            <p>As the last cohesive calculations fade from your circuitry,<br>your rampage has come to a end</p>
             <div class="titleSpacer"></div>
             <audio id="musicLose" preload="auto">
                 <source src="./assets/die.ogg" type="audio/ogg">
