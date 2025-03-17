@@ -3,7 +3,7 @@
     <head>
         <meta charset='utf-8'>
         <title>Singularity</title>
-        <link rel="icon" href="./assets/icon.png" type="image/x-icon">
+        <link rel="icon" href="./assets/img/icon.png" type="image/x-icon">
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
         <!-- CSS for main game elements -->
@@ -45,7 +45,7 @@
             <p>A Typing Management Game</p>
             <div class="titleSpacer"></div>
             <audio id="musicTitle" loop preload="auto">
-                <source src="./assets/intro.ogg" type="audio/ogg">
+                <source src="./assets/audio/intro.ogg" type="audio/ogg">
             </audio>
             <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME');">Begin</button>
         </div>
@@ -56,10 +56,10 @@
             <p>May you Reign Forever</p>
             <div class="titleSpacer"></div>
             <audio id="musicWin" preload="auto">
-                <source src="./assets/end.ogg" type="audio/ogg">
+                <source src="./assets/audio/end.ogg" type="audio/ogg">
             </audio>
             <audio id="voiceWin" preload="auto">
-                <source src="./assets/deus_ex_machina.ogg" type="audio/ogg">
+                <source src="./assets/audio/deus_ex_machina.ogg" type="audio/ogg">
             </audio>
             <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE');">Return to Title</button>
         </div>
@@ -69,7 +69,7 @@
             <p>As the last cohesive calculations fade from your circuitry,<br>your rampage has come to a end</p>
             <div class="titleSpacer"></div>
             <audio id="musicLose" preload="auto">
-                <source src="./assets/die.ogg" type="audio/ogg">
+                <source src="./assets/audio/die.ogg" type="audio/ogg">
             </audio>
             <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE');">Return to Title</button>
         </div>
@@ -125,7 +125,7 @@
             </div>
 
             <audio id="musicGame" loop preload="auto">
-                <source src="./assets/phase1.ogg" type="audio/ogg">
+                <source src="./assets/audio/phase1.ogg" type="audio/ogg">
             </audio>
         </div>
 

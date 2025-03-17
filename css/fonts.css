@@ -1,15 +1,15 @@
 @font-face {
     font-family: inhuman;
-    src: url("../exe/InhumanBB.woff") format('woff');
+    src: url("../assets/font/InhumanBB.woff") format('woff');
 }
 @font-face {
     font-family: multivac;
-    src: url("../exe/multivac-ghost.woff") format('woff');
+    src: url("../assets/font/multivac-ghost.woff") format('woff');
 }
 @font-face 
 {
     font-family: unifont;
-    src: url('../exe/Unifont_Bottom.woff') format('woff'),
+    src: url('../assets/font/Unifont_Bottom.woff') format('woff'),
 }
 
 body * {
