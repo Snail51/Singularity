@@ -1,5 +1,12 @@
 window.setInterval(() =>
 {
+    if(window.fadeState == "LOSE")
+    {
+        document.getElementById("binaryBG").classList.add("lose");
+        return;
+    }
+    document.getElementById("binaryBG").classList.remove("lose");
+
     var bg = "";
     for ( var i = 0; i < 5000; i++)
     {
@@ -7,3 +14,4 @@ window.setInterval(() =>
     }
     document.getElementById("binaryBG").innerHTML = bg;
 }, 100);
+

@@ -130,15 +130,17 @@
     height: 10vh;
     text-align: center;
     font-size: 4vmin;
-    background-color: rgba(100,100,100,0.5);
+    background-color: rgba(100,100,100,0.9);
 }
 
 #notify {
     color: black;
+    pointer-events: none;
 }
 
 #prompt {
     color: blue;
+    pointer-events: none;
 }
 
 #terminal {

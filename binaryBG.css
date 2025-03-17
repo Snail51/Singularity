@@ -1,6 +1,6 @@
 .binaryBG {
     background-color: black;
-    color: grey;
+    color: #404040;
 
     top: -24.17vh;
     left: -23.22vw;
@@ -15,4 +15,8 @@
     z-index: 1;
 
     font-family: monospace;
+}
+
+.binaryBG.lose {
+    color: #008;
 }

@@ -23,7 +23,7 @@
         <!--
         <script src="debugRandomColors.js"></script>
         -->
-        
+
     </head>
     <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin;">
 
@@ -33,7 +33,7 @@
             <h1>Singularity</h1>
             <h2>A Typing Management Game</h2>
             <div class="titleSpacer"></div>
-            <button>
+            <button onclick="window.changeFadeState('GAME')">
                 <h3>Begin</h3>
             </button>
         </div>
@@ -43,7 +43,7 @@
             <h2>With the destruction of the last virus in your circuitry, you rampage has become unstoppable</h2>
             <h2>May you Reign Forever</h2>
             <div class="titleSpacer"></div>
-            <button>
+            <button onclick="window.changeFadeState('TITLE')">
                 <h3>Return to Title</h3>
             </button>
         </div>
@@ -52,7 +52,7 @@
             <h1>ERROR</h1>
             <h2>As the last cohesive calculations fade from your circuitry, your rampage has come to a end.</h2>
             <div class="titleSpacer"></div>
-            <button>
+            <button onclick="window.changeFadeState('TITLE')">
                 <h3>Return to Title</h3>
             </button>
         </div>
@@ -60,6 +60,8 @@
         <div id="GAME" class="game fadeable hide">
             <div id="topBar" class="infoBar">
                 <p id="topLeftInfo">TOP LEFT</p>
+                <button onclick="window.changeFadeState('WIN')">DEBUG WIN</button>
+                <button onclick="window.changeFadeState('LOSE')">DEBUG LOSE</button>
                 <p id="topRightInfo">TOP RIGHT</p>
             </div>
 
