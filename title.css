@@ -1,0 +1,50 @@
+/*
+This CSS controls the various "title" screens of the application, i.e. when the game is NOT running
+*/
+
+.title {
+    position: fixed;
+    width: 97.5vw;
+    max-height: 100vh;
+    z-index: 3;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    background-color: red;
+}
+
+.title *
+{
+    color: whitesmoke;
+    text-align: center;
+}
+
+.title .titleSpacer {
+    height: 33vh;
+}
+
+/* Main Header */
+.title h1 
+{
+    font-size: 6vmin;
+}
+
+/* Subheader Contents */
+.title h2
+{
+    font-size: 4vmin;
+}
+
+/* Button  Contents */
+.title h3
+{
+    font-size: 4vmin;
+}
+
+.title button {
+    width: 50vw;
+    height: 10vh;
+    background-color: grey;
+}

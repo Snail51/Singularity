@@ -1,10 +1,17 @@
-#game {
-    width: 90vw;
+.game {
+    position: fixed;
+    z-index: 2;
+    width: 97.5vw;
     max-height: 100vh;
     background-color: red;
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.game.show {
+    opacity: 1.0;
+    pointer-events: all;
 }
 
 .infoBar {

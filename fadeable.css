@@ -1,0 +1,15 @@
+/*
+The purpose of this CSS is to declare elements as "fadeable", meaning there is an intention for them to be hidden from the DOM programmatically.
+
+All elements marked as fadeable must also be marked with their default state (.fadeable.show or fadeable.hide)
+Fades are controlled by preforming .classList.toggle("show"); .classList.toggle("hide");
+*/
+
+.fadeable {
+    transition: opacity 0.5s ease-out;
+}
+
+.fadeable.hide {
+    opacity: 0.0;
+    pointer-events: none;
+}
