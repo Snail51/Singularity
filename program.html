@@ -23,12 +23,19 @@
         <!-- Consume <Server> elements for setup and setup server DOM elements -->
         <script src="./code/src/server.js"></script>
 
+        <script src="./code/src/audio.js"></script>
+
         <!--
         <script src="debugRandomColors.js"></script>
         -->
 
+        <script>
+        </script>
+
     </head>
     <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin;">
+
+        
 
         <p id="binaryBG" class="binaryBG randomColor"></p>
 
@@ -36,7 +43,10 @@
             <p>Singularity</p>
             <p>A Typing Management Game</p>
             <div class="titleSpacer"></div>
-            <button onclick="window.changeFadeState('GAME')">Begin</button>
+            <audio id="musicTitle" loop preload="auto">
+                <source src="./assets/intro.ogg" type="audio/ogg">
+            </audio>
+            <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME');">Begin</button>
         </div>
 
         <div id="WIN" class="title fadeable hide">
@@ -44,21 +54,30 @@
             <p>With the destruction of the last virus in your circuitry, you rampage has become unstoppable</p>
             <p>May you Reign Forever</p>
             <div class="titleSpacer"></div>
-            <button onclick="window.changeFadeState('TITLE')">Return to Title</button>
+            <audio id="musicWin" preload="auto">
+                <source src="./assets/end.ogg" type="audio/ogg">
+            </audio>
+            <audio id="voiceWin" preload="auto">
+                <source src="./assets/deus_ex_machina.ogg" type="audio/ogg">
+            </audio>
+            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE');">Return to Title</button>
         </div>
 
         <div id="LOSE" class="title fadeable hide">
             <p>ERROR</p>
             <p>As the last cohesive calculations fade from your circuitry, your rampage has come to a end.</p>
             <div class="titleSpacer"></div>
-            <button onclick="window.changeFadeState('TITLE')">Return to Title</button>
+            <audio id="musicLose" preload="auto">
+                <source src="./assets/die.ogg" type="audio/ogg">
+            </audio>
+            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE');">Return to Title</button>
         </div>
 
         <div id="GAME" class="game fadeable hide">
             <div id="topBar" class="infoBar">
                 <p id="topLeftInfo">TOP LEFT</p>
-                <button onclick="window.changeFadeState('WIN')">DEBUG WIN</button>
-                <button onclick="window.changeFadeState('LOSE')">DEBUG LOSE</button>
+                <button onclick="window.changeFadeState('WIN'); window.changeAudioState('WIN');">DEBUG WIN</button>
+                <button onclick="window.changeFadeState('LOSE'); window.changeAudioState('LOSE');">DEBUG LOSE</button>
                 <p id="topRightInfo">TOP RIGHT</p>
             </div>
 
@@ -103,6 +122,10 @@
                 <p id="bottomLeftInfo">BOTTOM LEFT</p>
                 <p id="bottomRightInfo">BOTTOM RIGHT</p>
             </div>
+
+            <audio id="musicGame" loop preload="auto">
+                <source src="./assets/phase1.ogg" type="audio/ogg">
+            </audio>
         </div>
 
     </body>
