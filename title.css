@@ -23,20 +23,20 @@ This CSS controls the various "title" screens of the application, i.e. when the 
     height: 33vh;
 }
 
-/* Main Header */
-.title h1 
-{
-    font-size: 6vmin;
-}
-
 /* Subheader Contents */
-.title h2
+.title * 
 {
     font-size: 4vmin;
 }
 
+/* Main Header */
+.title :nth-child(1)
+{
+    font-size: 6vmin;
+}
+
 /* Button  Contents */
-.title h3
+.title :nth-last-child(1)
 {
     font-size: 4vmin;
 }
