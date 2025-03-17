@@ -11,8 +11,6 @@ This CSS controls the various "title" screens of the application, i.e. when the 
     display: flex;
     flex-direction: column;
     align-items: center;
-
-    background-color: red;
 }
 
 .title *

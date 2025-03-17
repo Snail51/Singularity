@@ -1,0 +1,18 @@
+.binaryBG {
+    background-color: black;
+    color: grey;
+
+    top: -24.17vh;
+    left: -23.22vw;
+
+    position: fixed;
+    height: 150vh;
+    width: 150vw;
+
+    text-wrap: wrap;
+    word-wrap: break-word;
+
+    z-index: 1;
+
+    font-family: monospace;
+}
