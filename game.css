@@ -1,0 +1,144 @@
+#game {
+    width: 90vw;
+    max-height: 100vh;
+    background-color: red;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.infoBar {
+    width: 100%;
+    height: 10vh;
+    background-color: green;
+    justify-content: space-between;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+}
+
+.infoBar :nth-child(1) {
+    background-color: orange;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.infoBar :nth-child(2) {
+    background-color: orange;
+    text-align: right;
+    justify-content: flex-end;
+}
+
+.serverContainer { 
+    padding: 1%;
+    width: 90%;
+    height: 50vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+    gap: 2.5vmin 5vmin;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "A B C D E F"
+        "G H I J K L"
+        "M N O P Q R"
+        "S T U V W X"
+        "Y _ _ RETURN RETURN Z";
+}
+
+.A { grid-area: A; }
+
+.B { grid-area: B; }
+
+.C { grid-area: C; }
+
+.D { grid-area: D; }
+
+.E { grid-area: E; }
+
+.F { grid-area: F; }
+
+.G { grid-area: G; }
+
+.H { grid-area: H; }
+
+.I { grid-area: I; }
+
+.J { grid-area: J; }
+
+.K { grid-area: K; }
+
+.L { grid-area: L; }
+
+.M { grid-area: M; }
+
+.N { grid-area: N; }
+
+.O { grid-area: O; }
+
+.P { grid-area: P; }
+
+.Q { grid-area: Q; }
+
+.R { grid-area: R; }
+
+.S { grid-area: S; }
+
+.T { grid-area: T; }
+
+.U { grid-area: U; }
+
+.V { grid-area: V; }
+
+.W { grid-area: W; }
+
+.X { grid-area: X; }
+
+.Y { grid-area: Y; }
+
+.Z { grid-area: Z; }
+
+._ { grid-area: _; }
+
+.RETURN { grid-area: RETURN; }
+
+.serverServer {
+    background-color: black;
+    border: 5px solid gray;
+    text-align: center;
+    color: whitesmoke;
+    font-size: 3vmin;
+}
+
+#activeBars
+{
+    width: 100%;
+    height: 30vh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+
+    background-color: #00ffffa0;
+}
+
+#activeBars * {
+    width: 75%;
+    height: 10vh;
+    background-color: #ff000060;
+    text-align: center;
+    font-size: 4vmin;
+}
+
+#notify {
+    color: black;
+}
+
+#prompt {
+    color: blue;
+}
+
+#terminal {
+    color: whitesmoke;
+}
