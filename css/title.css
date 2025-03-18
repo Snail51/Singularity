@@ -32,7 +32,7 @@ This CSS controls the various "title" screens of the application, i.e. when the 
 /* Main Header */
 .title :nth-child(1)
 {
-    font-size: 12vmin;
+    font-size: 10vmin;
 }
 
 /* Button  Contents */
