@@ -21,6 +21,7 @@
         <script src="./code/src/binaryBG.js"></script>
 
         <!-- Consume <Server> elements for setup and setup server DOM elements -->
+        <link rel="stylesheet" href="./css/server.css">
         <script src="./code/src/server.js"></script>
 
         <!-- Audio Control based on global game State -->
@@ -47,7 +48,7 @@
             <audio id="musicTitle" loop preload="auto">
                 <source src="./assets/audio/intro.ogg" type="audio/ogg">
             </audio>
-            <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME');">Begin</button>
+            <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME'); window.changeBackgroundState('GAME');">Begin</button>
         </div>
 
         <div id="WIN" class="title fadeable hide">
@@ -61,7 +62,7 @@
             <audio id="voiceWin" preload="auto">
                 <source src="./assets/audio/deus_ex_machina.ogg" type="audio/ogg">
             </audio>
-            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE');">Return to Title</button>
+            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE');">Return to Title</button>
         </div>
 
         <div id="LOSE" class="title fadeable hide">
@@ -71,14 +72,14 @@
             <audio id="musicLose" preload="auto">
                 <source src="./assets/audio/die.ogg" type="audio/ogg">
             </audio>
-            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE');">Return to Title</button>
+            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE');">Return to Title</button>
         </div>
 
         <div id="GAME" class="game fadeable hide">
             <div id="topBar" class="infoBar">
                 <p id="topLeftInfo">TOP LEFT</p>
-                <button onclick="window.changeFadeState('WIN'); window.changeAudioState('WIN');">DEBUG WIN</button>
-                <button onclick="window.changeFadeState('LOSE'); window.changeAudioState('LOSE');">DEBUG LOSE</button>
+                <button onclick="window.changeFadeState('WIN'); window.changeAudioState('WIN'); window.changeBackgroundState('WIN');">DEBUG WIN</button>
+                <button onclick="window.changeFadeState('LOSE'); window.changeAudioState('LOSE'); window.changeBackgroundState('LOSE');">DEBUG LOSE</button>
                 <p id="topRightInfo">TOP RIGHT</p>
             </div>
 

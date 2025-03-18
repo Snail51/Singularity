@@ -1,0 +1,93 @@
+/* Style Server Elements */ 
+.serverItem {
+    background-color: black;
+    border: 5px solid whitesmoke;
+    text-align: center;
+    color: whitesmoke;
+    font-size: 3vmin;
+}
+
+/* When locked, servers turn RED and stop listening to pointer events */
+.serverItem.locked {
+    border: 5px solid red;
+    color: red;
+    pointer-events: none;
+}
+
+/*
+Define a custom <div> of display=grid to hold the servers with particular shape.
+Grid positioning is handled via classes of name `serverGrid${serverID}`, which maps to a `grid-area`
+Servers must be inserted in order: A-Y,_,RETURN,Z.
+*/
+.serverContainer { 
+    padding: 1%;
+    width: 90%;
+    height: 50vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+    gap: 2.5vmin 5vmin;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "A B C D E F"
+        "G H I J K L"
+        "M N O P Q R"
+        "S T U V W X"
+        "Y _ _ RETURN RETURN Z";
+}
+
+.serverGridA { grid-area: A; }
+
+.serverGridB { grid-area: B; }
+
+.serverGridC { grid-area: C; }
+
+.serverGridD { grid-area: D; }
+
+.serverGridE { grid-area: E; }
+
+.serverGridF { grid-area: F; }
+
+.serverGridG { grid-area: G; }
+
+.serverGridH { grid-area: H; }
+
+.serverGridI { grid-area: I; }
+
+.serverGridJ { grid-area: J; }
+
+.serverGridK { grid-area: K; }
+
+.serverGridL { grid-area: L; }
+
+.serverGridM { grid-area: M; }
+
+.serverGridN { grid-area: N; }
+
+.serverGridO { grid-area: O; }
+
+.serverGridP { grid-area: P; }
+
+.serverGridQ { grid-area: Q; }
+
+.serverGridR { grid-area: R; }
+
+.serverGridS { grid-area: S; }
+
+.serverGridT { grid-area: T; }
+
+.serverGridU { grid-area: U; }
+
+.serverGridV { grid-area: V; }
+
+.serverGridW { grid-area: W; }
+
+.serverGridX { grid-area: X; }
+
+.serverGridY { grid-area: Y; }
+
+.serverGridZ { grid-area: Z; }
+
+.serverGrid_ { grid-area: _; }
+
+.serverGridRETURN { grid-area: RETURN; }
