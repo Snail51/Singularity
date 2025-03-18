@@ -36,6 +36,24 @@ export class Game
         this.active = false; // only true if the game is currently happening (not on any other view). used to prevent actions after win/loss
 
         document.getElementById("terminal").addEventListener('keydown', () => {
+            if(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) // disallow arrow keys
+            {
+                event.preventDefault();
+                return;
+            }
+
+            if(["Backspace", "Delete"].includes(event.key)) // `Backspace` and `Delete` have executionCost, block if cant afford
+            {
+                if(this.energy < this.executionCost)
+                {
+                    event.preventDefault();
+                }
+                else
+                {
+                    this.energy -= this.executionCost;
+                }
+            }
+
             if (event.key == 'Enter') // if the keypress is `Enter`, prevent default and tryExecution
             {
                 event.preventDefault();
@@ -114,7 +132,9 @@ export class Game
         this.promptInterval = window.setInterval(() => {
             this.promptCycle();
         }, this.promptTime);
+        this.prompt = "";
 
+        // focus the terminal <input> so the user doesn't need to click it
         document.getElementById("terminal").focus();
 
         this.active = true; // mark the game as active, allowing timeouts and intervals to resolve.
@@ -137,6 +157,8 @@ export class Game
         {
             return;
         }
+
+        this.promptTimestamp = Date.now();
 
         // if the prompt hasn't been cleared and we are making a new one, that indicates the user failed to complete it
         if(this.prompt.length > 0) 
