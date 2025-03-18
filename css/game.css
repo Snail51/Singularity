@@ -53,12 +53,11 @@
 }
 
 #notify {
-    color: black;
+    color: whitesmoke;
     pointer-events: none;
 }
 
 #prompt {
-    color: blue;
     pointer-events: none;
 }
 

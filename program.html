@@ -34,6 +34,14 @@
         <script src="debugRandomColors.js"></script>
         -->
 
+        <script type="module" defer>
+            import { Game } from "./code/src/game.js";
+            setTimeout(() => {
+                window.game = new Game(5, 10, 100, 150, 25, 5000, 8000, 7, 3000);
+            }, 50);
+            
+        </script>
+
     </head>
     <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin;">
 
@@ -48,7 +56,7 @@
             <audio id="musicTitle" loop preload="auto">
                 <source src="./assets/audio/intro.ogg" type="audio/ogg">
             </audio>
-            <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME'); window.changeBackgroundState('GAME');">Begin</button>
+            <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME'); window.changeBackgroundState('GAME'); window.game.load();">Begin</button>
         </div>
 
         <div id="WIN" class="title fadeable hide">
@@ -78,8 +86,6 @@
         <div id="GAME" class="game fadeable hide">
             <div id="topBar" class="infoBar">
                 <p id="topLeftInfo">TOP LEFT</p>
-                <button onclick="window.changeFadeState('WIN'); window.changeAudioState('WIN'); window.changeBackgroundState('WIN');">DEBUG WIN</button>
-                <button onclick="window.changeFadeState('LOSE'); window.changeAudioState('LOSE'); window.changeBackgroundState('LOSE');">DEBUG LOSE</button>
                 <p id="topRightInfo">TOP RIGHT</p>
             </div>
 
@@ -106,18 +112,18 @@
                 <server serverID="T"></server>
                 <server serverID="U"></server>
                 <server serverID="V"></server>
-                <server serverID="w"></server>
-                <server serverID="x"></server>
-                <server serverID="y"></server>
+                <server serverID="W"></server>
+                <server serverID="X"></server>
+                <server serverID="Y"></server>
                 <server serverID="_"></server>
                 <server serverID="RETURN"></server>
                 <server serverID="Z"></server>
             </div>
 
             <div id="activeBars">
-                <input id="notify" type="text" value="Virus Found!" readonly>
-                <input id="prompt" type="text" value="WNUIA_FN" readonly>
-                <input id="terminal" type="text" value="SCAN J">
+                <input id="notify" type="text" value="" placeholder="No Notifications" readonly>
+                <input id="prompt" type="text" value="" placeholder="PROMPT" readonly>
+                <input id="terminal" type="text" value="" placeholder="SCAN_J">
             </div>
 
             <div id="bottomBar" class="infoBar">

@@ -32,7 +32,6 @@ window.clickServer = () =>
     if( value == "RETURN" )
     {
         console.log(`EXECUTING AND CLEARING TERMINAL DATA "${document.getElementById("terminal").value}"`);
-        document.getElementById("terminal").value = "";
         return;
     }
     document.getElementById("terminal").value += value;
