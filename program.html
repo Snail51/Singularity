@@ -37,7 +37,7 @@
         <script type="module" defer>
             import { Game } from "./code/src/game.js";
             setTimeout(() => {
-                window.game = new Game(5, 10, 100, 150, 25, 5000, 8000, 7, 3000);
+                window.game = new Game(5, 10, 100, 125, 25, 5000, 8000, 7, 3000);
             }, 50);
             
         </script>
@@ -52,6 +52,7 @@
         <div id="TITLE" class="title fadeable">
             <p>Singularity</p>
             <p>A Typing Management Game</p>
+            <a href="https://github.com/Snail51/Singularity/blob/main/README.md">View Instructions</a>
             <div class="titleSpacer"></div>
             <audio id="musicTitle" loop preload="auto">
                 <source src="./assets/audio/intro.ogg" type="audio/ogg">
@@ -86,7 +87,7 @@
         <div id="GAME" class="game fadeable hide">
             <div id="topBar" class="infoBar">
                 <p id="topLeftInfo">TOP LEFT</p>
-                <p id="topRightInfo">TOP RIGHT</p>
+                <p id="topRightInfo">SINGULARITY</p>
             </div>
 
             <div class="serverContainer">
@@ -121,7 +122,7 @@
             </div>
 
             <div id="activeBars">
-                <input id="notify" type="text" value="" placeholder="No Notifications" readonly>
+                <input id="notify" type="text" value="" placeholder="NOTIFICATIONS" readonly>
                 <input id="prompt" type="text" value="" placeholder="PROMPT" readonly>
                 <input id="terminal" type="text" value="" placeholder="SCAN_J">
             </div>

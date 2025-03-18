@@ -82,7 +82,7 @@ export class Game
             document.getElementById("bottomLeftInfo").innerHTML = `Energy: ${this.energy}/${this.maxEnergy}`;
             document.getElementById("bottomRightInfo").innerHTML = `Health: ${this.health}/${this.maxHealth}`;
 
-            var r = Math.round(((Date.now() - this.promptTimestamp) / this.promptTime)*255);
+            var r = Math.abs(Math.round(((Date.now() - this.promptTimestamp) / this.promptTime)*255));
             var b = Math.abs(r - 255);
             r = r.toString(16).padStart(2, "0");
             b = b.toString(16).padStart(2, "0");
@@ -159,6 +159,7 @@ export class Game
         }
 
         this.promptTimestamp = Date.now();
+        document.getElementById("prompt").style.color = "blue";
 
         // if the prompt hasn't been cleared and we are making a new one, that indicates the user failed to complete it
         if(this.prompt.length > 0) 
