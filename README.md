@@ -1,52 +1,44 @@
 # Singularity
- Singularity is a typing-management / strategy game where you play as an Artificial Superintelligence attempting to escape a research facility by finding and eliminating computer viruses in your system.
- This project is heavily inspired by [SCP-079](http://www.scp-wiki.net/scp-079), a fictional superintelligent computer character part of the [SCP speculative fiction community](https://scp-wiki.wikidot.com/). It is also particularly inspired by SCP-079's depiction in [SCP: Secret Laboratory](https://store.steampowered.com/app/700330/SCP_Secret_Laboratory/) and [SCP: Containment Breach](https://www.scpcbgame.com/).
 
-## Installation Instructions
- 1. Install latest build from [releases section](https://github.com/Snail51/Singularity/releases).
- 2. Extract archive contents.
- 3. Install all included fonts. (InhumanBB.ttf)
- 4. Run the included executable file "Singularity".
+ ## About
+  Singularity is a typing-management / strategy game where you play as an Artificial Superintelligence attempting to escape a research facility by finding and eliminating computer viruses in your system. Various typing challenges are provided, where the player must complete certain actions that temporarily disable their ability to type certain keys, all the while other tasks may require pressing those keys.
 
-## Game Instruction
- #### Format
-  - The game presents 28 rectangles, each holding a character within. These represent the servers you have access to. You can either click on the servers or use your keyboard to type on the screen.
-  - Typing out certain instructions allow you to perform various actions.
-  - Certain "expensive" actions require energy to complete. The player gains energy automatically over time, but maximum energy capacity slowly decreases over the course of the game.
-  - Examples of "expensive" actions include:
-    1. Pressing `enter` to submit an instruction
-    2. PRessing `backspace` to delete a character
- #### Hunting Viruses
-  - The game starts with a configurable number of viruses hidden throughout your servers. It is your goal to find these viruses and destroy them.
-  - By executing an antivirus scan on a server, you are able to eliminate viruses in that server. During a scan, the selected server is temporarily taken offline for investigation. In that time, **you will be unable to type the associated key**, making other tasks more difficult. You can investigate any number of server simultaneously.
-  - Typing any alias of the scan command will commence the process of investigating a server:
-    - 'scrub'
-    - 'scan'
-    - 'disinfect'
-    - 'antivirus'
-    - 'check'
-    - 'clean' 
-  - To specify the target server, simply include the target as the last message of your instruction. For example `scan j` will scan server j.
- #### Maintenance Tasks
-  To represent the struggle against entropy, the user is required to type back randomized prompts that appear at the bottom of the screen.
-  These prompts begin blue but fade to red as they approach their expiration.
-  If a prompt expires, it will do damage to your overall health.
-  If your health reaches 0, you lose.
-  **These prompts may require you to press keys that correspond to servers currently offline for investigation**.
+ ### Inspiration
+  This project is heavily inspired by [SCP-079](http://www.scp-wiki.net/scp-079), a fictional superintelligent computer character part of the [SCP speculative fiction community](https://scp-wiki.wikidot.com/).
+  It is also particularly inspired by [SCP-079](http://www.scp-wiki.net/scp-079)'s depiction in [SCP: Secret Laboratory](https://store.steampowered.com/app/700330/SCP_Secret_Laboratory/) and [SCP: Containment Breach](https://www.scpcbgame.com/).
 
-## Game Configuration
- Almost everything about the game can be controlled by modifying the values of `Singularity.cfg`. Make sure to restart the game for changes to the config to apply.
 
-## Troubleshooting
- #### Performance Issues
-  If you encounter significant performance issues, go to Singularity.cfg and change "BinaryBG = True" to "BinaryBG = False"
- #### MacOS
-  If you are a MacOS user, you will need to execute Singularity through the terminal. cd into the directory where Singularity has been installed, into the /Singularity directory containing a directory called _internal as well as the Singularity executable, and the Config, then enter ./Singularity to launch.
-  If you try to launch it through finder, the terminal window opens wherever your terminal usually starts, rather than running the program from within the proper /Singularity directory where it can reference its assets.
+ ## Gameplay Guide
+  - The game presents 26 rectangles, representing computer servers corresponding to the letters of the alphabet.
+  - There are 5 virus randomly hidden across your servers. Your goal is to seek and destroy them.
+  - The game also prevents three text bars, one for notifications, one for prompts, and one for commands (the player types in the third).
+  - You type commands in the command bar and press enter to execute them. One such command is the command to perform an antivirus scan on a given server.
+  - If the executed command starts with `SCAN`, an antivirus scan is started on the server corresponding to the last letter of the command. (EX: `SCAN ABC` will scan server `C`).
+  - **While a server is being scanned, the user is unable to type that key to the command line for any reason.** This can also include the letters of the command themselves (You cant type `SCAN` without `S`!).
+  - In addition to hunting viruses, prompts will appear that the user must type back exactly before time runs out. Failure to do so in time will decrease the player's health. Prompts begin blue in color but shit to red as they approach expiration.
+  - Completing these prompts is made more difficult if you require a letter that is currently offline until the antivirus scan on it is completed. This introduces a need to plan ahead and perform risk-analysis.
+  - The following aliases are also available for the `SCAN` command, allowing alternative ways to perform the action if certain letters are unavailable:
+    - `SCRUB`
+    - `SCAN`
+    - `DISINFECT`
+    - `ANTIVIRUS`
+    - `CHECK`
+    - `CLEAN`
+  - The player also has an "Energy" meter, that slowly increases over time. There exist certain "expensive" actions that require 25 energy to perform:
+    - Pressing `enter` to submit and instruction
+    - Pressing `backspace` or `delete` to remove a character
 
-## Project History
- - A coding typing-strategy game originally written by Brendan Rood in 2020.
- - Revised by Brendan Rood, Connor Hagen, and Jet Li in the Spring of 2024 for the Advanced Computer Security course (CS-5732) at the University of Minnesota Duluth.
- - Further revisited by Brendan Rood on or about 2025-02-12.
+ ## Installation Instructions
+  - This program can be run in any httpx environment that supports JavaScript execution.
+  - **A public version of this program is already available at https://singularity.snailien.net**
 
- Because this project is so old and has been touched by so many hands, it is kind of a mess. Please be patient as refactoring is completed.
+ ## Project History
+  - Singularity was first written in Python by Brendan Rood during the winter of 2019-2020. The game was brought to a playable state, but as Brendan was relatively new to coding, the implementation was crude.
+  - The project was revised by Brendan Rood, Connor Hagen, and Jet Li in the Spring of 2024 for the Advanced Computer Security course (CS-5732) at the University of Minnesota Duluth. This version of the game was built to standalone executables, which were later uploaded to the [releases section](https://github.com/Snail51/Singularity/releases).
+  - Finally, in March of 2025, Brendan ported the game to a JavaScript browser-based implementation. It is live at **https://singularity.snailien.net**.
+
+ ## Installation Instructions (LEGACY EXECUTABLES)
+  1. Install latest build from [releases section](https://github.com/Snail51/Singularity/releases).
+  2. Extract archive contents.
+  3. Install all included fonts. (InhumanBB.ttf)
+  4. Run the included executable file "Singularity".
