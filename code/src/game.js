@@ -24,6 +24,12 @@ export class Game
         this.executionTime = executionTime;
 
         this.prompt = "";
+        this.promptList = new Array();
+            fetch("../../assets/prompts.txt")
+            .then(response => response.text())
+            .then(text => text.split('\n'))
+            .then(array => array = array.filter(item => item != ""))
+            .then(array => this.promptList = array);
         this.promptTime = promptTime;
         this.promptLength = promptLength;
         this.promptInterval; // initialize on state change
@@ -176,6 +182,11 @@ export class Game
         }
 
         // make a new prompt
+
+        this.prompt = this.promptList[Math.round(Math.random() * this.promptList.length)];
+        document.getElementById("prompt").value = this.prompt;
+
+        /*
         var promptBuilder = new Array();
         while(promptBuilder.length < this.promptLength)
         {
@@ -185,6 +196,7 @@ export class Game
         }
         this.prompt = promptBuilder.join("");
         document.getElementById("prompt").value = this.prompt;
+        */
 
         this.promptTimestamp = Date.now();
     }
