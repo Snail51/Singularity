@@ -36,13 +36,9 @@ This CSS controls the various "title" screens of the application, i.e. when the 
 }
 
 /* Button  Contents */
-.title :nth-last-child(1)
-{
-    font-size: 6vmin;
-}
-
 .title button {
     width: 50vw;
     height: 10vh;
     background-color: grey;
+    font-size: 6vmin;
 }

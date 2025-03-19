@@ -22,6 +22,10 @@
     flex-direction: row;
 }
 
+.infoBar * {
+    font-size: 4vmin;
+}
+
 .infoBar :nth-child(1) {
     text-align: left;
     justify-content: flex-start;
@@ -30,6 +34,12 @@
 .infoBar :nth-child(2) {
     text-align: right;
     justify-content: flex-end;
+    align-self: center;
+}
+
+.infoBar button {
+    background-color: grey;
+    color: whitesmoke;
 }
 
 #activeBars

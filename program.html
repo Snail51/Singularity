@@ -14,18 +14,18 @@
 
         <!-- Make elements fadeable via CSS opacity transitions -->
         <link rel="stylesheet" href="./css/fadeable.css">
-        <script src="./code/src/fadeable.js"></script>
+        <script src="./code/exe/fadeable.js"></script>
 
         <!-- Handle the logic and styling around the Binary Background -->
         <link rel="stylesheet" href="./css/binaryBG.css">
-        <script src="./code/src/binaryBG.js"></script>
+        <script src="./code/exe/binaryBG.js"></script>
 
         <!-- Consume <Server> elements for setup and setup server DOM elements -->
         <link rel="stylesheet" href="./css/server.css">
-        <script src="./code/src/server.js"></script>
+        <script src="./code/exe/server.js"></script>
 
         <!-- Audio Control based on global game State -->
-        <script src="./code/src/audio.js"></script>
+        <script src="./code/exe/audio.js"></script>
 
         <!-- Define, Download, and Apply Fonts -->
         <link rel="stylesheet" href="./css/fonts.css">
@@ -35,7 +35,7 @@
         -->
 
         <script type="module" defer>
-            import { Game } from "./code/src/game.js";
+            import { Game } from "./code/exe/game.js";
             setTimeout(() => {
                 window.game = new Game(5, 10, 100, 125, 25, 5000, 8000, 7, 3000);
             }, 50);
@@ -50,14 +50,15 @@
         <p id="binaryBG" class="binaryBG randomColor"></p>
 
         <div id="TITLE" class="title fadeable">
-            <p>Singularity</p>
+            <p>SINGULARITY</p>
             <p>A Typing Management Game</p>
             <a href="https://github.com/Snail51/Singularity/blob/main/README.md" target="_blank">View Instructions</a>
             <div class="titleSpacer"></div>
             <audio id="musicTitle" loop preload="auto">
                 <source src="./assets/audio/intro.ogg" type="audio/ogg">
             </audio>
-            <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME'); window.changeBackgroundState('GAME'); window.game.load();">Begin</button>
+            <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME'); window.changeBackgroundState('GAME'); window.game.load();">BEGIN</button>
+            <button onclick="window.changeAudioState('TITLE');">UNMUTE MUSIC</button>
         </div>
 
         <div id="WIN" class="title fadeable hide">
@@ -71,7 +72,7 @@
             <audio id="voiceWin" preload="auto">
                 <source src="./assets/audio/deus_ex_machina.ogg" type="audio/ogg">
             </audio>
-            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE');">Return to Title</button>
+            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE');">RETURN TO TITLE</button>
         </div>
 
         <div id="LOSE" class="title fadeable hide">
@@ -81,13 +82,13 @@
             <audio id="musicLose" preload="auto">
                 <source src="./assets/audio/die.ogg" type="audio/ogg">
             </audio>
-            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE');">Return to Title</button>
+            <button onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE');">RETURN TO TITLE</button>
         </div>
 
         <div id="GAME" class="game fadeable hide">
             <div id="topBar" class="infoBar">
                 <p id="topLeftInfo">TOP LEFT</p>
-                <p id="topRightInfo">SINGULARITY</p>
+                <button id="topRightInfo" onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE'); window.game.unload()">SINGULARITY</button>
             </div>
 
             <div class="serverContainer">
