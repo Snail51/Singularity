@@ -25,7 +25,7 @@ export class Game
 
         this.prompt = "";
         this.promptList = new Array();
-            fetch("../../assets/prompts.txt")
+            fetch("./assets/prompts.txt")
             .then(response => response.text())
             .then(text => text.split('\n'))
             .then(array => array = array.filter(item => item != ""))
