@@ -42,3 +42,22 @@ This CSS controls the various "title" screens of the application, i.e. when the 
     background-color: grey;
     font-size: 6vmin;
 }
+
+
+/* Volume Slider (only on main title) */
+.title .titleVolume {
+    width: 50vw;
+    display: flex;
+    align-items: center;
+}
+
+.title .titleVolume * {
+    font-size: 6vmin;
+    
+}
+
+.title input {
+    flex: 1;
+    height: 10vh;
+    accent-color: whitesmoke;
+}

@@ -45,8 +45,6 @@
     </head>
     <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin;">
 
-        
-
         <p id="binaryBG" class="binaryBG randomColor"></p>
 
         <div id="TITLE" class="title fadeable">
@@ -59,6 +57,11 @@
             </audio>
             <button onclick="window.changeFadeState('GAME'); window.changeAudioState('GAME'); window.changeBackgroundState('GAME'); window.game.load();">BEGIN</button>
             <button onclick="window.changeAudioState('TITLE');">UNMUTE MUSIC</button>
+            <div class="titleVolume">
+                <label for="volumeSlider">Volume: </label>
+                <input id="volumeSlider" type="range" oninput="window.changeAudioVolume(event.target.value/100)" min="0" max="100" value="50">
+            </div>
+            
         </div>
 
         <div id="WIN" class="title fadeable hide">

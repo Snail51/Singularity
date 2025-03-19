@@ -45,3 +45,14 @@ window.changeAudioState = function(newState) //call the desired state to handle 
     
     window.audioState = newState;
 }
+
+window.changeAudioVolume = function(newVolume)
+{
+    var nodes = document.querySelectorAll("audio");
+    for ( var node of nodes )
+    {
+        node.volume = newVolume;
+    }
+}
+
+window.addEventListener("DOMContentLoaded", () => window.changeAudioVolume(0.5));
