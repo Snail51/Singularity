@@ -183,7 +183,7 @@ export class Game
 
         // make a new prompt
 
-        this.prompt = this.promptList[Math.round(Math.random() * this.promptList.length)];
+        this.prompt = this.promptList[Math.round(Math.random() * (this.promptList.length -1))];
         document.getElementById("prompt").value = this.prompt;
 
         /*
