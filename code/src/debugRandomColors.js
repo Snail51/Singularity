@@ -5,12 +5,12 @@ debugRandomColors.js
 │   ​├── ​When designing a complex document layout, it is useful to be able to easily see the size and position of each element.
 │   ​└── ​This can be accomplished though modifying the `backgroundColor` css style of elements.
 └── ​Implementation
-    ​├── ​Waits for the `DOMContentLoaded` event to fire
+    ​├── ​Waits for the `pageshow` event to fire
     ​└── ​Modifies every element of the `<body>` to have a random `backgroundColor`
     ​        ​└── ​All elements will have their alpha value set to 200/255 (78%).
 */
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("pageshow", () => {
     var elements = document.querySelectorAll("body *");
     console.log(elements);
     for ( var element of elements )

@@ -55,4 +55,4 @@ window.changeAudioVolume = function(newVolume)
     }
 }
 
-window.addEventListener("DOMContentLoaded", () => window.changeAudioVolume(0.5));
+window.addEventListener("pageshow", () => window.changeAudioVolume(0.5));

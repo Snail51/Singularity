@@ -10,7 +10,7 @@ server.js
 │   ​    ​
 └── ​DECLARATION
     ​├── ​Servers are declared through the custom HTML tag `<Server serverID="?"></Server>`.
-    ​├── ​At DOMContentLoaded, this script consumes all `<Server>` elements and converts them into properly styled an initialized `<button>`s
+    ​├── ​At pageshow, this script consumes all `<Server>` elements and converts them into properly styled an initialized `<button>`s
     ​├── ​All <Server> elements must be declared with a `serverID` attribute.
     ​├── ​These custom buttons are setup with the following HTML attributes:
     ​│   ​├── ​- Key:"locked" Value:"false" (Bool as String)
@@ -38,7 +38,7 @@ window.clickServer = () =>
     document.getElementById("terminal").focus();
 }
 
-window.addEventListener("DOMContentLoaded", () => 
+window.addEventListener("pageshow", () => 
 {
     var ServerDOMs = document.querySelectorAll("Server");
     for( var server of ServerDOMs )
