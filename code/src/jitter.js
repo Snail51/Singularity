@@ -1,3 +1,8 @@
+/**
+ * Every 100ms, parse the DOM looking for certain `jitter-...` classes, and apply random offsets with a given chance
+ * Creates a "glitchy" effect
+ */
+
 setInterval(() => {
     var jitterelements;
 

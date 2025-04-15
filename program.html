@@ -54,6 +54,9 @@
         <!-- Import Jittery Elements Handler -->
         <script src="./code/exe/jitter.js"></script>
 
+        <!-- Code to make 079's face randomly flash for a moment -->
+        <script src="./code/exe/faceflash.js"></script>
+
         <!--
         <script src="debugRandomColors.js"></script>
         -->
@@ -67,9 +70,11 @@
         </script>
 
     </head>
-    <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin;">
+    <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin; overflow: hidden;">
 
         <p id="binaryBG" class="binaryBG randomColor"></p>
+
+        <div id="faceflashholder" style="overflow: hidden;"></div>
 
         <div id="TITLE" class="title fadeable">
             <p>&nbsp;</p>
