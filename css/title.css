@@ -30,7 +30,7 @@ This CSS controls the various "title" screens of the application, i.e. when the 
 }
 
 /* Main Header */
-.title :nth-child(1)
+.title :nth-child(2)
 {
     font-size: 10vmin;
 }

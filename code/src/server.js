@@ -50,6 +50,7 @@ window.addEventListener("DOMContentLoaded", () =>
         var newButton = document.createElement("button");
         newButton.classList.add("serverItem");
         newButton.classList.add(`serverGrid${id}`);
+        newButton.classList.add("jitter-low");
         newButton.innerHTML = id;
         newButton.id = `server${id}`;
         newButton.setAttribute("serverID", id);
