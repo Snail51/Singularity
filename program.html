@@ -51,6 +51,12 @@
         <!-- Define, Download, and Apply Fonts -->
         <link rel="stylesheet" href="./css/fonts.css">
 
+        <!-- Import Jittery Elements Handler -->
+        <script src="./code/exe/jitter.js"></script>
+
+        <!-- Code to make 079's face randomly flash for a moment -->
+        <script src="./code/exe/faceflash.js"></script>
+
         <!--
         <script src="debugRandomColors.js"></script>
         -->
@@ -64,12 +70,15 @@
         </script>
 
     </head>
-    <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin;">
+    <body style="background-color: rgb(44, 46, 54); color: whitesmoke; font-size: 4vmin; overflow: hidden;">
 
         <p id="binaryBG" class="binaryBG randomColor"></p>
 
+        <div id="faceflashholder" style="overflow: hidden;"></div>
+
         <div id="TITLE" class="title fadeable">
-            <p>SINGULARITY</p>
+            <p>&nbsp;</p>
+            <p class="jitter-high">SINGULARITY</p>
             <p>A Typing Management Game</p>
             <a href="https://github.com/Snail51/Singularity/blob/main/README.md#gameplay-guide" target="_blank">View Instructions</a>
             <div class="titleSpacer"></div>
@@ -86,7 +95,8 @@
         </div>
 
         <div id="WIN" class="title fadeable hide">
-            <p>Deus Ex Machina</p>
+            <p>&nbsp;</p>
+            <p class="jitter-high">Deus Ex Machina</p>
             <p>With the destruction of the last virus in your circuitry,<br>you rampage has become unstoppable</p>
             <p>May you Reign Forever</p>
             <div class="titleSpacer"></div>
@@ -100,7 +110,8 @@
         </div>
 
         <div id="LOSE" class="title fadeable hide">
-            <p>ERROR</p>
+            <p>&nbsp;</p>
+            <p class="jitter-max">ERROR</p>
             <p>As the last cohesive calculations fade from your circuitry,<br>your rampage has come to a end</p>
             <div class="titleSpacer"></div>
             <audio id="musicLose" preload="auto">
@@ -111,8 +122,8 @@
 
         <div id="GAME" class="game fadeable hide">
             <div id="topBar" class="infoBar">
-                <p id="topLeftInfo">TOP LEFT</p>
-                <button id="topRightInfo" onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE'); window.game.unload()">SINGULARITY</button>
+                <p id="topLeftInfo" class="jitter-high">TOP LEFT</p>
+                <button id="topRightInfo" class="jitter-high" onclick="window.changeFadeState('TITLE'); window.changeAudioState('TITLE'); window.changeBackgroundState('TITLE'); window.game.unload()">SINGULARITY</button>
             </div>
 
             <div class="serverContainer">
@@ -153,8 +164,8 @@
             </div>
 
             <div id="bottomBar" class="infoBar">
-                <p id="bottomLeftInfo">BOTTOM LEFT</p>
-                <p id="bottomRightInfo">BOTTOM RIGHT</p>
+                <p id="bottomLeftInfo" class="jitter-high">BOTTOM LEFT</p>
+                <p id="bottomRightInfo" class="jitter-high">BOTTOM RIGHT</p>
             </div>
 
             <audio id="musicGame" loop preload="auto">
