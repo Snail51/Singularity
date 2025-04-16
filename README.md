@@ -11,7 +11,7 @@
  ## Gameplay Guide
   - The game presents 26 rectangles, representing computer servers corresponding to the letters of the alphabet.
   - There are 5 virus randomly hidden across your servers. Your goal is to seek and destroy them.
-  - The game also prevents three text bars, one for notifications, one for prompts, and one for commands (the player types in the third).
+  - The game also presents three text bars, one for notifications, one for prompts, and one for commands (the player types in the third).
   - You type commands in the command bar and press enter to execute them. One such command is the command to perform an antivirus scan on a given server.
   - If the executed command starts with `SCAN`, an antivirus scan is started on the server corresponding to the last letter of the command. (EX: `SCAN ABC` will scan server `C`).
   - **While a server is being scanned, the user is unable to type that key to the command line for any reason.** This can also include the letters of the command themselves (You cant type `SCAN` without `S`!).
